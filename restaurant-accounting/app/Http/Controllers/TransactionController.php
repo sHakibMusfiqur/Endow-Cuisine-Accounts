@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Currency;
 use App\Models\DailyTransaction;
 use App\Models\PaymentMethod;
 use App\Services\TransactionService;
@@ -23,7 +24,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = DailyTransaction::with(['category', 'paymentMethod', 'creator']);
+        $query = DailyTransaction::with(['category', 'paymentMethod', 'currency', 'creator']);
 
         // Apply filters
         if ($request->filled('date_from')) {
@@ -74,8 +75,16 @@ class TransactionController extends Controller
         $incomeCategories = Category::income()->get();
         $expenseCategories = Category::expense()->get();
         $paymentMethods = PaymentMethod::active()->get();
+        $currencies = Currency::getActive();
+        $defaultCurrency = Currency::getDefault();
 
-        return view('transactions.create', compact('incomeCategories', 'expenseCategories', 'paymentMethods'));
+        return view('transactions.create', compact(
+            'incomeCategories', 
+            'expenseCategories', 
+            'paymentMethods',
+            'currencies',
+            'defaultCurrency'
+        ));
     }
 
     /**
@@ -90,6 +99,7 @@ class TransactionController extends Controller
             'expense' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
+            'currency_id' => 'required|exists:currencies,id',
         ]);
 
         // Set defaults
@@ -116,8 +126,15 @@ class TransactionController extends Controller
         $incomeCategories = Category::income()->get();
         $expenseCategories = Category::expense()->get();
         $paymentMethods = PaymentMethod::active()->get();
+        $currencies = Currency::getActive();
 
-        return view('transactions.edit', compact('transaction', 'incomeCategories', 'expenseCategories', 'paymentMethods'));
+        return view('transactions.edit', compact(
+            'transaction', 
+            'incomeCategories', 
+            'expenseCategories', 
+            'paymentMethods',
+            'currencies'
+        ));
     }
 
     /**
@@ -132,6 +149,7 @@ class TransactionController extends Controller
             'expense' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
+            'currency_id' => 'nullable|exists:currencies,id',
         ]);
 
         // Set defaults

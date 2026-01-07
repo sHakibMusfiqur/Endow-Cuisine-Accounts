@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DailyTransaction;
+use App\Models\Currency;
 use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -42,9 +43,26 @@ class TransactionService
         DB::beginTransaction();
 
         try {
+            // Get currency (default to KRW if not specified)
+            $currencyId = $data['currency_id'] ?? Currency::getDefault()?->id;
+            $currency = Currency::findOrFail($currencyId);
+            
+            // Determine original amount (the amount in selected currency)
+            $amountOriginal = $data['income'] > 0 ? $data['income'] : $data['expense'];
+            
+            // Convert to base currency (KRW)
+            $amountBase = $currency->convertToBase($amountOriginal);
+            
+            // Store exchange rate snapshot for historical accuracy
+            $exchangeRateSnapshot = $currency->exchange_rate;
+            
+            // Calculate income and expense in base currency
+            $incomeBase = $data['income'] > 0 ? $amountBase : 0;
+            $expenseBase = $data['expense'] > 0 ? $amountBase : 0;
+            
             // Calculate balance
             $lastBalance = $this->getLastBalance($data['date']);
-            $newBalance = $lastBalance + $data['income'] - $data['expense'];
+            $newBalance = $lastBalance + $incomeBase - $expenseBase;
 
             // Create transaction
             $transaction = DailyTransaction::create([
@@ -55,14 +73,18 @@ class TransactionService
                 'balance' => $newBalance,
                 'category_id' => $data['category_id'],
                 'payment_method_id' => $data['payment_method_id'],
+                'currency_id' => $currencyId,
+                'amount_original' => $amountOriginal,
+                'amount_base' => $amountBase,
+                'exchange_rate_snapshot' => $exchangeRateSnapshot,
                 'created_by' => Auth::id(),
             ]);
 
             // Update balances for subsequent transactions
             $this->updateSubsequentBalances($data['date']);
 
-            // Check for notifications
-            $this->checkAndCreateNotifications($transaction);
+            // Check for notifications (using base currency amounts)
+            $this->checkAndCreateNotifications($transaction, $amountBase);
 
             DB::commit();
 
@@ -97,6 +119,23 @@ class TransactionService
 
         try {
             $oldDate = $transaction->date;
+            
+            // Get currency (use existing if not changed)
+            $currencyId = $data['currency_id'] ?? $transaction->currency_id;
+            $currency = Currency::findOrFail($currencyId);
+            
+            // Determine original amount
+            $amountOriginal = $data['income'] > 0 ? $data['income'] : $data['expense'];
+            
+            // Convert to base currency
+            $amountBase = $currency->convertToBase($amountOriginal);
+            
+            // Store exchange rate snapshot
+            $exchangeRateSnapshot = $currency->exchange_rate;
+            
+            // Calculate income and expense in base currency
+            $incomeBase = $data['income'] > 0 ? $amountBase : 0;
+            $expenseBase = $data['expense'] > 0 ? $amountBase : 0;
 
             // Update transaction
             $transaction->update([
@@ -106,11 +145,15 @@ class TransactionService
                 'expense' => $data['expense'],
                 'category_id' => $data['category_id'],
                 'payment_method_id' => $data['payment_method_id'],
+                'currency_id' => $currencyId,
+                'amount_original' => $amountOriginal,
+                'amount_base' => $amountBase,
+                'exchange_rate_snapshot' => $exchangeRateSnapshot,
             ]);
 
             // Recalculate balance
             $lastBalance = $this->getLastBalance($data['date'], $transaction->id);
-            $newBalance = $lastBalance + $data['income'] - $data['expense'];
+            $newBalance = $lastBalance + $incomeBase - $expenseBase;
             $transaction->balance = $newBalance;
             $transaction->save();
 
@@ -119,7 +162,7 @@ class TransactionService
             $this->updateSubsequentBalances($earliestDate);
 
             // Check for notifications
-            $this->checkAndCreateNotifications($transaction);
+            $this->checkAndCreateNotifications($transaction, $amountBase);
 
             DB::commit();
 
@@ -195,7 +238,11 @@ class TransactionService
         $currentBalance = $this->getLastBalance($date);
 
         foreach ($transactions as $transaction) {
-            $currentBalance = $currentBalance + $transaction->income - $transaction->expense;
+            // Use amount_base for balance calculation (always in KRW)
+            $incomeBase = $transaction->income > 0 ? $transaction->amount_base : 0;
+            $expenseBase = $transaction->expense > 0 ? $transaction->amount_base : 0;
+            
+            $currentBalance = $currentBalance + $incomeBase - $expenseBase;
             $transaction->balance = $currentBalance;
             $transaction->saveQuietly(); // Save without triggering events
         }
@@ -205,14 +252,17 @@ class TransactionService
      * Check conditions and create notifications.
      *
      * @param DailyTransaction $transaction
+     * @param float $amountBase Amount in base currency (KRW)
      * @return void
      */
-    private function checkAndCreateNotifications(DailyTransaction $transaction): void
+    private function checkAndCreateNotifications(DailyTransaction $transaction, float $amountBase): void
     {
-        // Check for high expense
-        if ($transaction->expense > self::HIGH_EXPENSE_THRESHOLD) {
+        // Check for high expense (using base currency)
+        if ($transaction->expense > 0 && $amountBase > self::HIGH_EXPENSE_THRESHOLD) {
             Notification::create([
-                'message' => "High expense alert: {$transaction->description} - " . number_format($transaction->expense, 2),
+                'message' => "High expense alert: {$transaction->description} - " . 
+                            $transaction->currency->formatAmount($transaction->amount_original) . 
+                            " (₩" . number_format($amountBase, 2) . ")",
                 'type' => 'warning',
                 'user_id' => null, // Broadcast to all users
             ]);
@@ -221,7 +271,7 @@ class TransactionService
         // Check for low balance
         if ($transaction->balance < self::LOW_BALANCE_THRESHOLD) {
             Notification::create([
-                'message' => "Low balance alert: Current balance is " . number_format($transaction->balance, 2),
+                'message' => "Low balance alert: Current balance is ₩" . number_format($transaction->balance, 2),
                 'type' => 'warning',
                 'user_id' => null, // Broadcast to all users
             ]);
@@ -253,8 +303,19 @@ class TransactionService
                 break;
         }
 
-        $totalIncome = $query->sum('income');
-        $totalExpense = $query->sum('expense');
+        // Use amount_base for all calculations (always in KRW)
+        $totalIncome = DailyTransaction::where('income', '>', 0)
+            ->when($period !== 'all', function($q) use ($query) {
+                return $q->whereIn('id', $query->pluck('id'));
+            })
+            ->sum('amount_base');
+            
+        $totalExpense = DailyTransaction::where('expense', '>', 0)
+            ->when($period !== 'all', function($q) use ($query) {
+                return $q->whereIn('id', $query->pluck('id'));
+            })
+            ->sum('amount_base');
+            
         $netAmount = $totalIncome - $totalExpense;
         
         $currentBalance = DailyTransaction::orderBy('date', 'desc')

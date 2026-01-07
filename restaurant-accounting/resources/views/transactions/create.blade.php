@@ -34,6 +34,27 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="currency_id" class="form-label">Currency <span class="text-danger">*</span></label>
+                            <select class="form-select @error('currency_id') is-invalid @enderror" 
+                                    id="currency_id" name="currency_id" required>
+                                @foreach($currencies as $currency)
+                                <option value="{{ $currency->id }}" 
+                                        data-symbol="{{ $currency->symbol }}"
+                                        data-rate="{{ $currency->exchange_rate }}"
+                                        {{ (old('currency_id', $defaultCurrency->id ?? '') == $currency->id) ? 'selected' : '' }}>
+                                    {{ $currency->name }} ({{ $currency->symbol }})
+                                </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> Amounts will be automatically converted to KRW (₩)
+                            </small>
+                            @error('currency_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Transaction Type <span class="text-danger">*</span></label>
                             <div class="btn-group w-100" role="group">
                                 <input type="radio" class="btn-check" name="transaction_type" id="type_income" value="income" 
@@ -53,10 +74,13 @@
                         <div class="mb-3" id="income_section" style="display: none;">
                             <label for="income" class="form-label">Income Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text" id="income_currency_symbol">₩</span>
                                 <input type="number" class="form-control @error('income') is-invalid @enderror" 
                                        id="income" name="income" value="{{ old('income', 0) }}" step="0.01" min="0">
                             </div>
+                            <small class="text-muted" id="income_conversion" style="display: none;">
+                                <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="income_krw_amount">₩0.00</span>
+                            </small>
                             @error('income')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -65,10 +89,13 @@
                         <div class="mb-3" id="expense_section" style="display: none;">
                             <label for="expense" class="form-label">Expense Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">₹</span>
+                                <span class="input-group-text" id="expense_currency_symbol">₩</span>
                                 <input type="number" class="form-control @error('expense') is-invalid @enderror" 
                                        id="expense" name="expense" value="{{ old('expense', 0) }}" step="0.01" min="0">
                             </div>
+                            <small class="text-muted" id="expense_conversion" style="display: none;">
+                                <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="expense_krw_amount">₩0.00</span>
+                            </small>
                             @error('expense')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -141,6 +168,13 @@
         const expenseCategories = document.getElementById('expense_categories');
         const incomeInput = document.getElementById('income');
         const expenseInput = document.getElementById('expense');
+        const currencySelect = document.getElementById('currency_id');
+        const incomeCurrencySymbol = document.getElementById('income_currency_symbol');
+        const expenseCurrencySymbol = document.getElementById('expense_currency_symbol');
+        const incomeConversion = document.getElementById('income_conversion');
+        const expenseConversion = document.getElementById('expense_conversion');
+        const incomeKrwAmount = document.getElementById('income_krw_amount');
+        const expenseKrwAmount = document.getElementById('expense_krw_amount');
 
         function updateForm() {
             if (incomeRadio.checked) {
@@ -160,12 +194,49 @@
                 expenseInput.required = true;
                 incomeInput.value = 0;
             }
+            updateConversion();
+        }
+
+        function updateCurrencySymbol() {
+            const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+            const symbol = selectedOption.dataset.symbol;
+            incomeCurrencySymbol.textContent = symbol;
+            expenseCurrencySymbol.textContent = symbol;
+            updateConversion();
+        }
+
+        function updateConversion() {
+            const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+            const rate = parseFloat(selectedOption.dataset.rate);
+            const symbol = selectedOption.dataset.symbol;
+            
+            // If not KRW, show conversion
+            if (symbol !== '₩') {
+                if (incomeRadio.checked) {
+                    const amount = parseFloat(incomeInput.value) || 0;
+                    const krwAmount = amount * rate;
+                    incomeKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    incomeConversion.style.display = 'block';
+                } else if (expenseRadio.checked) {
+                    const amount = parseFloat(expenseInput.value) || 0;
+                    const krwAmount = amount * rate;
+                    expenseKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    expenseConversion.style.display = 'block';
+                }
+            } else {
+                incomeConversion.style.display = 'none';
+                expenseConversion.style.display = 'none';
+            }
         }
 
         incomeRadio.addEventListener('change', updateForm);
         expenseRadio.addEventListener('change', updateForm);
+        currencySelect.addEventListener('change', updateCurrencySymbol);
+        incomeInput.addEventListener('input', updateConversion);
+        expenseInput.addEventListener('input', updateConversion);
 
         // Initialize on page load
+        updateCurrencySymbol();
         updateForm();
     });
 </script>

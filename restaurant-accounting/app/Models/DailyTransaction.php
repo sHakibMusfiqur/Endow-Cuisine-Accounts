@@ -23,6 +23,10 @@ class DailyTransaction extends Model
         'balance',
         'category_id',
         'payment_method_id',
+        'currency_id',
+        'amount_original',
+        'amount_base',
+        'exchange_rate_snapshot',
         'created_by',
     ];
 
@@ -36,6 +40,9 @@ class DailyTransaction extends Model
         'income' => 'decimal:2',
         'expense' => 'decimal:2',
         'balance' => 'decimal:2',
+        'amount_original' => 'decimal:2',
+        'amount_base' => 'decimal:2',
+        'exchange_rate_snapshot' => 'decimal:6',
     ];
 
     /**
@@ -60,6 +67,14 @@ class DailyTransaction extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the currency for this transaction.
+     */
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     /**
@@ -120,6 +135,67 @@ class DailyTransaction extends Model
     public function scopeThisYear($query)
     {
         return $query->whereYear('date', Carbon::now()->year);
+    }
+
+    /**
+     * Format the original amount with currency symbol.
+     *
+     * @return string
+     */
+    public function getFormattedOriginalAmountAttribute(): string
+    {
+        if (!$this->currency) {
+            return number_format($this->amount_original, 2);
+        }
+        
+        return $this->currency->formatAmount($this->amount_original);
+    }
+
+    /**
+     * Format the base amount (KRW).
+     *
+     * @return string
+     */
+    public function getFormattedBaseAmountAttribute(): string
+    {
+        $krw = Currency::where('code', 'KRW')->first();
+        
+        if (!$krw) {
+            return '₩' . number_format($this->amount_base, 2);
+        }
+        
+        return $krw->formatAmount($this->amount_base);
+    }
+
+    /**
+     * Get display amount (shows conversion if not KRW).
+     *
+     * @return string
+     */
+    public function getDisplayAmountAttribute(): string
+    {
+        if (!$this->currency) {
+            return $this->formatted_base_amount;
+        }
+        
+        // If transaction is in KRW, just show the amount
+        if ($this->currency->code === 'KRW') {
+            return $this->formatted_base_amount;
+        }
+        
+        // If in another currency, show: $100 (₩132,000)
+        return $this->formatted_original_amount . ' (' . $this->formatted_base_amount . ')';
+    }
+
+    /**
+     * Convert amount to base currency using stored exchange rate.
+     *
+     * @param float $amount
+     * @return float
+     */
+    public function convertToBase(float $amount): float
+    {
+        return $amount * $this->exchange_rate_snapshot;
     }
 
     /**

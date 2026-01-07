@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            CurrencySeeder::class,  // Must run before transactions
             CategorySeeder::class,
             PaymentMethodSeeder::class,
         ]);

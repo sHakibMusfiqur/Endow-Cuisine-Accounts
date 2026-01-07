@@ -73,9 +73,10 @@
                     <th>Description</th>
                     <th>Category</th>
                     <th>Payment Method</th>
+                    <th>Currency</th>
                     <th>Income</th>
                     <th>Expense</th>
-                    <th>Balance</th>
+                    <th>Balance (KRW)</th>
                     <th>Created By</th>
                     <th>Actions</th>
                 </tr>
@@ -91,9 +92,30 @@
                         </span>
                     </td>
                     <td>{{ $transaction->paymentMethod->name }}</td>
-                    <td class="text-success fw-bold">{{ $transaction->income > 0 ? '₹'.number_format($transaction->income, 2) : '-' }}</td>
-                    <td class="text-danger fw-bold">{{ $transaction->expense > 0 ? '₹'.number_format($transaction->expense, 2) : '-' }}</td>
-                    <td class="fw-bold">₹{{ number_format($transaction->balance, 2) }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ $transaction->currency->code }}</span>
+                    </td>
+                    <td class="text-success fw-bold">
+                        @if($transaction->income > 0)
+                            {{ $transaction->currency->symbol }}{{ number_format($transaction->income, 2) }}
+                            @if($transaction->currency->code !== 'KRW')
+                                <br><small class="text-muted">(₩{{ number_format($transaction->amount_base, 2) }})</small>
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="text-danger fw-bold">
+                        @if($transaction->expense > 0)
+                            {{ $transaction->currency->symbol }}{{ number_format($transaction->expense, 2) }}
+                            @if($transaction->currency->code !== 'KRW')
+                                <br><small class="text-muted">(₩{{ number_format($transaction->amount_base, 2) }})</small>
+                            @endif
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td class="fw-bold">₩{{ number_format($transaction->balance, 2) }}</td>
                     <td>{{ $transaction->creator->name }}</td>
                     <td>
                         @if(auth()->user()->isAdmin() || auth()->user()->isAccountant())
@@ -115,7 +137,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="text-center text-muted">No transactions found</td>
+                    <td colspan="10" class="text-center text-muted">No transactions found</td>
                 </tr>
                 @endforelse
             </tbody>

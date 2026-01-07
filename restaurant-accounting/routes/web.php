@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 
@@ -66,6 +67,17 @@ Route::middleware('auth')->group(function () {
     // Payment Methods - Admin only
     Route::middleware('role:admin')->group(function () {
         Route::resource('payment-methods', PaymentMethodController::class);
+    });
+
+    // Currency Management - Admin only
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+        Route::get('/currencies/{currency}/edit', [CurrencyController::class, 'edit'])->name('currencies.edit');
+        Route::put('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+        Route::patch('/currencies/{currency}/set-default', [CurrencyController::class, 'setDefault'])->name('currencies.setDefault');
+        Route::patch('/currencies/{currency}/toggle-active', [CurrencyController::class, 'toggleActive'])->name('currencies.toggleActive');
+        Route::get('/currencies/calculator', [CurrencyController::class, 'calculator'])->name('currencies.calculator');
+        Route::post('/currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
     });
 
     // Reports - All authenticated users
