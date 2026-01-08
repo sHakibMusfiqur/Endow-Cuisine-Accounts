@@ -8,7 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\NotificationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -37,11 +37,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard - All authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Notifications - All authenticated users
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
-    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+   
 
     // Transactions - Admin and Accountant can create/edit, Manager can only view
     Route::get('/transactions', [TransactionController::class, 'index'])
@@ -86,4 +82,3 @@ Route::middleware('auth')->group(function () {
     Route::post('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     Route::post('/reports/export-summary', [ReportController::class, 'exportSummary'])->name('reports.export-summary');
 });
-

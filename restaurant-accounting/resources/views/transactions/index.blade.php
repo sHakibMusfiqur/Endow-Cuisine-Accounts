@@ -85,7 +85,7 @@
                 @forelse($transactions as $transaction)
                 <tr>
                     <td>{{ $transaction->date->format('M d, Y') }}</td>
-                    <td>{{ Str::limit($transaction->description, 40) }}</td>
+                    <td>{!! Str::limit(strip_tags($transaction->description), 40) !!}</td>
                     <td>
                         <span class="badge {{ $transaction->category->type == 'income' ? 'bg-success' : 'bg-warning' }}">
                             {{ $transaction->category->name }}

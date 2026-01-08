@@ -4,23 +4,12 @@ namespace App\Services;
 
 use App\Models\DailyTransaction;
 use App\Models\Currency;
-use App\Models\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class TransactionService
 {
-    /**
-     * High expense threshold for notifications
-     */
-    const HIGH_EXPENSE_THRESHOLD = 5000;
-
-    /**
-     * Low balance threshold for notifications
-     */
-    const LOW_BALANCE_THRESHOLD = 10000;
-
     /**
      * Create a new transaction with balance calculation.
      *
@@ -82,9 +71,6 @@ class TransactionService
 
             // Update balances for subsequent transactions
             $this->updateSubsequentBalances($data['date']);
-
-            // Check for notifications (using base currency amounts)
-            $this->checkAndCreateNotifications($transaction, $amountBase);
 
             DB::commit();
 
@@ -160,9 +146,6 @@ class TransactionService
             // Update balances for subsequent transactions
             $earliestDate = $oldDate < $data['date'] ? $oldDate : $data['date'];
             $this->updateSubsequentBalances($earliestDate);
-
-            // Check for notifications
-            $this->checkAndCreateNotifications($transaction, $amountBase);
 
             DB::commit();
 
@@ -248,35 +231,7 @@ class TransactionService
         }
     }
 
-    /**
-     * Check conditions and create notifications.
-     *
-     * @param DailyTransaction $transaction
-     * @param float $amountBase Amount in base currency (KRW)
-     * @return void
-     */
-    private function checkAndCreateNotifications(DailyTransaction $transaction, float $amountBase): void
-    {
-        // Check for high expense (using base currency)
-        if ($transaction->expense > 0 && $amountBase > self::HIGH_EXPENSE_THRESHOLD) {
-            Notification::create([
-                'message' => "High expense alert: {$transaction->description} - " . 
-                            $transaction->currency->formatAmount($transaction->amount_original) . 
-                            " (₩" . number_format($amountBase, 2) . ")",
-                'type' => 'warning',
-                'user_id' => null, // Broadcast to all users
-            ]);
-        }
 
-        // Check for low balance
-        if ($transaction->balance < self::LOW_BALANCE_THRESHOLD) {
-            Notification::create([
-                'message' => "Low balance alert: Current balance is ₩" . number_format($transaction->balance, 2),
-                'type' => 'warning',
-                'user_id' => null, // Broadcast to all users
-            ]);
-        }
-    }
 
     /**
      * Get summary statistics.

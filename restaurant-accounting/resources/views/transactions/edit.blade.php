@@ -27,10 +27,10 @@
 
                         <div class="mb-3">
                             <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="3" required>{{ old('description', $transaction->description) }}</textarea>
+                            <div id="description-editor" class="form-control @error('description') is-invalid @enderror" style="height: 150px; border: 1px solid #ced4da; border-radius: 0.375rem;"></div>
+                            <input type="hidden" name="description" id="description" value="{{ old('description', $transaction->description) }}">
                             @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -158,9 +158,64 @@
     </div>
 </div>
 
+@push('styles')
+<!-- Quill CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<style>
+    .ql-editor {
+        min-height: 120px;
+        font-size: 1rem;
+    }
+    .ql-container {
+        font-family: inherit;
+    }
+    #description-editor {
+        padding: 0;
+        border: none !important;
+    }
+    #description-editor .ql-toolbar {
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
+    #description-editor .ql-container {
+        border-bottom-left-radius: 0.375rem;
+        border-bottom-right-radius: 0.375rem;
+    }
+</style>
+@endpush
+
 @push('scripts')
+<!-- Quill JS -->
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Quill Editor
+        const quill = new Quill('#description-editor', {
+            theme: 'snow',
+            placeholder: 'Enter transaction details...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // Set initial content if editing or validation failed
+        const hiddenInput = document.getElementById('description');
+        if (hiddenInput.value) {
+            quill.root.innerHTML = hiddenInput.value;
+        }
+
+        // Update hidden input before form submission
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            hiddenInput.value = quill.root.innerHTML;
+        });
+
+        // Rest of the transaction form JavaScript
         const incomeRadio = document.getElementById('type_income');
         const expenseRadio = document.getElementById('type_expense');
         const incomeSection = document.getElementById('income_section');
