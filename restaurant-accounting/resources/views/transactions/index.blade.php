@@ -97,9 +97,9 @@
                     </td>
                     <td class="text-success fw-bold">
                         @if($transaction->income > 0)
-                            {{ $transaction->currency->symbol }}{{ number_format($transaction->income, 2) }}
-                            @if($transaction->currency->code !== 'KRW')
-                                <br><small class="text-muted">(₩{{ number_format($transaction->amount_base, 2) }})</small>
+                            {{ formatCurrency($transaction->income) }}
+                            @if($activeCurrency->code !== $transaction->currency->code)
+                                <br><small class="text-muted">Original: {{ $transaction->currency->symbol }}{{ number_format($transaction->income, 2) }}</small>
                             @endif
                         @else
                             -
@@ -107,15 +107,15 @@
                     </td>
                     <td class="text-danger fw-bold">
                         @if($transaction->expense > 0)
-                            {{ $transaction->currency->symbol }}{{ number_format($transaction->expense, 2) }}
-                            @if($transaction->currency->code !== 'KRW')
-                                <br><small class="text-muted">(₩{{ number_format($transaction->amount_base, 2) }})</small>
+                            {{ formatCurrency($transaction->expense) }}
+                            @if($activeCurrency->code !== $transaction->currency->code)
+                                <br><small class="text-muted">Original: {{ $transaction->currency->symbol }}{{ number_format($transaction->expense, 2) }}</small>
                             @endif
                         @else
                             -
                         @endif
                     </td>
-                    <td class="fw-bold">₩{{ number_format($transaction->balance, 2) }}</td>
+                    <td class="fw-bold">{{ formatCurrency($transaction->balance) }}</td>
                     <td>{{ $transaction->creator->name }}</td>
                     <td>
                         @if(auth()->user()->isAdmin() || auth()->user()->isAccountant())

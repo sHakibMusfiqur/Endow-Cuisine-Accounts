@@ -39,10 +39,34 @@
             overflow-y: auto;
             transition: width var(--transition-speed) ease;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar.sidebar-collapsed {
             width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar.sidebar-collapsed .currency-selector {
+            padding: 15px 10px;
+        }
+
+        .sidebar.sidebar-collapsed .currency-selector label,
+        .sidebar.sidebar-collapsed .currency-info {
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar.sidebar-collapsed .form-select {
+            font-size: 0;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .sidebar.sidebar-collapsed .form-select::after {
+            content: '💱';
+            font-size: 20px;
         }
 
         /* ============================================
@@ -723,6 +747,26 @@
                 <i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span>
             </a>
         </nav>
+
+        <!-- Currency Switcher -->
+        <div class="currency-selector" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
+            <form action="{{ route('currency.switch') }}" method="POST" id="currencySwitchForm">
+                @csrf
+                <label for="currencySelect" style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fas fa-money-bill-wave"></i> <span class="nav-text">Display Currency</span>
+                </label>
+                <select name="currency_id" id="currencySelect" class="form-select form-select-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
+                    @foreach($allCurrencies as $currency)
+                    <option value="{{ $currency->id }}" {{ $activeCurrency->id == $currency->id ? 'selected' : '' }}>
+                        {{ $currency->code }} ({{ $currency->symbol }})
+                    </option>
+                    @endforeach
+                </select>
+            </form>
+            <div class="currency-info" style="margin-top: 8px; color: rgba(255,255,255,0.6); font-size: 11px;">
+                <span class="nav-text">Active: <strong style="color: #ffd700;">{{ $activeCurrency->code }}</strong></span>
+            </div>
+        </div>
     </div>
 
     <!-- Main Content -->

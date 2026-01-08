@@ -26,35 +26,38 @@ class ReportController extends Controller
             'date_to' => 'required|date|after_or_equal:date_from',
         ]);
 
-        $transactions = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
+        $transactions = DailyTransaction::with(['category', 'paymentMethod', 'creator', 'currency'])
             ->dateRange($validated['date_from'], $validated['date_to'])
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
-        $filename = 'transactions_' . $validated['date_from'] . '_to_' . $validated['date_to'] . '.csv';
+        $activeCurrency = getActiveCurrency();
+        $filename = 'transactions_' . $validated['date_from'] . '_to_' . $validated['date_to'] . '_' . $activeCurrency->code . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($transactions) {
+        $callback = function() use ($transactions, $activeCurrency) {
             $file = fopen('php://output', 'w');
 
-            // Add CSV headers
+            // Add CSV headers with currency information
+            fputcsv($file, ['Currency: ' . $activeCurrency->code . ' (' . $activeCurrency->symbol . ')']);
+            fputcsv($file, []); // Empty row
             fputcsv($file, ['Date', 'Description', 'Category', 'Payment Method', 'Income', 'Expense', 'Balance', 'Created By']);
 
             // Add data
             foreach ($transactions as $transaction) {
                 fputcsv($file, [
                     $transaction->date->format('Y-m-d'),
-                    $transaction->description,
+                    strip_tags($transaction->description),
                     $transaction->category->name,
                     $transaction->paymentMethod->name,
-                    number_format($transaction->income, 2),
-                    number_format($transaction->expense, 2),
-                    number_format($transaction->balance, 2),
+                    $transaction->income > 0 ? number_format(convertCurrency($transaction->income, $activeCurrency), 2) : '0.00',
+                    $transaction->expense > 0 ? number_format(convertCurrency($transaction->expense, $activeCurrency), 2) : '0.00',
+                    number_format(convertCurrency($transaction->balance, $activeCurrency), 2),
                     $transaction->creator->name,
                 ]);
             }

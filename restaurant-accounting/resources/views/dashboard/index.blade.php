@@ -10,25 +10,25 @@
         <div class="col-md-3 col-sm-6">
             <div class="stat-card income">
                 <h6><i class="fas fa-arrow-up"></i> Today's Income</h6>
-                <h2>₩{{ number_format($todaySummary['total_income'], 2) }}</h2>
+                <h2>{{ formatCurrency($todaySummary['total_income']) }}</h2>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
             <div class="stat-card expense">
                 <h6><i class="fas fa-arrow-down"></i> Today's Expense</h6>
-                <h2>₩{{ number_format($todaySummary['total_expense'], 2) }}</h2>
+                <h2>{{ formatCurrency($todaySummary['total_expense']) }}</h2>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
             <div class="stat-card balance">
                 <h6><i class="fas fa-wallet"></i> Current Balance</h6>
-                <h2>₩{{ number_format($todaySummary['current_balance'], 2) }}</h2>
+                <h2>{{ formatCurrency($todaySummary['current_balance']) }}</h2>
             </div>
         </div>
         <div class="col-md-3 col-sm-6">
             <div class="stat-card net">
                 <h6><i class="fas fa-chart-pie"></i> Today's Net</h6>
-                <h2>₩{{ number_format($todaySummary['net_amount'], 2) }}</h2>
+                <h2>{{ formatCurrency($todaySummary['net_amount']) }}</h2>
             </div>
         </div>
     </div>
@@ -42,15 +42,15 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <small class="text-muted">Income</small>
-                            <h6 class="text-success">₩{{ number_format($weekSummary['total_income'], 2) }}</h6>
+                            <h6 class="text-success">{{ formatCurrency($weekSummary['total_income']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Expense</small>
-                            <h6 class="text-danger">₩{{ number_format($weekSummary['total_expense'], 2) }}</h6>
+                            <h6 class="text-danger">{{ formatCurrency($weekSummary['total_expense']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Net</small>
-                            <h6 class="text-info">₩{{ number_format($weekSummary['net_amount'], 2) }}</h6>
+                            <h6 class="text-info">{{ formatCurrency($weekSummary['net_amount']) }}</h6>
                         </div>
                     </div>
                 </div>
@@ -63,15 +63,15 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <small class="text-muted">Income</small>
-                            <h6 class="text-success">₩{{ number_format($monthSummary['total_income'], 2) }}</h6>
+                            <h6 class="text-success">{{ formatCurrency($monthSummary['total_income']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Expense</small>
-                            <h6 class="text-danger">₩{{ number_format($monthSummary['total_expense'], 2) }}</h6>
+                            <h6 class="text-danger">{{ formatCurrency($monthSummary['total_expense']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Net</small>
-                            <h6 class="text-info">₩{{ number_format($monthSummary['net_amount'], 2) }}</h6>
+                            <h6 class="text-info">{{ formatCurrency($monthSummary['net_amount']) }}</h6>
                         </div>
                     </div>
                 </div>
@@ -84,15 +84,15 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <small class="text-muted">Income</small>
-                            <h6 class="text-success">₩{{ number_format($yearSummary['total_income'], 2) }}</h6>
+                            <h6 class="text-success">{{ formatCurrency($yearSummary['total_income']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Expense</small>
-                            <h6 class="text-danger">₩{{ number_format($yearSummary['total_expense'], 2) }}</h6>
+                            <h6 class="text-danger">{{ formatCurrency($yearSummary['total_expense']) }}</h6>
                         </div>
                         <div>
                             <small class="text-muted">Net</small>
-                            <h6 class="text-info">₩{{ number_format($yearSummary['net_amount'], 2) }}</h6>
+                            <h6 class="text-info">{{ formatCurrency($yearSummary['net_amount']) }}</h6>
                         </div>
                     </div>
                 </div>
@@ -130,7 +130,7 @@
                         @forelse($categoryExpenses as $category => $amount)
                         <div class="list-group-item d-flex justify-content-between align-items-center">
                             {{ $category }}
-                            <span class="badge bg-danger">₩{{ number_format($amount, 2) }}</span>
+                            <span class="badge bg-danger">{{ formatCurrency($amount) }}</span>
                         </div>
                         @empty
                         <p class="text-muted">No expenses recorded</p>
@@ -161,9 +161,9 @@
                                     <td>{{ $transaction->date->format('M d, Y') }}</td>
                                     <td>{{ Str::limit($transaction->description, 30) }}</td>
                                     <td><span class="badge bg-secondary">{{ $transaction->category->name }}</span></td>
-                                    <td class="text-success">{{ $transaction->income > 0 ? '₹'.number_format($transaction->income, 2) : '-' }}</td>
-                                    <td class="text-danger">{{ $transaction->expense > 0 ? '₹'.number_format($transaction->expense, 2) : '-' }}</td>
-                                    <td>₩{{ number_format($transaction->balance, 2) }}</td>
+                                    <td class="text-success">{{ $transaction->income > 0 ? formatCurrency($transaction->income) : '-' }}</td>
+                                    <td class="text-danger">{{ $transaction->expense > 0 ? formatCurrency($transaction->expense) : '-' }}</td>
+                                    <td>{{ formatCurrency($transaction->balance) }}</td>
                                 </tr>
                                 @empty
                                 <tr>

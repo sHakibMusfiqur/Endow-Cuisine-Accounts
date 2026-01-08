@@ -73,11 +73,11 @@
                         </div>
 
                         <div class="mb-3" id="income_section">
-                            <label for="income" class="form-label">Income Amount</label>
+                            <label for="income" class="form-label">Income Amount <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="income_currency_symbol">₩</span>
                                 <input type="number" class="form-control @error('income') is-invalid @enderror" 
-                                       id="income" name="income" value="{{ old('income', $transaction->income) }}" step="0.01" min="0">
+                                       id="income" name="income" value="{{ old('income', $transaction->income > 0 ? $transaction->income : '') }}" step="0.01" min="0" placeholder="Enter income amount">
                             </div>
                             <small class="text-muted" id="income_conversion" style="display: none;">
                                 <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="income_krw_amount">₩0.00</span>
@@ -88,11 +88,11 @@
                         </div>
 
                         <div class="mb-3" id="expense_section">
-                            <label for="expense" class="form-label">Expense Amount</label>
+                            <label for="expense" class="form-label">Expense Amount <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text" id="expense_currency_symbol">₩</span>
                                 <input type="number" class="form-control @error('expense') is-invalid @enderror" 
-                                       id="expense" name="expense" value="{{ old('expense', $transaction->expense) }}" step="0.01" min="0">
+                                       id="expense" name="expense" value="{{ old('expense', $transaction->expense > 0 ? $transaction->expense : '') }}" step="0.01" min="0" placeholder="Enter expense amount">
                             </div>
                             <small class="text-muted" id="expense_conversion" style="display: none;">
                                 <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="expense_krw_amount">₩0.00</span>
@@ -209,10 +209,38 @@
             quill.root.innerHTML = hiddenInput.value;
         }
 
+        // Update hidden input on text change
+        quill.on('text-change', function() {
+            const content = quill.root.innerHTML;
+            // Check if editor is empty (only contains <p><br></p> or similar)
+            const text = quill.getText().trim();
+            if (text.length === 0) {
+                hiddenInput.value = '';
+            } else {
+                hiddenInput.value = content;
+            }
+        });
+
         // Update hidden input before form submission
         const form = document.querySelector('form');
         form.addEventListener('submit', function(e) {
-            hiddenInput.value = quill.root.innerHTML;
+            const content = quill.root.innerHTML;
+            const text = quill.getText().trim();
+            
+            // Update hidden field
+            if (text.length === 0) {
+                hiddenInput.value = '';
+            } else {
+                hiddenInput.value = content;
+            }
+            
+            // Validate that description is not empty
+            if (text.length === 0) {
+                e.preventDefault();
+                alert('Please enter a description for the transaction.');
+                quill.focus();
+                return false;
+            }
         });
 
         // Rest of the transaction form JavaScript
@@ -240,7 +268,9 @@
                 expenseCategories.style.display = 'none';
                 incomeInput.required = true;
                 expenseInput.required = false;
-                expenseInput.value = 0;
+                if (!expenseInput.value || expenseInput.value == '0') {
+                    expenseInput.value = '';
+                }
             } else if (expenseRadio.checked) {
                 incomeSection.style.display = 'none';
                 expenseSection.style.display = 'block';
@@ -248,7 +278,9 @@
                 expenseCategories.style.display = 'block';
                 incomeInput.required = false;
                 expenseInput.required = true;
-                incomeInput.value = 0;
+                if (!incomeInput.value || incomeInput.value == '0') {
+                    incomeInput.value = '';
+                }
             }
             updateConversion();
         }

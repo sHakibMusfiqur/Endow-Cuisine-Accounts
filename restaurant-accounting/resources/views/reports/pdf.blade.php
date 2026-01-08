@@ -54,6 +54,7 @@
         <h1>Restaurant Accounting</h1>
         <h2>Transaction Report</h2>
         <p>Period: {{ $date_from }} to {{ $date_to }}</p>
+        <p><strong>Currency:</strong> {{ $activeCurrency->name }} ({{ $activeCurrency->code }})</p>
     </div>
 
     <div class="info">
@@ -81,21 +82,21 @@
                 <td>{{ $transaction->category->name }}</td>
                 <td>{{ $transaction->paymentMethod->name }}</td>
                 <td class="text-right text-success">
-                    {{ $transaction->income > 0 ? '₹'.number_format($transaction->income, 2) : '-' }}
+                    {{ $transaction->income > 0 ? formatCurrency($transaction->income) : '-' }}
                 </td>
                 <td class="text-right text-danger">
-                    {{ $transaction->expense > 0 ? '₹'.number_format($transaction->expense, 2) : '-' }}
+                    {{ $transaction->expense > 0 ? formatCurrency($transaction->expense) : '-' }}
                 </td>
-                <td class="text-right">₹{{ number_format($transaction->balance, 2) }}</td>
+                <td class="text-right">{{ formatCurrency($transaction->balance) }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="totals">
-        <p>Total Income: <span class="text-success">₹{{ number_format($total_income, 2) }}</span></p>
-        <p>Total Expense: <span class="text-danger">₹{{ number_format($total_expense, 2) }}</span></p>
-        <p>Net Amount: <span style="color: {{ $net_amount >= 0 ? 'green' : 'red' }}">₹{{ number_format($net_amount, 2) }}</span></p>
+        <p>Total Income: <span class="text-success">{{ formatCurrency($total_income) }}</span></p>
+        <p>Total Expense: <span class="text-danger">{{ formatCurrency($total_expense) }}</span></p>
+        <p>Net Amount: <span style="color: {{ $net_amount >= 0 ? 'green' : 'red' }}">{{ formatCurrency($net_amount) }}</span></p>
     </div>
 
     <div class="no-print" style="margin-top: 30px; text-align: center;">

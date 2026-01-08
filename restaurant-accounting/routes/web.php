@@ -76,6 +76,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/currencies/convert', [CurrencyController::class, 'convert'])->name('currencies.convert');
     });
 
+    // Currency Switching - All authenticated users
+    Route::post('/currency/switch', [CurrencyController::class, 'switchCurrency'])->name('currency.switch');
+
     // Reports - All authenticated users
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');

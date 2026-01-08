@@ -163,4 +163,20 @@ class CurrencyController extends Controller
         
         return back()->with('info', 'Live rate updates will be available in a future version.');
     }
+
+    /**
+     * Switch the active display currency for the current session.
+     */
+    public function switchCurrency(Request $request)
+    {
+        $validated = $request->validate([
+            'currency_id' => 'required|exists:currencies,id',
+        ]);
+
+        if (setActiveCurrency($validated['currency_id'])) {
+            return back()->with('success', 'Display currency changed successfully.');
+        }
+
+        return back()->withErrors(['error' => 'Failed to change currency. Please try again.']);
+    }
 }
