@@ -45,31 +45,355 @@
             width: var(--sidebar-collapsed-width);
         }
 
+        /* ============================================
+           SIDEBAR LOGO - Optimized Design System
+           ============================================ */
+        
+        /* Logo Container - Base Structure */
+        .sidebar-logo {
+            display: block;
+            text-decoration: none;
+            padding: 16px 20px;
+            margin: 0 10px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
         .sidebar .logo {
             color: white;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 0 20px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 14px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
+            text-decoration: none;
+            padding: 16px 20px;
+            margin: 0 10px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        /* Logo Icon Container */
+        .logo-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,255,255,0.05));
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            flex-shrink: 0;
+        }
+
+        .sidebar .logo i {
+            font-size: 26px;
+            color: #ffd700;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: inline-block;
+        }
+
+        /* Logo Text Container */
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
             overflow: hidden;
+            transition: all var(--transition-speed) ease;
+            opacity: 1;
+            width: auto;
+            flex: 1;
+        }
+
+        .logo-text .app-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: white;
+            line-height: 1.2;
             transition: all var(--transition-speed) ease;
         }
 
+        .logo-text .app-tagline {
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            color: rgba(255,255,255,0.65);
+            text-transform: uppercase;
+            transition: all var(--transition-speed) ease;
+        }
+
+        /* Hover Effects - Expanded State */
+        .sidebar .logo:hover {
+            background: rgba(255,255,255,0.08);
+            border-bottom-color: rgba(255,215,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 20px rgba(255,255,255,0.05);
+        }
+
+        .sidebar .logo:hover .logo-icon {
+            transform: scale(1.1) rotate(-5deg);
+            background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,255,255,0.1));
+            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+        }
+
+        .sidebar .logo:hover i {
+            transform: scale(1.1);
+            color: #ffed4e;
+            filter: drop-shadow(0 0 8px rgba(255,215,0,0.5));
+        }
+
+        .sidebar .logo:hover .logo-text .app-name {
+            color: #ffd700;
+            transform: translateX(2px);
+        }
+
+        .sidebar .logo:hover .logo-text .app-tagline {
+            color: rgba(255,215,0,0.8);
+        }
+
+        /* Active State (when on dashboard) */
+        .sidebar .logo.active {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,255,255,0.1) 100%);
+            border-bottom: 2px solid #ffd700;
+            box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+        }
+
+        .sidebar .logo.active .logo-icon {
+            background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,255,255,0.15));
+            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+        }
+
+        .sidebar .logo.active i {
+            color: #ffd700;
+            filter: drop-shadow(0 0 6px rgba(255,215,0,0.6));
+        }
+
+        .sidebar .logo.active .logo-text .app-name {
+            color: #ffd700;
+        }
+
+        /* Click/Active Effect */
+        .sidebar .logo:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease;
+        }
+
+        /* ============================================
+           COLLAPSED SIDEBAR - Logo Adjustments
+           ============================================ */
+        
         .sidebar.sidebar-collapsed .logo {
-            padding: 0 12px 20px;
-            font-size: 20px;
-            text-align: center;
+            padding: 16px 12px;
+            justify-content: center;
+            gap: 0;
+            margin: 0 8px 20px;
         }
 
-        .sidebar .logo .logo-text {
-            transition: opacity var(--transition-speed) ease;
+        .sidebar.sidebar-collapsed .logo-icon {
+            min-width: 48px;
+            min-height: 48px;
+            transform: scale(1.05);
         }
 
-        .sidebar.sidebar-collapsed .logo .logo-text {
+        .sidebar.sidebar-collapsed .logo i {
+            font-size: 28px;
+        }
+
+        /* Hide Text in Collapsed State */
+        .sidebar.sidebar-collapsed .logo-text {
             opacity: 0;
-            display: none;
+            width: 0;
+            overflow: hidden;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .sidebar.sidebar-collapsed .logo-text .app-name,
+        .sidebar.sidebar-collapsed .logo-text .app-tagline {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        /* Collapsed State Hover */
+        .sidebar.sidebar-collapsed .logo:hover .logo-icon {
+            transform: scale(1.15) rotate(-8deg);
+        }
+
+        /* ============================================
+           TOOLTIP - Collapsed State
+           ============================================ */
+        
+        .sidebar .logo::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.1);
+            z-index: 1001;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+
+        .sidebar .logo::after {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #2c3e50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar.sidebar-collapsed .logo:hover::before {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .sidebar.sidebar-collapsed .logo:hover::after {
+            opacity: 1;
+        }
+
+        /* ============================================
+           ACCESSIBILITY & REDUCED MOTION
+           ============================================ */
+        
+        /* Focus States for Accessibility */
+        .sidebar .logo:focus-visible {
+            outline: 2px solid #ffd700;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(255,215,0,0.2);
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            .sidebar .logo {
+                border: 2px solid rgba(255,255,255,0.3);
+            }
+            
+            .sidebar .logo.active {
+                border: 2px solid #ffd700;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            .sidebar .logo,
+            .sidebar .logo i,
+            .sidebar .logo-icon,
+            .sidebar .logo-text,
+            .logo-text .app-name,
+            .logo-text .app-tagline {
+                transition: none !important;
+                transform: none !important;
+                animation: none !important;
+            }
+            
+            .sidebar .logo:hover .logo-icon,
+            .sidebar .logo:hover i {
+                transform: none !important;
+            }
+        }
+
+        /* ============================================
+           LOGO ANIMATIONS - Subtle Entrance
+           ============================================ */
+        
+        @keyframes logoFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes iconPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        /* Apply entrance animation on page load */
+        .sidebar .logo {
+            animation: logoFadeIn 0.5s ease-out;
+        }
+
+        .sidebar .logo.active .logo-icon {
+            animation: iconPulse 2s ease-in-out infinite;
+        }
+
+        /* ============================================
+           PRINT STYLES - Logo Optimization
+           ============================================ */
+        
+        @media print {
+            .sidebar .logo {
+                background: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+            
+            .logo-icon {
+                background: none !important;
+                box-shadow: none !important;
+            }
+            
+            .sidebar .logo i {
+                color: #000 !important;
+            }
+            
+            .logo-text .app-name,
+            .logo-text .app-tagline {
+                color: #000 !important;
+            }
+        }
+
+        /* ============================================
+           LOADING STATE - Logo Skeleton
+           ============================================ */
+        
+        .sidebar .logo.loading .logo-icon {
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.05) 0%,
+                rgba(255,255,255,0.15) 50%,
+                rgba(255,255,255,0.05) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
         }
 
         .sidebar .nav-link {
@@ -281,11 +605,67 @@
             .toggle-btn {
                 display: inline-block !important;
             }
+            
+            /* Mobile logo adjustments */
+            .sidebar .logo {
+                padding: 14px 16px;
+                margin: 0 8px 16px;
+            }
+            
+            .logo-icon {
+                min-width: 40px;
+                min-height: 40px;
+            }
+            
+            .sidebar .logo i {
+                font-size: 22px;
+            }
+            
+            .logo-text .app-name {
+                font-size: 16px;
+            }
+            
+            .logo-text .app-tagline {
+                font-size: 10px;
+            }
         }
 
         @media (min-width: 769px) {
             .mobile-toggle {
                 display: none;
+            }
+        }
+        
+        /* Extra small screens - Compact logo */
+        @media (max-width: 480px) {
+            .sidebar .logo {
+                padding: 12px;
+                justify-content: center;
+            }
+            
+            .logo-icon {
+                min-width: 36px;
+                min-height: 36px;
+            }
+            
+            .sidebar .logo i {
+                font-size: 20px;
+            }
+            
+            .logo-text {
+                display: none !important;
+                opacity: 0;
+            }
+        }
+        
+        /* Tablet Landscape - Optimize spacing */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar .logo {
+                padding: 14px 18px;
+            }
+            
+            .logo-text .app-name {
+                font-size: 17px;
             }
         }
     </style>
@@ -298,9 +678,22 @@
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-            <i class="fas fa-utensils"></i> <span class="logo-text">Restaurant</span>
-        </div>
+        <!-- Logo Section - Optimized Structure -->
+        <a href="{{ route('dashboard') }}" 
+           class="logo {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
+           aria-label="Go to Dashboard - Restaurant Accounting System" 
+           data-tooltip="🏠 Dashboard"
+           title="Go to Dashboard"
+           role="link"
+           tabindex="0">
+            <div class="logo-icon">
+                <i class="fas fa-utensils" aria-hidden="true"></i>
+            </div>
+            <div class="logo-text">
+                <span class="app-name">Endow Cuisine</span>
+                <span class="app-tagline">Accounting System</span>
+            </div>
+        </a>
         <nav class="nav flex-column">
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
                href="{{ route('dashboard') }}" 
