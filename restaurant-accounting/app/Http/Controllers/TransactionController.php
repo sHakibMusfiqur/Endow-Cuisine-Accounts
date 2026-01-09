@@ -58,13 +58,17 @@ class TransactionController extends Controller
         // Order by date and id
         $transactions = $query->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->appends($request->query()); // Preserve filter parameters in pagination
 
-        // Get filter options
+        // Get filter options (load dynamically from database)
         $categories = Category::all();
         $paymentMethods = PaymentMethod::active()->get();
+        
+        // Get active currency for display
+        $activeCurrency = getActiveCurrency();
 
-        return view('transactions.index', compact('transactions', 'categories', 'paymentMethods'));
+        return view('transactions.index', compact('transactions', 'categories', 'paymentMethods', 'activeCurrency'));
     }
 
     /**

@@ -58,15 +58,35 @@
             overflow: hidden;
         }
 
-        .sidebar.sidebar-collapsed .form-select {
+        .sidebar.sidebar-collapsed .currency-selector .form-select {
             font-size: 0;
             padding: 8px;
             text-align: center;
+            position: relative;
         }
 
-        .sidebar.sidebar-collapsed .form-select::after {
+        /* Show emoji only when NOT focused/opened */
+        .sidebar.sidebar-collapsed .currency-selector .form-select:not(:focus)::before {
             content: '💱';
             font-size: 20px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* Normal font size when dropdown is opened */
+        .sidebar.sidebar-collapsed .currency-selector .form-select:focus,
+        .sidebar.sidebar-collapsed .currency-selector .form-select:active {
+            font-size: 14px;
+        }
+
+        /* Ensure options are always visible with proper font size */
+        .sidebar.sidebar-collapsed .currency-selector .form-select option {
+            font-size: 14px;
+            color: #000;
+            background: #fff;
         }
 
         /* ============================================
@@ -539,6 +559,39 @@
             transform: rotate(90deg);
         }
 
+        /* User Dropdown Styles */
+        .dropdown-toggle::after {
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .dropdown-menu {
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa !important;
+        }
+
+        .dropdown-item.text-danger:hover {
+            background-color: #fff5f5 !important;
+        }
+
         .stat-card {
             border-radius: 10px;
             padding: 20px;
@@ -692,6 +745,42 @@
                 font-size: 17px;
             }
         }
+
+        /* ============================================
+           CURRENCY SELECT - Fix Duplication Issue
+           ============================================ */
+        
+        /* Ensure select options always render properly */
+        #currencySelect {
+            appearance: auto;
+            -webkit-appearance: menulist;
+            -moz-appearance: menulist;
+        }
+
+        /* Ensure options have proper styling in all browsers */
+        #currencySelect option {
+            font-size: 14px !important;
+            color: #000 !important;
+            background: #fff !important;
+            padding: 8px 12px;
+        }
+
+        /* Highlighted/selected option in dropdown list */
+        #currencySelect option:checked {
+            background: #007bff !important;
+            color: #fff !important;
+        }
+
+        /* Hover state for options */
+        #currencySelect option:hover {
+            background: #e9ecef !important;
+        }
+
+        /* Ensure no pseudo-elements interfere with options */
+        #currencySelect option::before,
+        #currencySelect option::after {
+            display: none !important;
+        }
     </style>
 
     @stack('styles')
@@ -729,7 +818,7 @@
                data-tooltip="Transactions">
                 <i class="fas fa-exchange-alt"></i> <span class="nav-text">Transactions</span>
             </a>
-            @if(auth()->user()->isAdmin())
+            @role('admin')
             <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" 
                href="{{ route('categories.index') }}"
                data-tooltip="Categories">
@@ -740,11 +829,16 @@
                data-tooltip="Payment Methods">
                 <i class="fas fa-credit-card"></i> <span class="nav-text">Payment Methods</span>
             </a>
-            @endif
+            @endrole
             <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" 
                href="{{ route('reports.index') }}"
                data-tooltip="Reports">
                 <i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span>
+            </a>
+            <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" 
+               href="{{ route('profile.show') }}"
+               data-tooltip="My Profile">
+                <i class="fas fa-user-circle"></i> <span class="nav-text">My Profile</span>
             </a>
         </nav>
 
@@ -757,9 +851,12 @@
                 </label>
                 <select name="currency_id" id="currencySelect" class="form-select form-select-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
                     @foreach($allCurrencies as $currency)
-                    <option value="{{ $currency->id }}" {{ $activeCurrency->id == $currency->id ? 'selected' : '' }}>
-                        {{ $currency->code }} ({{ $currency->symbol }})
-                    </option>
+                        <option 
+                            value="{{ $currency->id }}" 
+                            {{ (int)$activeCurrency->id === (int)$currency->id ? 'selected' : '' }}
+                            style="color: #000; background: #fff;">
+                            {{ $currency->code }} ({{ $currency->symbol }})
+                        </option>
                     @endforeach
                 </select>
             </form>
@@ -785,16 +882,52 @@
                 <h4 class="mb-0">@yield('page-title', 'Dashboard')</h4>
             </div>
             <div class="d-flex align-items-center">
-                <span class="me-3">
-                    <i class="fas fa-user-circle"></i> {{ auth()->user()->name }}
-                    <span class="badge bg-secondary">{{ ucfirst(auth()->user()->role) }}</span>
-                </span>
-                <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                <!-- User Profile Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-link text-decoration-none dropdown-toggle d-flex align-items-center px-2 py-1" 
+                            type="button" 
+                            id="userDropdown" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false"
+                            style="color: #333; cursor: pointer; border-radius: 8px; transition: background-color 0.2s;"
+                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                        @if(auth()->user()->profile_photo)
+                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
+                                 alt="Profile" 
+                                 class="rounded-circle me-2"
+                                 style="width: 36px; height: 36px; object-fit: cover; border: 2px solid #dee2e6;">
+                        @else
+                            <div class="rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                 style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 16px; border: 2px solid #dee2e6;">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                        @endif
+                        <span style="font-weight: 500;">{{ auth()->user()->name }}</span>
                     </button>
-                </form>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" 
+                        aria-labelledby="userDropdown"
+                        style="border-radius: 8px; border: 1px solid #dee2e6; min-width: 200px;">
+                        <li>
+                            <a class="dropdown-item py-2" 
+                               href="{{ route('profile.show') }}"
+                               style="transition: background-color 0.2s;">
+                                <i class="fas fa-user me-2"></i>My Profile
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" 
+                                        class="dropdown-item text-danger py-2 w-100 text-start"
+                                        style="transition: background-color 0.2s; border: none; background: none;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 

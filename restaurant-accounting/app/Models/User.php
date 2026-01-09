@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\ResetPasswordNotification;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -21,7 +23,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'profile_photo',
+        'phone',
+        'address',
+        'last_login_at',
     ];
 
     /**
@@ -42,6 +47,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'last_login_at' => 'datetime',
     ];
 
     /**
@@ -53,27 +59,34 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user is admin.
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
      */
-    public function isAdmin(): bool
+    public function sendPasswordResetNotification($token)
     {
-        return $this->role === 'admin';
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**
-     * Check if user is accountant.
+     * Check if the user has the admin role.
+     *
+     * @return bool
      */
-    public function isAccountant(): bool
+    public function isAdmin()
     {
-        return $this->role === 'accountant';
+        return $this->hasRole('admin');
     }
 
     /**
-     * Check if user is manager.
+     * Check if the user has the accountant role.
+     *
+     * @return bool
      */
-    public function isManager(): bool
+    public function isAccountant()
     {
-        return $this->role === 'manager';
+        return $this->hasRole('accountant');
     }
 }
 

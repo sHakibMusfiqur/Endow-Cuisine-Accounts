@@ -10,6 +10,8 @@ class CheckRole
 {
     /**
      * Handle an incoming request.
+     * 
+     * This middleware uses Spatie Laravel Permission to check if the user has any of the specified roles.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
@@ -24,12 +26,11 @@ class CheckRole
 
         $user = Auth::user();
 
-        foreach ($roles as $role) {
-            if ($user->role === $role) {
-                return $next($request);
-            }
+        // Use Spatie's hasAnyRole method to check if user has any of the specified roles
+        if ($user->hasAnyRole($roles)) {
+            return $next($request);
         }
 
-        abort(403, 'Unauthorized action.');
+        abort(403, 'Unauthorized action. You do not have the required role.');
     }
 }
