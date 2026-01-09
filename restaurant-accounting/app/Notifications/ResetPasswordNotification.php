@@ -2,10 +2,10 @@
 
 namespace App\Notifications;
 
-use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
+use Illuminate\Auth\Notifications\ResetPassword as BaseResetPasswordNotification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class ResetPasswordNotification extends ResetPasswordNotification
+class ResetPasswordNotification extends BaseResetPasswordNotification
 {
     /**
      * Get the mail representation of the notification.
