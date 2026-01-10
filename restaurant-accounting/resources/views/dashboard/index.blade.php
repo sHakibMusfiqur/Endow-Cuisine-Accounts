@@ -159,7 +159,7 @@
                                 @forelse($recentTransactions as $transaction)
                                 <tr>
                                     <td>{{ $transaction->date->format('M d, Y') }}</td>
-                                    <td>{{ Str::limit($transaction->description, 30) }}</td>
+                                    <td>{{ Str::limit(strip_tags($transaction->description), 50) }}</td>
                                     <td><span class="badge bg-secondary">{{ $transaction->category->name }}</span></td>
                                     <td class="text-success">{{ $transaction->income > 0 ? formatCurrency($transaction->income) : '-' }}</td>
                                     <td class="text-danger">{{ $transaction->expense > 0 ? formatCurrency($transaction->expense) : '-' }}</td>

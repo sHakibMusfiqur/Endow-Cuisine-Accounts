@@ -78,7 +78,7 @@
             @foreach($transactions as $transaction)
             <tr>
                 <td>{{ $transaction->date->format('Y-m-d') }}</td>
-                <td>{{ $transaction->description }}</td>
+                <td>{{ strip_tags($transaction->description) }}</td>
                 <td>{{ $transaction->category->name }}</td>
                 <td>{{ $transaction->paymentMethod->name }}</td>
                 <td class="text-right text-success">
