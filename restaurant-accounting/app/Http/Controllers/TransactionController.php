@@ -76,15 +76,17 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        $incomeCategories = Category::income()->get();
-        $expenseCategories = Category::expense()->get();
+        // Fetch all categories with id, name, and type for client-side filtering
+        $categories = Category::select('id', 'name', 'type')
+            ->orderBy('name')
+            ->get();
+        
         $paymentMethods = PaymentMethod::active()->get();
         $currencies = Currency::getActive();
         $defaultCurrency = Currency::getDefault();
 
         return view('transactions.create', compact(
-            'incomeCategories', 
-            'expenseCategories', 
+            'categories',
             'paymentMethods',
             'currencies',
             'defaultCurrency'
@@ -99,12 +101,21 @@ class TransactionController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:5000',
+            'transaction_type' => 'required|in:income,expense',
             'income' => 'nullable|numeric|min:0',
             'expense' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'currency_id' => 'required|exists:currencies,id',
         ]);
+        
+        // Validate that category type matches transaction type
+        $category = Category::findOrFail($validated['category_id']);
+        if ($category->type !== $validated['transaction_type']) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['category_id' => 'Selected category does not match the transaction type.']);
+        }
 
         // Set defaults
         $validated['income'] = $validated['income'] ?? 0;
@@ -130,15 +141,17 @@ class TransactionController extends Controller
      */
     public function edit(DailyTransaction $transaction)
     {
-        $incomeCategories = Category::income()->get();
-        $expenseCategories = Category::expense()->get();
+        // Fetch all categories with id, name, and type for client-side filtering
+        $categories = Category::select('id', 'name', 'type')
+            ->orderBy('name')
+            ->get();
+        
         $paymentMethods = PaymentMethod::active()->get();
         $currencies = Currency::getActive();
 
         return view('transactions.edit', compact(
-            'transaction', 
-            'incomeCategories', 
-            'expenseCategories', 
+            'transaction',
+            'categories',
             'paymentMethods',
             'currencies'
         ));
@@ -152,12 +165,21 @@ class TransactionController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:5000',
+            'transaction_type' => 'required|in:income,expense',
             'income' => 'nullable|numeric|min:0',
             'expense' => 'nullable|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
+        
+        // Validate that category type matches transaction type
+        $category = Category::findOrFail($validated['category_id']);
+        if ($category->type !== $validated['transaction_type']) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['category_id' => 'Selected category does not match the transaction type.']);
+        }
 
         // Set defaults
         $validated['income'] = $validated['income'] ?? 0;

@@ -57,19 +57,15 @@
 
                         <div class="mb-3">
                             <label class="form-label">Transaction Type <span class="text-danger">*</span></label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="transaction_type" id="type_income" value="income" 
-                                       {{ ($transaction->income > 0 || old('transaction_type') == 'income') ? 'checked' : '' }}>
-                                <label class="btn btn-outline-success" for="type_income">
+                            <div class="btn-group w-100" role="group" aria-label="Transaction Type">
+                                <button type="button" class="btn btn-outline-success transaction-type-btn {{ ($transaction->income > 0 || old('transaction_type') == 'income') ? 'active' : '' }}" data-type="income">
                                     <i class="fas fa-arrow-up"></i> Income
-                                </label>
-
-                                <input type="radio" class="btn-check" name="transaction_type" id="type_expense" value="expense"
-                                       {{ ($transaction->expense > 0 || old('transaction_type') == 'expense') ? 'checked' : '' }}>
-                                <label class="btn btn-outline-danger" for="type_expense">
+                                </button>
+                                <button type="button" class="btn btn-outline-danger transaction-type-btn {{ ($transaction->expense > 0 || old('transaction_type') == 'expense') ? 'active' : '' }}" data-type="expense">
                                     <i class="fas fa-arrow-down"></i> Expense
-                                </label>
+                                </button>
                             </div>
+                            <input type="hidden" name="transaction_type" id="transaction_type" value="{{ old('transaction_type', $transaction->income > 0 ? 'income' : 'expense') }}">
                         </div>
 
                         <div class="mb-3" id="income_section">
@@ -106,21 +102,7 @@
                             <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
                             <select class="form-select @error('category_id') is-invalid @enderror" 
                                     id="category_id" name="category_id" required>
-                                <option value="">Select Category</option>
-                                <optgroup label="Income Categories" id="income_categories">
-                                    @foreach($incomeCategories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $transaction->category_id) == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                    @endforeach
-                                </optgroup>
-                                <optgroup label="Expense Categories" id="expense_categories">
-                                    @foreach($expenseCategories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $transaction->category_id) == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                    @endforeach
-                                </optgroup>
+                                <option value="" disabled selected>Select Category</option>
                             </select>
                             @error('category_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -180,6 +162,17 @@
     #description-editor .ql-container {
         border-bottom-left-radius: 0.375rem;
         border-bottom-right-radius: 0.375rem;
+    }
+    /* Transaction Type Toggle Buttons */
+    .transaction-type-btn.active.btn-outline-success {
+        background-color: #198754;
+        color: white;
+        border-color: #198754;
+    }
+    .transaction-type-btn.active.btn-outline-danger {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
     }
 </style>
 @endpush
@@ -243,13 +236,15 @@
             }
         });
 
-        // Rest of the transaction form JavaScript
-        const incomeRadio = document.getElementById('type_income');
-        const expenseRadio = document.getElementById('type_expense');
+        // Categories data from server
+        const categoriesData = @json($categories);
+        
+        // DOM elements
+        const transactionTypeButtons = document.querySelectorAll('.transaction-type-btn');
+        const transactionTypeInput = document.getElementById('transaction_type');
+        const categorySelect = document.getElementById('category_id');
         const incomeSection = document.getElementById('income_section');
         const expenseSection = document.getElementById('expense_section');
-        const incomeCategories = document.getElementById('income_categories');
-        const expenseCategories = document.getElementById('expense_categories');
         const incomeInput = document.getElementById('income');
         const expenseInput = document.getElementById('expense');
         const currencySelect = document.getElementById('currency_id');
@@ -260,22 +255,80 @@
         const incomeKrwAmount = document.getElementById('income_krw_amount');
         const expenseKrwAmount = document.getElementById('expense_krw_amount');
 
-        function updateForm() {
-            if (incomeRadio.checked) {
+        // Store old/current category value for restoration
+        const savedCategoryId = "{{ old('category_id', $transaction->category_id) }}";
+
+        /**
+         * Filter and populate category dropdown based on transaction type
+         */
+        function loadCategories(transactionType) {
+            // Get the first option (placeholder) to preserve it
+            const placeholder = categorySelect.options[0];
+            
+            // Clear all options
+            categorySelect.innerHTML = '';
+            
+            // Re-add the placeholder
+            categorySelect.appendChild(placeholder);
+            
+            // Filter categories by type
+            const filteredCategories = categoriesData.filter(cat => cat.type === transactionType);
+            
+            // Add filtered categories to dropdown
+            filteredCategories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                
+                // Restore saved value
+                if (savedCategoryId && savedCategoryId == category.id) {
+                    option.selected = true;
+                }
+                
+                categorySelect.appendChild(option);
+            });
+        }
+
+        /**
+         * Handle transaction type button clicks
+         */
+        transactionTypeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                transactionTypeButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Get transaction type
+                const transactionType = this.dataset.type;
+                
+                // Update hidden input
+                transactionTypeInput.value = transactionType;
+                
+                // Update form sections
+                updateFormSections(transactionType);
+                
+                // Load categories for selected type
+                loadCategories(transactionType);
+            });
+        });
+
+        /**
+         * Update form sections based on transaction type
+         */
+        function updateFormSections(transactionType) {
+            if (transactionType === 'income') {
                 incomeSection.style.display = 'block';
                 expenseSection.style.display = 'none';
-                incomeCategories.style.display = 'block';
-                expenseCategories.style.display = 'none';
                 incomeInput.required = true;
                 expenseInput.required = false;
                 if (!expenseInput.value || expenseInput.value == '0') {
                     expenseInput.value = '';
                 }
-            } else if (expenseRadio.checked) {
+            } else if (transactionType === 'expense') {
                 incomeSection.style.display = 'none';
                 expenseSection.style.display = 'block';
-                incomeCategories.style.display = 'none';
-                expenseCategories.style.display = 'block';
                 incomeInput.required = false;
                 expenseInput.required = true;
                 if (!incomeInput.value || incomeInput.value == '0') {
@@ -285,6 +338,9 @@
             updateConversion();
         }
 
+        /**
+         * Update currency symbols
+         */
         function updateCurrencySymbol() {
             const selectedOption = currencySelect.options[currencySelect.selectedIndex];
             const symbol = selectedOption.dataset.symbol;
@@ -293,19 +349,23 @@
             updateConversion();
         }
 
+        /**
+         * Update conversion display
+         */
         function updateConversion() {
             const selectedOption = currencySelect.options[currencySelect.selectedIndex];
             const rate = parseFloat(selectedOption.dataset.rate);
             const symbol = selectedOption.dataset.symbol;
+            const transactionType = transactionTypeInput.value;
             
             // If not KRW, show conversion
             if (symbol !== '₩') {
-                if (incomeRadio.checked) {
+                if (transactionType === 'income') {
                     const amount = parseFloat(incomeInput.value) || 0;
                     const krwAmount = amount * rate;
                     incomeKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     incomeConversion.style.display = 'block';
-                } else if (expenseRadio.checked) {
+                } else if (transactionType === 'expense') {
                     const amount = parseFloat(expenseInput.value) || 0;
                     const krwAmount = amount * rate;
                     expenseKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -317,15 +377,26 @@
             }
         }
 
-        incomeRadio.addEventListener('change', updateForm);
-        expenseRadio.addEventListener('change', updateForm);
+        // Event listeners
         currencySelect.addEventListener('change', updateCurrencySymbol);
         incomeInput.addEventListener('input', updateConversion);
         expenseInput.addEventListener('input', updateConversion);
 
         // Initialize on page load
+        const initialTransactionType = transactionTypeInput.value;
+        
+        // Set correct button as active
+        transactionTypeButtons.forEach(btn => {
+            if (btn.dataset.type === initialTransactionType) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
         updateCurrencySymbol();
-        updateForm();
+        updateFormSections(initialTransactionType);
+        loadCategories(initialTransactionType);
     });
 </script>
 @endpush
