@@ -818,7 +818,7 @@
                data-tooltip="Transactions">
                 <i class="fas fa-exchange-alt"></i> <span class="nav-text">Transactions</span>
             </a>
-            @role('admin')
+            @can('manage categories')
             <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" 
                href="{{ route('categories.index') }}"
                data-tooltip="Categories">
@@ -829,7 +829,7 @@
                data-tooltip="Payment Methods">
                 <i class="fas fa-credit-card"></i> <span class="nav-text">Payment Methods</span>
             </a>
-            @endrole
+            @endcan
             <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" 
                href="{{ route('reports.index') }}"
                data-tooltip="Reports">

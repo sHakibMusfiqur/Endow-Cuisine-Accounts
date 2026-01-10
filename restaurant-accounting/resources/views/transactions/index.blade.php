@@ -67,11 +67,11 @@
     <!-- Header with Add Button -->
     <div class="d-flex justify-content-between align-items-center mb-3 page-header-flex">
         <h4 class="mb-0"><i class="fas fa-exchange-alt"></i> All Transactions</h4>
-        @role('admin|accountant')
+        @can('create transactions')
         <a href="{{ route('transactions.create') }}" class="btn btn-add-transaction">
             <i class="fas fa-plus"></i> Add New Transaction
         </a>
-        @endrole
+        @endcan
     </div>
 
     <!-- Filters -->
@@ -185,15 +185,15 @@
                     <td>{{ $transaction->creator->name }}</td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
-                            @role('admin|accountant')
+                            @can('edit transactions')
                                 <a href="{{ route('transactions.edit', $transaction) }}" 
                                    class="btn btn-sm btn-info" 
                                    title="Edit Transaction">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                            @endrole
+                            @endcan
                             
-                            @role('admin')
+                            @can('delete transactions')
                                 <form action="{{ route('transactions.destroy', $transaction) }}" 
                                       method="POST" 
                                       class="d-inline" 
@@ -206,15 +206,15 @@
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
-                            @endrole
+                            @endcan
                             
-                            @role('manager')
+                            @cannot('edit transactions')
                                 <button class="btn btn-sm btn-secondary" 
                                         disabled 
                                         title="View Only">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                            @endrole
+                            @endcannot
                         </div>
                     </td>
                 </tr>
@@ -230,11 +230,11 @@
                                 Get started by adding your first transaction.
                             @endif
                         </p>
-                        @role('admin|accountant')
+                        @can('create transactions')
                         <a href="{{ route('transactions.create') }}" class="btn btn-add-transaction">
                             <i class="fas fa-plus"></i> Add New Transaction
                         </a>
-                        @endrole
+                        @endcan
                     </td>
                 </tr>
                 @endforelse

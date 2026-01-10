@@ -54,36 +54,38 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.destroy-photo');
 
-   
-
-    // Transactions - Admin and Accountant can create/edit, Manager can only view
-    Route::get('/transactions', [TransactionController::class, 'index'])
-        ->name('transactions.index');
+    // Transactions - Permission-based access control
+    Route::middleware('can:view transactions')->group(function () {
+        Route::get('/transactions', [TransactionController::class, 'index'])
+            ->name('transactions.index');
+    });
     
-    Route::middleware('role:admin,accountant')->group(function () {
+    Route::middleware('can:create transactions')->group(function () {
         Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    });
+
+    Route::middleware('can:edit transactions')->group(function () {
         Route::get('/transactions/{transaction}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
         Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     });
 
-    // Only admin can delete transactions
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('can:delete transactions')->group(function () {
         Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
     });
 
-    // Categories - Admin only
-    Route::middleware('role:admin')->group(function () {
+    // Categories - Permission-based (Admin only)
+    Route::middleware('can:manage categories')->group(function () {
         Route::resource('categories', CategoryController::class);
     });
 
-    // Payment Methods - Admin only
-    Route::middleware('role:admin')->group(function () {
+    // Payment Methods - Permission-based (Admin only)
+    Route::middleware('can:manage payment methods')->group(function () {
         Route::resource('payment-methods', PaymentMethodController::class);
     });
 
-    // Currency Management - Admin only
-    Route::middleware('role:admin')->group(function () {
+    // Currency Management - Permission-based (Admin only)
+    Route::middleware('can:manage currencies')->group(function () {
         Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
         Route::get('/currencies/{currency}/edit', [CurrencyController::class, 'edit'])->name('currencies.edit');
         Route::put('/currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
