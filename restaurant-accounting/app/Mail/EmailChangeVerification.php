@@ -13,12 +13,18 @@ class EmailChangeVerification extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $user;
+    public $newEmail;
+    public $verificationUrl;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($user, $newEmail, $verificationUrl)
     {
-        //
+        $this->user = $user;
+        $this->newEmail = $newEmail;
+        $this->verificationUrl = $verificationUrl;
     }
 
     /**
@@ -27,7 +33,7 @@ class EmailChangeVerification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Email Change Verification',
+            subject: 'Verify Your New Email Address',
         );
     }
 
@@ -37,7 +43,7 @@ class EmailChangeVerification extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'view.name',
+            view: 'emails.email-change-verification',
         );
     }
 

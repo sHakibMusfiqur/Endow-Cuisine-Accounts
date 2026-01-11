@@ -72,15 +72,41 @@
                         <!-- Email (Read-only) -->
                         <div class="mb-3">
                             <label for="email" class="form-label">
-                                <i class="fas fa-envelope me-2"></i>Email Address
+                                <i class="fas fa-envelope me-2"></i>Email Address <span class="text-danger">*</span>
                             </label>
                             <input type="email" 
-                                   class="form-control" 
+                                   class="form-control @error('email') is-invalid @enderror" 
                                    id="email" 
-                                   value="{{ $user->email }}" 
-                                   readonly
-                                   style="background-color: #e9ecef;">
-                            <small class="text-muted">Email cannot be changed</small>
+                                   name="email"
+                                   value="{{ old('email', $user->email) }}" 
+                                   required>
+                            @error('email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            
+                            @if($user->pending_email)
+                                <div class="alert alert-warning mt-2 mb-0">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-2 mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <strong>Email Change Pending</strong><br>
+                                            A verification link has been sent to <strong>{{ $user->pending_email }}</strong>. 
+                                            Please check your email to confirm the change.
+                                            <div class="mt-2">
+                                                <form action="{{ route('profile.cancel-email-change') }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="return confirm('Cancel email change request?')">
+                                                        <i class="fas fa-times me-1"></i>Cancel Request
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <small class="text-muted">You can update your email address. A verification link will be sent to the new address.</small>
+                            @endif
                         </div>
 
                         <!-- Phone -->

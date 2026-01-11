@@ -39,6 +39,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
+// Email change verification route (accessible without authentication)
+Route::get('/email-change/verify', [ProfileController::class, 'verifyEmail'])->name('email.change.verify');
+
 // Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -53,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/change-password', [ProfileController::class, 'editPassword'])->name('profile.change-password');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
     Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.destroy-photo');
+    Route::post('/profile/cancel-email-change', [ProfileController::class, 'cancelEmailChange'])->name('profile.cancel-email-change');
 
     // Transactions - Permission-based access control
     Route::middleware('can:view transactions')->group(function () {

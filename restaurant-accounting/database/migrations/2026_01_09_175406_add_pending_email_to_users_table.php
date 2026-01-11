@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->string('pending_email')->nullable()->after('email');
+            $table->string('email_verification_token')->nullable()->after('pending_email');
+            $table->timestamp('email_verification_sent_at')->nullable()->after('email_verification_token');
+            $table->timestamp('email_verification_expires_at')->nullable()->after('email_verification_sent_at');
         });
     }
 
@@ -22,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            $table->dropColumn(['pending_email', 'email_verification_token', 'email_verification_sent_at', 'email_verification_expires_at']);
         });
     }
 };

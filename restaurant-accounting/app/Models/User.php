@@ -27,6 +27,10 @@ class User extends Authenticatable
         'phone',
         'address',
         'last_login_at',
+        'pending_email',
+        'email_verification_token',
+        'email_verification_sent_at',
+        'email_verification_expires_at',
     ];
 
     /**

@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use App\Mail\EmailChangeVerification;
 
 class ProfileController extends Controller
 {
@@ -38,6 +41,7 @@ class ProfileController extends Controller
 
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:20'],
                 'address' => ['nullable', 'string', 'max:500'],
                 'profile_photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif', 'max:2048'],
@@ -45,6 +49,33 @@ class ProfileController extends Controller
 
             // Remove profile_photo from validated data for now
             unset($validated['profile_photo']);
+
+            $emailChanged = false;
+            
+            // Check if email has changed
+            if ($validated['email'] !== $user->email) {
+                // Check if email is already taken by another user
+                $existingUser = \App\Models\User::where('email', $validated['email'])
+                    ->where('id', '!=', $user->id)
+                    ->first();
+                
+                if ($existingUser) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['email' => 'This email address is already in use.']);
+                }
+
+                // Generate verification token
+                $token = Str::random(60);
+                
+                // Store pending email and token with 30 minute expiration
+                $user->pending_email = $validated['email'];
+                $user->email_verification_token = hash('sha256', $token);
+                $user->email_verification_sent_at = now();
+                $user->email_verification_expires_at = now()->addMinutes(30);
+                
+                $emailChanged = true;
+            }
 
             // Update basic fields
             $user->name = $validated['name'];
@@ -65,6 +96,15 @@ class ProfileController extends Controller
 
             // Save user
             $user->save();
+
+            // Send verification email if email changed
+            if ($emailChanged) {
+                $verificationUrl = url('/email-change/verify?token=' . $token);
+                Mail::to($validated['email'])->send(new EmailChangeVerification($user, $validated['email'], $verificationUrl));
+                
+                return redirect()->route('profile.edit')
+                    ->with('success', 'Profile updated! A verification link has been sent to ' . $validated['email'] . '. Please check your email to confirm the email change.');
+            }
 
             return redirect()->route('profile.show')
                 ->with('success', 'Profile updated successfully!');
@@ -117,5 +157,74 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.edit')
             ->with('success', 'Profile photo removed successfully!');
+    }
+
+    /**
+     * Verify the new email address.
+     */
+    public function verifyEmail(Request $request)
+    {
+        $token = $request->query('token');
+        
+        if (!$token) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Invalid verification link.');
+        }
+        
+        $hashedToken = hash('sha256', $token);
+        
+        $user = \App\Models\User::where('email_verification_token', $hashedToken)
+            ->whereNotNull('pending_email')
+            ->first();
+        
+        if (!$user) {
+            return redirect()->route('profile.edit')
+                ->with('error', 'Invalid or expired verification link.');
+        }
+
+        // Check if token is expired using the expires_at field
+        if ($user->email_verification_expires_at && now()->isAfter($user->email_verification_expires_at)) {
+            // Clear expired token
+            $user->pending_email = null;
+            $user->email_verification_token = null;
+            $user->email_verification_sent_at = null;
+            $user->email_verification_expires_at = null;
+            $user->save();
+            
+            return redirect()->route('profile.edit')
+                ->with('error', 'Verification link has expired. Please request a new one.');
+        }
+
+        // Update email address
+        $user->email = $user->pending_email;
+        $user->pending_email = null;
+        $user->email_verification_token = null;
+        $user->email_verification_sent_at = null;
+        $user->email_verification_expires_at = null;
+        $user->save();
+
+        return redirect()->route('profile.edit')
+            ->with('success', 'Email address updated successfully!');
+    }
+
+    /**
+     * Cancel pending email change.
+     */
+    public function cancelEmailChange()
+    {
+        $user = Auth::user();
+        
+        if ($user->pending_email) {
+            $user->pending_email = null;
+            $user->email_verification_token = null;
+            $user->email_verification_sent_at = null;
+            $user->email_verification_expires_at = null;
+            $user->save();
+            
+            return redirect()->route('profile.edit')
+                ->with('success', 'Email change request cancelled.');
+        }
+
+        return redirect()->route('profile.edit');
     }
 }
