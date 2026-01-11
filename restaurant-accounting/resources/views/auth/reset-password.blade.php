@@ -79,6 +79,12 @@
 <body>
     <div class="reset-card">
         <div class="reset-logo">
+            {{-- Logo Image Placeholder - Replace src with actual logo path --}}
+            @if(file_exists(public_path('images/logo.png')))
+                <img src="{{ asset('images/logo.png') }}" 
+                     alt="Endow Cuisine Logo" 
+                     style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
+            @endif
             <i class="fas fa-lock"></i>
             <h2>Reset Password</h2>
             <p class="info-text">

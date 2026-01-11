@@ -79,7 +79,15 @@
 <body>
     <div class="login-card">
         <div class="login-logo">
-            <i class="fas fa-utensils"></i>
+            {{-- Logo Image Placeholder - Replace src with actual logo path --}}
+            @if(file_exists(public_path('images/logo.png')))
+                <img src="{{ asset('images/logo.png') }}" 
+                     alt="Endow Cuisine Logo" 
+                     style="width: 100px; height: 100px; object-fit: contain; margin-bottom: 10px;">
+            @else
+                {{-- Fallback to icon if logo doesn't exist --}}
+                <i class="fas fa-utensils"></i>
+            @endif
             <h2>Endow Cuisine Accounting</h2>
             <p class="text-muted">Please login to continue</p>
         </div>

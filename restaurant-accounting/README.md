@@ -202,6 +202,55 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[byte5](https://byte5.de)**
 - **[OP.GG](https://op.gg)**
 
+## 🎨 Logo Setup (NEW!)
+
+This application now includes logo placeholder support across all pages. You can easily add your restaurant's logo to personalize the application.
+
+### Quick Logo Setup
+
+1. **Prepare your logo:**
+   - Format: PNG with transparent background
+   - Size: 200x200px (square)
+   - File size: Under 100KB
+
+2. **Add to project:**
+   ```powershell
+   # Copy to the images directory
+   copy "path\to\your\logo.png" "public\images\logo.png"
+   ```
+
+3. **Clear cache:**
+   ```powershell
+   php artisan cache:clear
+   php artisan view:clear
+   ```
+
+4. **Refresh browser** - Your logo will now appear!
+
+### Helper Script
+
+Use the automated setup script:
+```powershell
+.\setup-logo.ps1
+```
+
+### Logo Locations
+
+Your logo will automatically appear in:
+- ✅ Sidebar navigation (all pages)
+- ✅ Login page
+- ✅ Password reset pages
+- ✅ Welcome page
+- ✅ Email templates
+
+### Documentation
+
+- **Quick Reference:** [`LOGO_QUICK_REFERENCE.md`](LOGO_QUICK_REFERENCE.md)
+- **Full Guide:** [`LOGO_IMPLEMENTATION.md`](LOGO_IMPLEMENTATION.md)
+- **Summary:** [`LOGO_IMPLEMENTATION_SUMMARY.md`](LOGO_IMPLEMENTATION_SUMMARY.md)
+
+**Note:** The application works perfectly without a logo - fallback icons are displayed automatically.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

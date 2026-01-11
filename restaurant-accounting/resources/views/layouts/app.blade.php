@@ -761,7 +761,23 @@
            role="link"
            tabindex="0">
             <div class="logo-icon">
-                <i class="fas fa-utensils" aria-hidden="true"></i>
+                {{-- Logo Image Placeholder - Replace src with actual logo path --}}
+                @if(file_exists(public_path('images/logo.png')))
+                    <img src="{{ asset('images/logo.png') }}" 
+                         alt="Endow Cuisine Logo" 
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                @elseif(file_exists(public_path('images/logo.svg')))
+                    <img src="{{ asset('images/logo.svg') }}" 
+                         alt="Endow Cuisine Logo" 
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                @elseif(file_exists(public_path('images/logo-placeholder.svg')))
+                    <img src="{{ asset('images/logo-placeholder.svg') }}" 
+                         alt="Endow Cuisine Logo" 
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                @else
+                    {{-- Fallback to icon if logo doesn't exist --}}
+                    <i class="fas fa-utensils" aria-hidden="true"></i>
+                @endif
             </div>
             <div class="logo-text">
                 <span class="app-name">Endow Cuisine</span>
