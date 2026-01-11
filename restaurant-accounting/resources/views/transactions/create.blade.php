@@ -4,6 +4,135 @@
 @section('page-title', 'Create Transaction')
 
 @section('content')
+<style>
+    /* Mobile Responsive Styles for Transaction Forms */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 10px;
+        }
+
+        .col-md-8 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .card {
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card-header h5 {
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 10px 12px;
+        }
+
+        .input-group-text {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+        }
+
+        /* Transaction type buttons */
+        .btn-group {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .transaction-type-btn {
+            flex: 1;
+            padding: 12px 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Quill Editor Adjustments */
+        #description-editor {
+            min-height: 120px;
+        }
+
+        .ql-editor {
+            min-height: 100px;
+            font-size: 0.95rem;
+        }
+
+        .ql-toolbar {
+            padding: 6px 8px;
+        }
+
+        /* Form action buttons */
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .d-flex.justify-content-between .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Reverse button order on mobile for better UX */
+        .d-flex.justify-content-between {
+            flex-direction: column-reverse;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .card-body {
+            padding: 12px;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 14px;
+            padding: 8px 10px;
+        }
+
+        .transaction-type-btn {
+            padding: 10px 8px;
+            font-size: 0.85rem;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .form-control,
+        .form-select {
+            min-height: 44px;
+        }
+
+        .btn {
+            min-height: 44px;
+        }
+
+        .transaction-type-btn {
+            min-height: 48px;
+        }
+    }
+</style>
+
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">

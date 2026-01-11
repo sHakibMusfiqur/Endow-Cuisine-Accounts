@@ -46,12 +46,21 @@
         margin-top: 20px;
     }
 
-    /* Mobile Responsive Header */
-    @media (max-width: 576px) {
+    /* ============================================
+       MOBILE RESPONSIVE DESIGN - COMPREHENSIVE
+       ============================================ */
+
+    /* Tablets and below - 768px */
+    @media (max-width: 768px) {
+        /* Header Responsive */
         .page-header-flex {
             flex-direction: column;
             align-items: flex-start !important;
             gap: 12px;
+        }
+
+        .page-header-flex h4 {
+            font-size: 1.1rem;
         }
 
         .btn-add-transaction {
@@ -59,6 +68,171 @@
             justify-content: center;
             display: flex;
             align-items: center;
+        }
+
+        /* Filter Card Improvements */
+        .card-body form .row {
+            row-gap: 10px;
+        }
+
+        .card-body form .col-md-2 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        /* Make input group stack on very small screens */
+        .input-group {
+            flex-wrap: nowrap;
+        }
+
+        .input-group .btn {
+            flex-shrink: 0;
+        }
+
+        /* Table Wrapper - Horizontal Scroll */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -10px;
+            padding: 0 10px;
+        }
+
+        /* Table Optimizations */
+        .table {
+            font-size: 0.85rem;
+            min-width: 900px; /* Ensures horizontal scroll */
+        }
+
+        .table thead th {
+            font-size: 0.8rem;
+            padding: 10px 8px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        .table tbody td {
+            padding: 10px 8px;
+        }
+
+        /* Badge Sizing */
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+
+        /* Action Buttons - Better Touch Targets */
+        .btn-group .btn-sm {
+            padding: 8px 10px;
+            font-size: 0.85rem;
+        }
+
+        /* Pagination */
+        .pagination {
+            font-size: 0.9rem;
+        }
+
+        .pagination .page-link {
+            padding: 8px 12px;
+        }
+    }
+
+    /* Small Phones - 480px and below */
+    @media (max-width: 480px) {
+        .page-header-flex h4 {
+            font-size: 1rem;
+        }
+
+        .btn-add-transaction {
+            padding: 10px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Compact Filter Inputs */
+        .form-control,
+        .form-select {
+            font-size: 0.9rem;
+            padding: 8px 10px;
+        }
+
+        /* Smaller table text */
+        .table {
+            font-size: 0.8rem;
+            min-width: 800px;
+        }
+
+        .table thead th {
+            font-size: 0.75rem;
+            padding: 8px 6px;
+        }
+
+        .table tbody td {
+            padding: 8px 6px;
+        }
+
+        /* Compact badges */
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 6px;
+        }
+
+        /* Smaller action buttons */
+        .btn-group .btn-sm {
+            padding: 6px 8px;
+            font-size: 0.8rem;
+        }
+
+        .btn-group .btn-sm i {
+            font-size: 0.85rem;
+        }
+
+        /* Empty state adjustments */
+        .empty-state-container {
+            padding: 40px 15px;
+        }
+
+        .empty-state-container .fa-3x {
+            font-size: 2rem !important;
+        }
+
+        .empty-state-container h5 {
+            font-size: 1.1rem;
+        }
+
+        .empty-state-container p {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Landscape Mode - Phones */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .page-header-flex {
+            flex-direction: row !important;
+            gap: 15px;
+        }
+
+        .btn-add-transaction {
+            width: auto;
+        }
+    }
+
+    /* Touch Device Optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .btn-add-transaction {
+            min-height: 44px;
+        }
+
+        .form-control,
+        .form-select {
+            min-height: 44px;
+        }
+
+        .btn-group .btn-sm {
+            min-height: 38px;
+            min-width: 38px;
         }
     }
 </style>

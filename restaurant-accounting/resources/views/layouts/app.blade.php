@@ -656,7 +656,11 @@
             opacity: 1;
         }
 
-        /* Mobile Responsive */
+        /* ============================================
+           MOBILE & TABLET RESPONSIVE DESIGN
+           ============================================ */
+
+        /* Mobile & Tablet General - Up to 768px */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -666,6 +670,7 @@
 
             .sidebar.show {
                 transform: translateX(0);
+                box-shadow: 4px 0 15px rgba(0,0,0,0.3);
             }
 
             .sidebar.sidebar-collapsed {
@@ -674,6 +679,7 @@
 
             .main-content {
                 margin-left: 0 !important;
+                padding: 15px;
             }
 
             .toggle-btn {
@@ -702,6 +708,89 @@
             .logo-text .app-tagline {
                 font-size: 10px;
             }
+
+            /* Navbar Responsive */
+            .navbar-top {
+                padding: 12px 15px;
+                margin: -15px -15px 15px -15px;
+                flex-wrap: wrap;
+            }
+
+            .navbar-top h4 {
+                font-size: 1.1rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 150px;
+            }
+
+            /* Stat Cards - Full Width on Mobile */
+            .stat-card {
+                margin-bottom: 15px;
+                padding: 15px;
+            }
+
+            /* Table Responsive Improvements */
+            .table-responsive {
+                border-radius: 8px;
+                padding: 10px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .table {
+                font-size: 0.85rem;
+                min-width: 800px;
+            }
+
+            .table th,
+            .table td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+
+            /* Card Improvements */
+            .card {
+                margin-bottom: 15px;
+                border-radius: 8px;
+            }
+
+            .card-body {
+                padding: 15px;
+            }
+
+            /* Button Group Adjustments */
+            .btn-group {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .btn-sm {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            /* Form Improvements */
+            .form-control,
+            .form-select {
+                font-size: 16px; /* Prevents iOS zoom on focus */
+            }
+
+            /* Alerts */
+            .alert {
+                font-size: 0.9rem;
+                padding: 10px 15px;
+            }
+
+            /* Dropdown Menu */
+            .dropdown-menu {
+                font-size: 0.9rem;
+            }
+
+            /* User Profile in Navbar */
+            .dropdown-toggle span {
+                display: none; /* Hide username on very small screens */
+            }
         }
 
         @media (min-width: 769px) {
@@ -710,25 +799,100 @@
             }
         }
 
-        /* Extra small screens - Compact logo */
+        /* Extra small screens (phones in portrait) - Compact Mode */
         @media (max-width: 480px) {
             .sidebar .logo {
                 padding: 12px;
-                justify-content: center;
             }
 
             .logo-icon {
-                min-width: 36px;
-                min-height: 36px;
+                min-width: 38px;
+                min-height: 38px;
             }
 
             .sidebar .logo i {
                 font-size: 20px;
             }
 
+            /* Keep logo text visible on mobile */
             .logo-text {
-                display: none !important;
-                opacity: 0;
+                display: flex !important;
+                opacity: 1;
+            }
+
+            .logo-text .app-name {
+                font-size: 15px;
+            }
+
+            .logo-text .app-tagline {
+                font-size: 9px;
+            }
+
+            /* Extra compact navbar */
+            .navbar-top {
+                padding: 10px 12px;
+                margin: -15px -15px 12px -15px;
+            }
+
+            .navbar-top h4 {
+                font-size: 1rem;
+                max-width: 120px;
+            }
+
+            /* Show only user initials */
+            .dropdown-toggle img,
+            .dropdown-toggle > div {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 14px !important;
+            }
+
+            /* Full width buttons */
+            .btn {
+                font-size: 0.9rem;
+            }
+
+            /* Stat cards more compact */
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-card h5 {
+                font-size: 0.9rem;
+            }
+
+            .stat-card h2 {
+                font-size: 1.5rem;
+            }
+
+            /* Tables even more compact */
+            .table {
+                font-size: 0.8rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 6px 4px;
+            }
+
+            /* Card headers */
+            .card-header h5 {
+                font-size: 1rem;
+            }
+        }
+
+        /* Tablet Portrait - 481px to 768px */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .navbar-top h4 {
+                max-width: 300px;
+            }
+
+            .dropdown-toggle span {
+                display: inline; /* Show username on larger mobile/tablet */
+            }
+
+            .table {
+                font-size: 0.9rem;
             }
         }
 
@@ -740,6 +904,117 @@
 
             .logo-text .app-name {
                 font-size: 17px;
+            }
+
+            .navbar-top {
+                padding: 12px 20px;
+            }
+
+            .main-content {
+                padding: 18px;
+            }
+        }
+
+        /* Desktop - Large Screens */
+        @media (min-width: 1025px) and (max-width: 1440px) {
+            .main-content {
+                padding: 20px;
+            }
+        }
+
+        /* Ultra-wide Screens */
+        @media (min-width: 1920px) {
+            .main-content {
+                max-width: 1800px;
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: calc(var(--sidebar-width) + 40px);
+            }
+
+            .main-content.sidebar-collapsed {
+                padding-left: calc(var(--sidebar-collapsed-width) + 40px);
+            }
+        }
+
+        /* Touch Screen Optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            /* Increase touch targets */
+            .btn {
+                min-height: 44px;
+                padding: 10px 16px;
+            }
+
+            .btn-sm {
+                min-height: 38px;
+                padding: 8px 12px;
+            }
+
+            .nav-link {
+                min-height: 48px;
+                padding: 14px 20px;
+            }
+
+            .form-control,
+            .form-select {
+                min-height: 44px;
+                padding: 10px 12px;
+            }
+
+            .dropdown-item {
+                min-height: 44px;
+                padding: 10px 16px;
+            }
+
+            /* Better spacing for touch */
+            .btn-group .btn {
+                margin: 2px;
+            }
+        }
+
+        /* Landscape Mode - Phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .sidebar {
+                padding-top: 10px;
+            }
+
+            .sidebar .logo {
+                margin-bottom: 10px;
+                padding: 10px 16px;
+            }
+
+            .nav-link {
+                padding: 8px 20px;
+                margin: 1px 10px;
+            }
+
+            .sidebar-footer {
+                padding: 10px 20px !important;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .sidebar,
+            .navbar-top,
+            .sidebar-overlay,
+            .toggle-btn,
+            .btn,
+            .alert {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+
+            .table {
+                font-size: 10pt;
+            }
+
+            .card {
+                border: 1px solid #ddd;
+                box-shadow: none;
             }
         }
     </style>

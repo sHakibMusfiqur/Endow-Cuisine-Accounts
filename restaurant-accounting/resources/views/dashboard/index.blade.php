@@ -4,6 +4,207 @@
 @section('page-title', 'Dashboard')
 
 @section('content')
+<style>
+    /* Mobile Responsive Styles for Dashboard */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 0 10px;
+        }
+
+        /* Stat Cards - 2 columns on mobile */
+        .col-md-3 {
+            width: 50%;
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 0 5px;
+        }
+
+        .stat-card {
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h6 {
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-card h2 {
+            font-size: 1.3rem;
+        }
+
+        /* Period Summary Cards */
+        .col-md-4 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        .card {
+            margin-bottom: 15px;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+
+        .card-body .d-flex {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card-body .d-flex > div {
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .card-body small {
+            font-size: 0.75rem;
+        }
+
+        .card-body h6 {
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        /* Charts */
+        .col-md-6 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        canvas {
+            max-height: 250px !important;
+        }
+
+        /* Category Expenses & Recent Transactions */
+        .col-md-8 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table {
+            font-size: 0.85rem;
+            min-width: 600px;
+        }
+
+        .table thead th {
+            font-size: 0.8rem;
+            padding: 10px 8px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 10px 8px;
+        }
+
+        /* List Groups */
+        .list-group-item {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        /* Stat Cards - Single column on very small screens */
+        .col-md-3 {
+            width: 100%;
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0;
+        }
+
+        .stat-card {
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card h6 {
+            font-size: 0.75rem;
+        }
+
+        .stat-card h2 {
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+        }
+
+        .card-body .d-flex > div {
+            min-width: 70px;
+        }
+
+        .card-body h6 {
+            font-size: 0.9rem;
+        }
+
+        canvas {
+            max-height: 200px !important;
+        }
+
+        .table {
+            font-size: 0.8rem;
+            min-width: 500px;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 8px 6px;
+        }
+
+        .list-group-item {
+            font-size: 0.85rem;
+            padding: 8px 10px;
+        }
+    }
+
+    /* Tablet - Landscape orientation */
+    @media (min-width: 481px) and (max-width: 768px) {
+        .col-md-3 {
+            width: 50%;
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .col-md-4 {
+            width: 50%;
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+
+    /* Touch device optimizations */
+    @media (hover: none) and (pointer: coarse) {
+        .stat-card {
+            min-height: 100px;
+        }
+
+        .list-group-item {
+            min-height: 44px;
+        }
+    }
+</style>
+
 <div class="container-fluid">
     <!-- Summary Cards -->
     <div class="row">

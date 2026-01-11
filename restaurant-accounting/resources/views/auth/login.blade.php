@@ -37,6 +37,44 @@
         .login-logo h2 {
             margin-top: 15px;
             color: #292929;
+            font-weight: 600;
+        }
+
+        .login-logo-img {
+            transition: transform 0.3s ease;
+        }
+
+        .login-logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-placeholder {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .logo-placeholder:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(234, 34, 42, 0.4);
+        }
+
+        @media (max-width: 576px) {
+            .login-logo-img {
+                max-width: 100px !important;
+                max-height: 80px !important;
+            }
+            
+            .logo-placeholder {
+                width: 90px !important;
+                height: 90px !important;
+            }
+            
+            .logo-placeholder i {
+                font-size: 40px !important;
+            }
+            
+            .login-logo h2 {
+                font-size: 1.5rem;
+            }
         }
 
         .form-control:focus {
@@ -79,14 +117,28 @@
 <body>
     <div class="login-card">
         <div class="login-logo">
-            {{-- Logo Image Placeholder - Replace src with actual logo path --}}
-            @if(file_exists(public_path('images/logo.png')))
-                <img src="{{ asset('images/logo.png') }}" 
+            {{-- Logo Image Placeholder - Replace with actual logo --}}
+            @php
+                $logoFiles = ['logo.png', 'logo.jpg', 'logo.svg', 'logo-placeholder.svg'];
+                $logoPath = null;
+                foreach($logoFiles as $file) {
+                    if(file_exists(public_path('images/' . $file))) {
+                        $logoPath = 'images/' . $file;
+                        break;
+                    }
+                }
+            @endphp
+
+            @if($logoPath)
+                <img src="{{ asset($logoPath) }}" 
                      alt="Endow Cuisine Logo" 
-                     style="width: 100px; height: 100px; object-fit: contain; margin-bottom: 10px;">
+                     class="login-logo-img"
+                     style="max-width: 150px; max-height: 120px; width: auto; height: auto; object-fit: contain; margin-bottom: 15px;">
             @else
-                {{-- Fallback to icon if logo doesn't exist --}}
-                <i class="fas fa-utensils"></i>
+                {{-- Fallback placeholder design --}}
+                <div class="logo-placeholder" style="width: 120px; height: 120px; margin: 0 auto 15px; background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(234, 34, 42, 0.3);">
+                    <i class="fas fa-utensils" style="font-size: 50px; color: white;"></i>
+                </div>
             @endif
             <h2>Endow Cuisine Accounting</h2>
             <p class="text-muted">Please login to continue</p>
