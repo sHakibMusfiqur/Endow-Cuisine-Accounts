@@ -34,26 +34,8 @@
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="currency_id" class="form-label">Currency <span class="text-danger">*</span></label>
-                            <select class="form-select @error('currency_id') is-invalid @enderror" 
-                                    id="currency_id" name="currency_id" required>
-                                @foreach($currencies as $currency)
-                                <option value="{{ $currency->id }}" 
-                                        data-symbol="{{ $currency->symbol }}"
-                                        data-rate="{{ $currency->exchange_rate }}"
-                                        {{ (old('currency_id', $transaction->currency_id) == $currency->id) ? 'selected' : '' }}>
-                                    {{ $currency->code }} ({{ $currency->symbol }}) — {{ $currency->is_base ? '1.00' : number_format($currency->exchange_rate, 2) }}
-                                </option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle"></i> Amounts will be automatically converted to KRW (₩). Exchange rates are updated automatically.
-                            </small>
-                            @error('currency_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <!-- Hidden currency field - System uses only KRW -->
+                        <input type="hidden" name="currency_id" value="{{ $transaction->currency_id }}">
 
                         <div class="mb-3">
                             <label class="form-label">Transaction Type <span class="text-danger">*</span></label>
@@ -69,30 +51,24 @@
                         </div>
 
                         <div class="mb-3" id="income_section">
-                            <label for="income" class="form-label">Income Amount <span class="text-danger">*</span></label>
+                            <label for="income" class="form-label">Income Amount (KRW) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text" id="income_currency_symbol">₩</span>
+                                <span class="input-group-text">₩</span>
                                 <input type="number" class="form-control @error('income') is-invalid @enderror" 
                                        id="income" name="income" value="{{ old('income', $transaction->income > 0 ? $transaction->income : '') }}" step="0.01" min="0" placeholder="Enter income amount">
                             </div>
-                            <small class="text-muted" id="income_conversion" style="display: none;">
-                                <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="income_krw_amount">₩0.00</span>
-                            </small>
                             @error('income')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3" id="expense_section">
-                            <label for="expense" class="form-label">Expense Amount <span class="text-danger">*</span></label>
+                            <label for="expense" class="form-label">Expense Amount (KRW) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text" id="expense_currency_symbol">₩</span>
+                                <span class="input-group-text">₩</span>
                                 <input type="number" class="form-control @error('expense') is-invalid @enderror" 
                                        id="expense" name="expense" value="{{ old('expense', $transaction->expense > 0 ? $transaction->expense : '') }}" step="0.01" min="0" placeholder="Enter expense amount">
                             </div>
-                            <small class="text-muted" id="expense_conversion" style="display: none;">
-                                <i class="fas fa-exchange-alt"></i> Will be converted to: <span id="expense_krw_amount">₩0.00</span>
-                            </small>
                             @error('expense')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -153,15 +129,17 @@
     }
     #description-editor {
         padding: 0;
-        border: none !important;
+        overflow: hidden;
     }
     #description-editor .ql-toolbar {
         border-top-left-radius: 0.375rem;
         border-top-right-radius: 0.375rem;
+        border-bottom: none;
     }
     #description-editor .ql-container {
         border-bottom-left-radius: 0.375rem;
         border-bottom-right-radius: 0.375rem;
+        border-top: none;
     }
     /* Transaction Type Toggle Buttons */
     .transaction-type-btn.active.btn-outline-success {
@@ -247,13 +225,6 @@
         const expenseSection = document.getElementById('expense_section');
         const incomeInput = document.getElementById('income');
         const expenseInput = document.getElementById('expense');
-        const currencySelect = document.getElementById('currency_id');
-        const incomeCurrencySymbol = document.getElementById('income_currency_symbol');
-        const expenseCurrencySymbol = document.getElementById('expense_currency_symbol');
-        const incomeConversion = document.getElementById('income_conversion');
-        const expenseConversion = document.getElementById('expense_conversion');
-        const incomeKrwAmount = document.getElementById('income_krw_amount');
-        const expenseKrwAmount = document.getElementById('expense_krw_amount');
 
         // Store old/current category value for restoration
         const savedCategoryId = "{{ old('category_id', $transaction->category_id) }}";
@@ -335,52 +306,7 @@
                     incomeInput.value = '';
                 }
             }
-            updateConversion();
         }
-
-        /**
-         * Update currency symbols
-         */
-        function updateCurrencySymbol() {
-            const selectedOption = currencySelect.options[currencySelect.selectedIndex];
-            const symbol = selectedOption.dataset.symbol;
-            incomeCurrencySymbol.textContent = symbol;
-            expenseCurrencySymbol.textContent = symbol;
-            updateConversion();
-        }
-
-        /**
-         * Update conversion display
-         */
-        function updateConversion() {
-            const selectedOption = currencySelect.options[currencySelect.selectedIndex];
-            const rate = parseFloat(selectedOption.dataset.rate);
-            const symbol = selectedOption.dataset.symbol;
-            const transactionType = transactionTypeInput.value;
-            
-            // If not KRW, show conversion
-            if (symbol !== '₩') {
-                if (transactionType === 'income') {
-                    const amount = parseFloat(incomeInput.value) || 0;
-                    const krwAmount = amount * rate;
-                    incomeKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    incomeConversion.style.display = 'block';
-                } else if (transactionType === 'expense') {
-                    const amount = parseFloat(expenseInput.value) || 0;
-                    const krwAmount = amount * rate;
-                    expenseKrwAmount.textContent = '₩' + krwAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    expenseConversion.style.display = 'block';
-                }
-            } else {
-                incomeConversion.style.display = 'none';
-                expenseConversion.style.display = 'none';
-            }
-        }
-
-        // Event listeners
-        currencySelect.addEventListener('change', updateCurrencySymbol);
-        incomeInput.addEventListener('input', updateConversion);
-        expenseInput.addEventListener('input', updateConversion);
 
         // Initialize on page load
         const initialTransactionType = transactionTypeInput.value;
@@ -394,7 +320,6 @@
             }
         });
         
-        updateCurrencySymbol();
         updateFormSections(initialTransactionType);
         loadCategories(initialTransactionType);
     });
