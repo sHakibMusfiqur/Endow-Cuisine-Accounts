@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Restaurant Accounting</title>
+    <title>Login - Endow Cuisine Accounting</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #EA222A 0%, #292929 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -31,28 +31,28 @@
 
         .login-logo i {
             font-size: 60px;
-            color: #667eea;
+            color: #EA222A;
         }
 
         .login-logo h2 {
             margin-top: 15px;
-            color: #2c3e50;
+            color: #292929;
         }
 
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #EA222A;
+            box-shadow: 0 0 0 0.2rem rgba(234, 34, 42, 0.25);
         }
 
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%);
             border: none;
             padding: 12px;
             font-size: 16px;
         }
 
         .btn-login:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #FF3D47 0%, #EA222A 100%);
         }
 
         .demo-credentials {
@@ -64,14 +64,14 @@
         }
 
         .forgot-password-link {
-            color: #667eea;
+            color: #EA222A;
             text-decoration: none;
             font-size: 14px;
             transition: color 0.3s ease;
         }
 
         .forgot-password-link:hover {
-            color: #764ba2;
+            color: #292929;
             text-decoration: underline;
         }
     </style>
@@ -80,7 +80,7 @@
     <div class="login-card">
         <div class="login-logo">
             <i class="fas fa-utensils"></i>
-            <h2>Restaurant Accounting</h2>
+            <h2>Endow Cuisine Accounting</h2>
             <p class="text-muted">Please login to continue</p>
         </div>
 
@@ -106,7 +106,7 @@
                 <label for="email" class="form-label">Email Address</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                    <input type="email" class="form-control" id="email" name="email" 
+                    <input type="email" class="form-control" id="email" name="email"
                            value="{{ old('email') }}" required autofocus>
                 </div>
             </div>

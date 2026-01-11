@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Restaurant Accounting')</title>
-    
+    <title>@yield('title', 'Endow Cuisine Accounting')</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
-    
+
     <style>
         :root {
             --sidebar-width: 250px;
@@ -32,7 +32,7 @@
             left: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+            background: linear-gradient(180deg, #292929 0%, #1a1a1a 100%);
             padding-top: 20px;
             z-index: 1000;
             overflow-x: hidden;
@@ -47,52 +47,10 @@
             width: var(--sidebar-collapsed-width);
         }
 
-        .sidebar.sidebar-collapsed .currency-selector {
-            padding: 15px 10px;
-        }
-
-        .sidebar.sidebar-collapsed .currency-selector label,
-        .sidebar.sidebar-collapsed .currency-info {
-            opacity: 0;
-            height: 0;
-            overflow: hidden;
-        }
-
-        .sidebar.sidebar-collapsed .currency-selector .form-select {
-            font-size: 0;
-            padding: 8px;
-            text-align: center;
-            position: relative;
-        }
-
-        /* Show emoji only when NOT focused/opened */
-        .sidebar.sidebar-collapsed .currency-selector .form-select:not(:focus)::before {
-            content: '💱';
-            font-size: 20px;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-        }
-
-        /* Normal font size when dropdown is opened */
-        .sidebar.sidebar-collapsed .currency-selector .form-select:focus,
-        .sidebar.sidebar-collapsed .currency-selector .form-select:active {
-            font-size: 14px;
-        }
-
-        /* Ensure options are always visible with proper font size */
-        .sidebar.sidebar-collapsed .currency-selector .form-select option {
-            font-size: 14px;
-            color: #000;
-            background: #fff;
-        }
-
         /* ============================================
            SIDEBAR LOGO - Optimized Design System
            ============================================ */
-        
+
         /* Logo Container - Base Structure */
         .sidebar-logo {
             display: block;
@@ -128,7 +86,7 @@
             justify-content: center;
             min-width: 44px;
             min-height: 44px;
-            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,255,255,0.05));
+            background: linear-gradient(135deg, rgba(234,34,42,0.15), rgba(255,255,255,0.05));
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             flex-shrink: 0;
@@ -136,7 +94,7 @@
 
         .sidebar .logo i {
             font-size: 26px;
-            color: #ffd700;
+            color: #EA222A;
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             display: inline-block;
         }
@@ -174,50 +132,50 @@
         /* Hover Effects - Expanded State */
         .sidebar .logo:hover {
             background: rgba(255,255,255,0.08);
-            border-bottom-color: rgba(255,215,0,0.3);
+            border-bottom-color: rgba(234,34,42,0.3);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2), 0 0 20px rgba(255,255,255,0.05);
         }
 
         .sidebar .logo:hover .logo-icon {
             transform: scale(1.1) rotate(-5deg);
-            background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,255,255,0.1));
-            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
+            background: linear-gradient(135deg, rgba(234,34,42,0.25), rgba(255,255,255,0.1));
+            box-shadow: 0 4px 12px rgba(234,34,42,0.3);
         }
 
         .sidebar .logo:hover i {
             transform: scale(1.1);
-            color: #ffed4e;
-            filter: drop-shadow(0 0 8px rgba(255,215,0,0.5));
+            color: #FF3D47;
+            filter: drop-shadow(0 0 8px rgba(234,34,42,0.5));
         }
 
         .sidebar .logo:hover .logo-text .app-name {
-            color: #ffd700;
+            color: #EA222A;
             transform: translateX(2px);
         }
 
         .sidebar .logo:hover .logo-text .app-tagline {
-            color: rgba(255,215,0,0.8);
+            color: rgba(234,34,42,0.8);
         }
 
         /* Active State (when on dashboard) */
         .sidebar .logo.active {
-            background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,255,255,0.1) 100%);
-            border-bottom: 2px solid #ffd700;
-            box-shadow: 0 2px 8px rgba(255,215,0,0.3);
+            background: linear-gradient(135deg, rgba(234,34,42,0.15) 0%, rgba(255,255,255,0.1) 100%);
+            border-bottom: 2px solid #EA222A;
+            box-shadow: 0 2px 8px rgba(234,34,42,0.3);
         }
 
         .sidebar .logo.active .logo-icon {
-            background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,255,255,0.15));
-            box-shadow: 0 0 15px rgba(255,215,0,0.4);
+            background: linear-gradient(135deg, rgba(234,34,42,0.3), rgba(255,255,255,0.15));
+            box-shadow: 0 0 15px rgba(234,34,42,0.4);
         }
 
         .sidebar .logo.active i {
-            color: #ffd700;
-            filter: drop-shadow(0 0 6px rgba(255,215,0,0.6));
+            color: #EA222A;
+            filter: drop-shadow(0 0 6px rgba(234,34,42,0.6));
         }
 
         .sidebar .logo.active .logo-text .app-name {
-            color: #ffd700;
+            color: #EA222A;
         }
 
         /* Click/Active Effect */
@@ -229,7 +187,7 @@
         /* ============================================
            COLLAPSED SIDEBAR - Logo Adjustments
            ============================================ */
-        
+
         .sidebar.sidebar-collapsed .logo {
             padding: 16px 12px;
             justify-content: center;
@@ -270,14 +228,14 @@
         /* ============================================
            TOOLTIP - Collapsed State
            ============================================ */
-        
+
         .sidebar .logo::before {
             content: attr(data-tooltip);
             position: absolute;
             left: calc(100% + 12px);
             top: 50%;
             transform: translateY(-50%) translateX(-10px);
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            background: linear-gradient(135deg, #292929, #1a1a1a);
             color: white;
             padding: 10px 16px;
             border-radius: 8px;
@@ -287,9 +245,9 @@
             transition: all 0.3s ease;
             font-size: 14px;
             font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 20px rgba(255,215,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 20px rgba(234,34,42,0.1);
             z-index: 1001;
-            border: 1px solid rgba(255,215,0,0.2);
+            border: 1px solid rgba(234,34,42,0.2);
         }
 
         .sidebar .logo::after {
@@ -299,7 +257,7 @@
             top: 50%;
             transform: translateY(-50%);
             border: 6px solid transparent;
-            border-right-color: #2c3e50;
+            border-right-color: #292929;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -318,12 +276,12 @@
         /* ============================================
            ACCESSIBILITY & REDUCED MOTION
            ============================================ */
-        
+
         /* Focus States for Accessibility */
         .sidebar .logo:focus-visible {
-            outline: 2px solid #ffd700;
+            outline: 2px solid #EA222A;
             outline-offset: 2px;
-            box-shadow: 0 0 0 4px rgba(255,215,0,0.2);
+            box-shadow: 0 0 0 4px rgba(234,34,42,0.2);
         }
 
         /* High Contrast Mode Support */
@@ -331,9 +289,9 @@
             .sidebar .logo {
                 border: 2px solid rgba(255,255,255,0.3);
             }
-            
+
             .sidebar .logo.active {
-                border: 2px solid #ffd700;
+                border: 2px solid #EA222A;
             }
         }
 
@@ -349,7 +307,7 @@
                 transform: none !important;
                 animation: none !important;
             }
-            
+
             .sidebar .logo:hover .logo-icon,
             .sidebar .logo:hover i {
                 transform: none !important;
@@ -359,7 +317,7 @@
         /* ============================================
            LOGO ANIMATIONS - Subtle Entrance
            ============================================ */
-        
+
         @keyframes logoFadeIn {
             from {
                 opacity: 0;
@@ -392,7 +350,7 @@
         /* ============================================
            PRINT STYLES - Logo Optimization
            ============================================ */
-        
+
         @media print {
             .sidebar .logo {
                 background: none !important;
@@ -400,16 +358,16 @@
                 box-shadow: none !important;
                 page-break-inside: avoid;
             }
-            
+
             .logo-icon {
                 background: none !important;
                 box-shadow: none !important;
             }
-            
+
             .sidebar .logo i {
                 color: #000 !important;
             }
-            
+
             .logo-text .app-name,
             .logo-text .app-tagline {
                 color: #000 !important;
@@ -419,7 +377,7 @@
         /* ============================================
            LOADING STATE - Logo Skeleton
            ============================================ */
-        
+
         .sidebar .logo.loading .logo-icon {
             background: linear-gradient(
                 90deg,
@@ -497,7 +455,7 @@
             left: 100%;
             top: 50%;
             transform: translateY(-50%);
-            background: #34495e;
+            background: #292929;
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
@@ -538,7 +496,7 @@
         .toggle-btn {
             background: transparent;
             border: none;
-            color: #2c3e50;
+            color: #292929;
             font-size: 24px;
             cursor: pointer;
             padding: 5px 10px;
@@ -548,7 +506,7 @@
         }
 
         .toggle-btn:hover {
-            background: rgba(44, 62, 80, 0.1);
+            background: rgba(41, 41, 41, 0.1);
         }
 
         .toggle-btn i {
@@ -605,22 +563,22 @@
         }
 
         .stat-card.income {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%);
             color: white;
         }
 
         .stat-card.expense {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #292929 0%, #1a1a1a 100%);
             color: white;
         }
 
         .stat-card.balance {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #EA222A 0%, #B81D23 100%);
             color: white;
         }
 
         .stat-card.net {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            background: linear-gradient(135deg, #292929 0%, #3d3d3d 100%);
             color: white;
         }
 
@@ -632,12 +590,51 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%);
             border: none;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            background: linear-gradient(135deg, #FF3D47 0%, #EA222A 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #292929 0%, #1a1a1a 100%);
+            border: none;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #3d3d3d 0%, #292929 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            border: none;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ffcd39 0%, #ffc107 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #e4606d 0%, #dc3545 100%);
         }
 
         /* Mobile Overlay */
@@ -682,26 +679,26 @@
             .toggle-btn {
                 display: inline-block !important;
             }
-            
+
             /* Mobile logo adjustments */
             .sidebar .logo {
                 padding: 14px 16px;
                 margin: 0 8px 16px;
             }
-            
+
             .logo-icon {
                 min-width: 40px;
                 min-height: 40px;
             }
-            
+
             .sidebar .logo i {
                 font-size: 22px;
             }
-            
+
             .logo-text .app-name {
                 font-size: 16px;
             }
-            
+
             .logo-text .app-tagline {
                 font-size: 10px;
             }
@@ -712,74 +709,38 @@
                 display: none;
             }
         }
-        
+
         /* Extra small screens - Compact logo */
         @media (max-width: 480px) {
             .sidebar .logo {
                 padding: 12px;
                 justify-content: center;
             }
-            
+
             .logo-icon {
                 min-width: 36px;
                 min-height: 36px;
             }
-            
+
             .sidebar .logo i {
                 font-size: 20px;
             }
-            
+
             .logo-text {
                 display: none !important;
                 opacity: 0;
             }
         }
-        
+
         /* Tablet Landscape - Optimize spacing */
         @media (min-width: 769px) and (max-width: 1024px) {
             .sidebar .logo {
                 padding: 14px 18px;
             }
-            
+
             .logo-text .app-name {
                 font-size: 17px;
             }
-        }
-
-        /* ============================================
-           CURRENCY SELECT - Fix Duplication Issue
-           ============================================ */
-        
-        /* Ensure select options always render properly */
-        #currencySelect {
-            appearance: auto;
-            -webkit-appearance: menulist;
-            -moz-appearance: menulist;
-        }
-
-        /* Ensure options have proper styling in all browsers */
-        #currencySelect option {
-            font-size: 14px !important;
-            color: #000 !important;
-            background: #fff !important;
-            padding: 8px 12px;
-        }
-
-        /* Highlighted/selected option in dropdown list */
-        #currencySelect option:checked {
-            background: #007bff !important;
-            color: #fff !important;
-        }
-
-        /* Hover state for options */
-        #currencySelect option:hover {
-            background: #e9ecef !important;
-        }
-
-        /* Ensure no pseudo-elements interfere with options */
-        #currencySelect option::before,
-        #currencySelect option::after {
-            display: none !important;
         }
     </style>
 
@@ -792,9 +753,9 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <!-- Logo Section - Optimized Structure -->
-        <a href="{{ route('dashboard') }}" 
-           class="logo {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-           aria-label="Go to Dashboard - Restaurant Accounting System" 
+        <a href="{{ route('dashboard') }}"
+           class="logo {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+           aria-label="Go to Dashboard - Restaurant Accounting System"
            data-tooltip="🏠 Dashboard"
            title="Go to Dashboard"
            role="link"
@@ -808,70 +769,44 @@
             </div>
         </a>
         <nav class="nav flex-column">
-            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-               href="{{ route('dashboard') }}" 
+            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+               href="{{ route('dashboard') }}"
                data-tooltip="Dashboard">
                 <i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}" 
+            <a class="nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}"
                href="{{ route('transactions.index') }}"
                data-tooltip="Transactions">
                 <i class="fas fa-exchange-alt"></i> <span class="nav-text">Transactions</span>
             </a>
             @can('manage categories')
-            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" 
+            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
                href="{{ route('categories.index') }}"
                data-tooltip="Categories">
                 <i class="fas fa-tags"></i> <span class="nav-text">Categories</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}" 
+            <a class="nav-link {{ request()->routeIs('payment-methods.*') ? 'active' : '' }}"
                href="{{ route('payment-methods.index') }}"
                data-tooltip="Payment Methods">
                 <i class="fas fa-credit-card"></i> <span class="nav-text">Payment Methods</span>
             </a>
             @endcan
-            <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" 
+            <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                href="{{ route('reports.index') }}"
                data-tooltip="Reports">
                 <i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" 
+            <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
                href="{{ route('profile.show') }}"
                data-tooltip="My Profile">
                 <i class="fas fa-user-circle"></i> <span class="nav-text">My Profile</span>
             </a>
         </nav>
 
-        <!-- Currency Switcher -->
-        <div class="currency-selector" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
-            <form action="{{ route('currency.switch') }}" method="POST" id="currencySwitchForm">
-                @csrf
-                <label for="currencySelect" style="color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <i class="fas fa-money-bill-wave"></i> <span class="nav-text">Display Currency</span>
-                </label>
-                <select name="currency_id" id="currencySelect" class="form-select form-select-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
-                    @foreach($allCurrencies as $currency)
-                        @php
-                            // Format rate: KRW always shows 1.00, others show 2-4 decimals
-                            $rate = $currency->is_base ? '1.00' : rtrim(rtrim(number_format($currency->exchange_rate, 4, '.', ''), '0'), '.');
-                            // Ensure at least 2 decimal places
-                            if (strpos($rate, '.') !== false && strlen(substr($rate, strpos($rate, '.') + 1)) < 2) {
-                                $rate = number_format((float)$rate, 2, '.', '');
-                            } elseif (strpos($rate, '.') === false) {
-                                $rate = number_format((float)$rate, 2, '.', '');
-                            }
-                        @endphp
-                        <option 
-                            value="{{ $currency->id }}" 
-                            {{ (int)$activeCurrency->id === (int)$currency->id ? 'selected' : '' }}
-                            style="color: #000; background: #fff;">
-                            {{ $currency->code }} ({{ $currency->symbol }}) — {{ $rate }}
-                        </option>
-                    @endforeach
-                </select>
-            </form>
-            <div class="currency-info" style="margin-top: 8px; color: rgba(255,255,255,0.6); font-size: 11px;">
-                <span class="nav-text">Active: <strong style="color: #ffd700;">{{ $activeCurrency->code }}</strong></span>
+        <!-- System Info Footer -->
+        <div class="sidebar-footer" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto;">
+            <div class="currency-info" style="color: rgba(255,255,255,0.6); font-size: 11px; text-align: center;">
+                <i class="fas fa-won-sign"></i> <span class="nav-text">Currency: <strong style="color: #EA222A;">KRW (₩)</strong></span>
             </div>
         </div>
     </div>
@@ -894,32 +829,32 @@
             <div class="d-flex align-items-center">
                 <!-- User Profile Dropdown -->
                 <div class="dropdown">
-                    <button class="btn btn-link text-decoration-none dropdown-toggle d-flex align-items-center px-2 py-1" 
-                            type="button" 
-                            id="userDropdown" 
-                            data-bs-toggle="dropdown" 
+                    <button class="btn btn-link text-decoration-none dropdown-toggle d-flex align-items-center px-2 py-1"
+                            type="button"
+                            id="userDropdown"
+                            data-bs-toggle="dropdown"
                             aria-expanded="false"
                             style="color: #333; cursor: pointer; border-radius: 8px; transition: background-color 0.2s;"
                             onmouseover="this.style.backgroundColor='#f8f9fa'"
                             onmouseout="this.style.backgroundColor='transparent'">
                         @if(auth()->user()->profile_photo)
-                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}" 
-                                 alt="Profile" 
+                            <img src="{{ asset('storage/' . auth()->user()->profile_photo) }}"
+                                 alt="Profile"
                                  class="rounded-circle me-2"
                                  style="width: 36px; height: 36px; object-fit: cover; border: 2px solid #dee2e6;">
                         @else
                             <div class="rounded-circle me-2 d-flex align-items-center justify-content-center"
-                                 style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 16px; border: 2px solid #dee2e6;">
+                                 style="width: 36px; height: 36px; background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%); color: white; font-weight: bold; font-size: 16px; border: 2px solid #dee2e6;">
                                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                         @endif
                         <span style="font-weight: 500;">{{ auth()->user()->name }}</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" 
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm"
                         aria-labelledby="userDropdown"
                         style="border-radius: 8px; border: 1px solid #dee2e6; min-width: 200px;">
                         <li>
-                            <a class="dropdown-item py-2" 
+                            <a class="dropdown-item py-2"
                                href="{{ route('profile.show') }}"
                                style="transition: background-color 0.2s;">
                                 <i class="fas fa-user me-2"></i>My Profile
@@ -929,7 +864,7 @@
                         <li>
                             <form action="{{ route('logout') }}" method="POST" class="m-0">
                                 @csrf
-                                <button type="submit" 
+                                <button type="submit"
                                         class="dropdown-item text-danger py-2 w-100 text-start"
                                         style="transition: background-color 0.2s; border: none; background: none;">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
@@ -973,48 +908,48 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         // ===================================
         // SIDEBAR TOGGLE FUNCTIONALITY
         // ===================================
-        
+
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
         const desktopToggle = document.getElementById('desktopToggle');
         const mobileToggle = document.getElementById('mobileToggle');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
-        
+
         // Local Storage Keys
         const STORAGE_KEY = 'sidebar-collapsed';
-        
+
         // Check if device is mobile
         function isMobile() {
             return window.innerWidth <= 768;
         }
-        
+
         // Desktop Toggle Function
         function toggleSidebarDesktop() {
             const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
             mainContent.classList.toggle('sidebar-collapsed');
             desktopToggle.classList.toggle('rotated');
-            
+
             // Save state to localStorage
             localStorage.setItem(STORAGE_KEY, isCollapsed ? 'true' : 'false');
         }
-        
+
         // Mobile Toggle Function
         function toggleSidebarMobile() {
             sidebar.classList.toggle('show');
             sidebarOverlay.classList.toggle('show');
         }
-        
+
         // Close mobile sidebar
         function closeMobileSidebar() {
             sidebar.classList.remove('show');
             sidebarOverlay.classList.remove('show');
         }
-        
+
         // Initialize sidebar state on page load
         function initializeSidebar() {
             if (!isMobile()) {
@@ -1031,20 +966,20 @@
                 mainContent.classList.remove('sidebar-collapsed');
             }
         }
-        
+
         // Event Listeners
         if (desktopToggle) {
             desktopToggle.addEventListener('click', toggleSidebarDesktop);
         }
-        
+
         if (mobileToggle) {
             mobileToggle.addEventListener('click', toggleSidebarMobile);
         }
-        
+
         if (sidebarOverlay) {
             sidebarOverlay.addEventListener('click', closeMobileSidebar);
         }
-        
+
         // Close mobile sidebar when clicking on a link
         const sidebarLinks = sidebar.querySelectorAll('.nav-link');
         sidebarLinks.forEach(link => {
@@ -1054,7 +989,7 @@
                 }
             });
         });
-        
+
         // Handle window resize
         let resizeTimer;
         window.addEventListener('resize', () => {
@@ -1072,28 +1007,28 @@
                 }
             }, 250);
         });
-        
+
         // Keyboard accessibility
         document.addEventListener('keydown', (e) => {
             // Press Escape to close mobile sidebar
             if (e.key === 'Escape' && isMobile() && sidebar.classList.contains('show')) {
                 closeMobileSidebar();
             }
-            
+
             // Press Ctrl+B to toggle desktop sidebar
             if (e.ctrlKey && e.key === 'b' && !isMobile()) {
                 e.preventDefault();
                 toggleSidebarDesktop();
             }
         });
-        
+
         // Initialize on page load
         initializeSidebar();
-        
+
         // ===================================
         // AUTO-HIDE ALERTS
         // ===================================
-        
+
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
