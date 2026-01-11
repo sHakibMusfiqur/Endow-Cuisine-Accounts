@@ -42,12 +42,12 @@
                                         data-symbol="{{ $currency->symbol }}"
                                         data-rate="{{ $currency->exchange_rate }}"
                                         {{ (old('currency_id', $defaultCurrency->id ?? '') == $currency->id) ? 'selected' : '' }}>
-                                    {{ $currency->name }} ({{ $currency->symbol }})
+                                    {{ $currency->code }} ({{ $currency->symbol }}) — {{ $currency->is_base ? '1.00' : number_format($currency->exchange_rate, 2) }}
                                 </option>
                                 @endforeach
                             </select>
                             <small class="text-muted">
-                                <i class="fas fa-info-circle"></i> Amounts will be automatically converted to KRW (₩)
+                                <i class="fas fa-info-circle"></i> Amounts will be automatically converted to KRW (₩). Exchange rates are updated automatically.
                             </small>
                             @error('currency_id')
                             <div class="invalid-feedback">{{ $message }}</div>

@@ -182,3 +182,77 @@ if (!function_exists('clearCurrencyCache')) {
         Cache::forget('active_currency_' . Session::getId());
     }
 }
+
+if (!function_exists('getCurrencyLastUpdateTime')) {
+    /**
+     * Get the last time currency rates were updated.
+     * Returns formatted string for display in UI.
+     *
+     * @return string|null
+     */
+    function getCurrencyLastUpdateTime(): ?string
+    {
+        $currency = Currency::whereNotNull('last_updated_at')
+            ->where('is_base', false)
+            ->orderBy('last_updated_at', 'desc')
+            ->first();
+
+        if (!$currency || !$currency->last_updated_at) {
+            return null;
+        }
+
+        return $currency->last_updated_at->format('M d, Y \a\t H:i');
+    }
+}
+
+if (!function_exists('getCurrencyLastUpdateTimestamp')) {
+    /**
+     * Get the last currency update timestamp (raw).
+     * Useful for programmatic checks.
+     *
+     * @return \Carbon\Carbon|null
+     */
+    function getCurrencyLastUpdateTimestamp(): ?\Carbon\Carbon
+    {
+        $currency = Currency::whereNotNull('last_updated_at')
+            ->where('is_base', false)
+            ->orderBy('last_updated_at', 'desc')
+            ->first();
+
+        return $currency?->last_updated_at;
+    }
+}
+
+if (!function_exists('shouldDisplayCurrencyUpdateWarning')) {
+    /**
+     * Check if currency rates haven't been updated recently.
+     * Returns true if rates are older than 48 hours (missed update).
+     *
+     * @return bool
+     */
+    function shouldDisplayCurrencyUpdateWarning(): bool
+    {
+        $lastUpdate = getCurrencyLastUpdateTimestamp();
+        
+        if (!$lastUpdate) {
+            return true; // Never updated
+        }
+        
+        return $lastUpdate->diffInHours(now()) > 48;
+    }
+}
+
+if (!function_exists('getBaseCurrency')) {
+    /**
+     * Get the base currency (KRW).
+     * This is the currency all conversions are relative to.
+     *
+     * @return Currency|null
+     */
+    function getBaseCurrency(): ?Currency
+    {
+        return Cache::remember('base_currency', 86400, function () {
+            return Currency::where('is_base', true)->first();
+        });
+    }
+}

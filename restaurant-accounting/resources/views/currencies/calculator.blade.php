@@ -30,7 +30,7 @@
                                                     data-symbol="{{ $currency->symbol }}"
                                                     data-code="{{ $currency->code }}"
                                                     {{ $currency->is_default ? 'selected' : '' }}>
-                                                {{ $currency->name }} ({{ $currency->code }})
+                                                {{ $currency->code }} ({{ $currency->symbol }}) — {{ $currency->is_base ? '1.00' : number_format($currency->exchange_rate, 2) }}
                                             </option>
                                             @endforeach
                                         </select>
@@ -68,7 +68,7 @@
                                             <option value="{{ $currency->id }}" 
                                                     data-symbol="{{ $currency->symbol }}"
                                                     data-code="{{ $currency->code }}">
-                                                {{ $currency->name }} ({{ $currency->code }})
+                                                {{ $currency->code }} ({{ $currency->symbol }}) — {{ $currency->is_base ? '1.00' : number_format($currency->exchange_rate, 2) }}
                                             </option>
                                             @endforeach
                                         </select>

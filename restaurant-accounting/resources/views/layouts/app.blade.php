@@ -851,11 +851,21 @@
                 </label>
                 <select name="currency_id" id="currencySelect" class="form-select form-select-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);" onchange="this.form.submit()">
                     @foreach($allCurrencies as $currency)
+                        @php
+                            // Format rate: KRW always shows 1.00, others show 2-4 decimals
+                            $rate = $currency->is_base ? '1.00' : rtrim(rtrim(number_format($currency->exchange_rate, 4, '.', ''), '0'), '.');
+                            // Ensure at least 2 decimal places
+                            if (strpos($rate, '.') !== false && strlen(substr($rate, strpos($rate, '.') + 1)) < 2) {
+                                $rate = number_format((float)$rate, 2, '.', '');
+                            } elseif (strpos($rate, '.') === false) {
+                                $rate = number_format((float)$rate, 2, '.', '');
+                            }
+                        @endphp
                         <option 
                             value="{{ $currency->id }}" 
                             {{ (int)$activeCurrency->id === (int)$currency->id ? 'selected' : '' }}
                             style="color: #000; background: #fff;">
-                            {{ $currency->code }} ({{ $currency->symbol }})
+                            {{ $currency->code }} ({{ $currency->symbol }}) — {{ $rate }}
                         </option>
                     @endforeach
                 </select>

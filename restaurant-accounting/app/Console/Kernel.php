@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Update currency exchange rates daily at 2:00 AM
+        $schedule->command('currency:update-rates')
+                 ->dailyAt('02:00')
+                 ->withoutOverlapping()
+                 ->onOneServer();
     }
 
     /**

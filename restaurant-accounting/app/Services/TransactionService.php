@@ -12,6 +12,21 @@ class TransactionService
 {
     /**
      * Create a new transaction with balance calculation.
+     * 
+     * CRITICAL: Dynamic Rate Conversion & Historical Locking
+     * =======================================================
+     * 1. Fetches CURRENT rate from database (dynamic)
+     * 2. Converts to base currency (KRW) using multiplication
+     * 3. Stores rate SNAPSHOT with transaction (historical lock)
+     * 4. Future rate changes DO NOT affect this transaction
+     * 
+     * Example:
+     *   User enters: 10 USD
+     *   Current rate: 1320.50 KRW/USD (fetched dynamically from DB)
+     *   Conversion: 10 × 1320.50 = 13,205 KRW
+     *   Stored: original=10, base=13205, rate_snapshot=1320.50
+     *   
+     * If rate changes tomorrow to 1400, this transaction stays 13,205 KRW ✓
      *
      * @param array $data
      * @return DailyTransaction
@@ -32,17 +47,19 @@ class TransactionService
         DB::beginTransaction();
 
         try {
-            // Get currency (default to KRW if not specified)
+            // STEP 1: Get currency (default to KRW if not specified)
             $currencyId = $data['currency_id'] ?? Currency::getDefault()?->id;
             $currency = Currency::findOrFail($currencyId);
             
-            // Determine original amount (the amount in selected currency)
+            // STEP 2: Determine original amount (the amount in selected currency)
             $amountOriginal = $data['income'] > 0 ? $data['income'] : $data['expense'];
             
-            // Convert to base currency (KRW)
+            // STEP 3: Convert to base currency (KRW) using CURRENT rate (dynamic)
+            // CRITICAL: Uses convertToBase() which multiplies (never divides)
             $amountBase = $currency->convertToBase($amountOriginal);
             
-            // Store exchange rate snapshot for historical accuracy
+            // STEP 4: Store exchange rate SNAPSHOT for historical accuracy
+            // This locks the rate - future updates won't change this transaction
             $exchangeRateSnapshot = $currency->exchange_rate;
             
             // Calculate income and expense in base currency
