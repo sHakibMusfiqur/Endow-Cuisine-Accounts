@@ -88,6 +88,10 @@ class ReportController extends Controller
         $totalExpense = $transactions->sum('expense');
         $netAmount = $totalIncome - $totalExpense;
 
+        // Get timezone from authenticated user or use app default
+        $timezone = auth()->user()->timezone ?? config('app.timezone');
+        $generatedAt = now()->setTimezone($timezone);
+
         $data = [
             'transactions' => $transactions,
             'date_from' => $validated['date_from'],
@@ -95,6 +99,7 @@ class ReportController extends Controller
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
             'net_amount' => $netAmount,
+            'generated_at' => $generatedAt,
         ];
 
         // For now, return a simple HTML view that can be printed as PDF
@@ -135,6 +140,10 @@ class ReportController extends Controller
             ];
         });
 
+        // Get timezone from authenticated user or use app default
+        $timezone = auth()->user()->timezone ?? config('app.timezone');
+        $generatedAt = now()->setTimezone($timezone);
+
         $data = [
             'date_from' => $validated['date_from'],
             'date_to' => $validated['date_to'],
@@ -143,6 +152,7 @@ class ReportController extends Controller
             'total_expense' => $transactions->sum('expense'),
             'category_wise' => $categoryWise,
             'payment_method_wise' => $paymentMethodWise,
+            'generated_at' => $generatedAt,
         ];
 
         return view('reports.summary', $data);

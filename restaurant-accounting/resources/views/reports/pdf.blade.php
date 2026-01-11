@@ -12,128 +12,166 @@
         }
         
         body {
-            font-family: 'Segoe UI', 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #1a1a1a;
-            line-height: 1.65;
-            background: #f8f9fa;
-            padding: 40px 20px;
-            font-size: 13.5px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1f2937;
+            line-height: 1.6;
+            background: #f3f4f6;
+            padding: 30px 20px;
+            font-size: 14px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1140px;
             margin: 0 auto;
             background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            padding: 40px;
+            padding: 50px 60px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
 
-        /* Professional Header - Clean & Minimal */
+        /* CLEAN HEADER - No background, just text + divider */
         .report-header {
-            border-bottom: 3px solid #DC2626;
-            padding-bottom: 25px;
-            margin-bottom: 35px;
-            background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
-            padding: 20px;
-            border-radius: 6px;
-            margin: -40px -40px 35px -40px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .company-name h1 {
-            color: #111827;
-            font-size: 28px;
+        .company-name {
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        .report-subtitle {
-            color: #6b7280;
-            font-size: 13.5px;
-            margin-bottom: 18px;
-            font-weight: 500;
-        }
-
-        .report-title-section {
-            margin: 18px 0 0 0;
-            padding: 15px 0 0 0;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .report-title-section h2 {
             color: #111827;
-            font-size: 19px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             letter-spacing: -0.3px;
         }
 
-        .report-period {
-            color: #6b7280;
-            font-size: 13.5px;
-            font-weight: 500;
+        .report-subtitle {
+            font-size: 13px;
+            color: #9ca3af;
+            font-weight: 400;
+            margin-bottom: 20px;
         }
 
-        /* Current Date & Time Display */
-        .generation-info {
-            background: linear-gradient(135deg, #fef2f2 0%, #fef9f9 100%);
-            padding: 12px 18px;
+        .report-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        /* Generated Time Section - clean with thin red accent */
+        .meta-section {
             margin: 25px 0;
-            border-left: 4px solid #DC2626;
-            font-size: 12.5px;
-            color: #6b7280;
-            border-radius: 4px;
+            padding: 16px 0;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        .generation-info strong {
+        .generated-time {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .generated-time strong {
             color: #111827;
             font-weight: 600;
         }
 
-        /* Info Cards - Minimal & Clean */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 35px;
+        .report-period {
+            font-size: 13px;
+            color: #6b7280;
         }
 
-        .info-card {
-            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        .report-period strong {
+            color: #111827;
+            font-weight: 600;
+        }
+
+        /* Info Row - Minimal cards with left accent */
+        .info-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .info-item {
+            background: #ffffff;
             border: 1px solid #e5e7eb;
-            border-left: 4px solid #DC2626;
-            padding: 16px 18px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border-left: 2px solid #dc2626;
+            padding: 14px 18px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
         }
 
         .info-label {
             font-size: 11px;
             color: #9ca3af;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.5px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .info-value {
-            font-size: 15px;
+            font-size: 14px;
             color: #111827;
-            font-weight: 700;
-            letter-spacing: -0.2px;
+            font-weight: 600;
         }
 
+        /* Summary Cards - Modern Accounting Style */
+        .summary-section {
+            margin: 35px 0;
+        }
 
-        /* Professional Table - Accounting Grade */
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .summary-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 2px solid #dc2626;
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .summary-card-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .summary-card-amount {
+            font-size: 26px;
+            font-weight: 700;
+            font-family: 'Courier New', 'Consolas', monospace;
+            color: #111827;
+            letter-spacing: -0.5px;
+        }
+
+        /* Table Design - Enterprise Standard */
+        .table-section {
+            margin: 35px 0;
+        }
+
         .table-wrapper {
             overflow-x: auto;
-            margin: 28px 0;
+            margin-top: 18px;
             border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         table {
@@ -143,247 +181,150 @@
         }
 
         thead {
-            background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+            background: #f9fafb;
         }
 
         th {
-            padding: 14px 16px;
+            padding: 12px 14px;
             text-align: left;
-            font-weight: 700;
-            font-size: 11.5px;
+            font-weight: 600;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.7px;
-            color: #374151;
-            border-bottom: 2px solid #DC2626;
+            letter-spacing: 0.5px;
+            color: #6b7280;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th.text-right {
+            text-align: right;
         }
 
         tbody tr {
             border-bottom: 1px solid #f3f4f6;
-            transition: background-color 0.2s ease;
         }
 
         tbody tr:nth-child(even) {
-            background-color: #f9fafb;
+            background-color: #fafafa;
         }
 
         tbody tr:hover {
-            background-color: #fef2f2;
-        }
-
-        tbody tr:last-child {
-            border-bottom: none;
+            background-color: #f9fafb;
         }
 
         td {
-            padding: 13px 16px;
-            font-size: 13.5px;
-            color: #1f2937;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #374151;
         }
 
-        .text-right {
+        td.text-right {
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
-        }
-
-        /* Amount Styling */
-        .amount-positive {
+        .amount-income {
             color: #059669;
-            font-weight: 700;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
         }
 
-        .amount-negative {
-            color: #DC2626;
-            font-weight: 700;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
+        .amount-expense {
+            color: #dc2626;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
         }
 
         .amount-neutral {
             color: #d1d5db;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-            font-weight: 500;
         }
 
         .balance-cell {
-            font-weight: 700;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-            background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%);
-            font-size: 13.5px;
-        }
-
-        /* Financial Summary Section */
-        .financial-summary {
-            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-            border: 2px solid #e5e7eb;
-            padding: 28px;
-            margin: 35px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .summary-title {
-            font-size: 17px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #DC2626;
-            letter-spacing: -0.3px;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-        }
-
-        .summary-item {
-            background: white;
-            padding: 20px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        }
-
-        .summary-item.income {
-            border-top: 4px solid #059669;
-        }
-
-        .summary-item.expense {
-            border-top: 4px solid #DC2626;
-        }
-
-        .summary-item.net {
-            border-top: 4px solid #111827;
-        }
-
-        .summary-item .label {
-            font-size: 11.5px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
             font-weight: 600;
-            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            background: #fafafa;
         }
 
-        .summary-item .value {
-            font-size: 22px;
-            font-weight: 800;
-            font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-            letter-spacing: -0.5px;
-        }
-
-        .summary-item.income .value {
-            color: #059669;
-        }
-
-        .summary-item.expense .value {
-            color: #DC2626;
-        }
-
-        .summary-item.net .value {
-            color: #111827;
-        }
-
-        /* Footer */
-        .report-footer {
-            margin-top: 50px;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-            text-align: center;
-            color: #888888;
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #f3f4f6;
+            color: #4b5563;
             font-size: 11px;
+            font-weight: 600;
+            border-radius: 3px;
         }
 
-        .footer-note {
-            margin-bottom: 5px;
+        .payment-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #f3f4f6;
+            color: #4b5563;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 3px;
         }
 
         /* Action Buttons */
         .action-buttons {
-            text-align: center;
-            margin: 30px 0;
+            margin: 40px 0 30px;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .btn {
-            padding: 12px 28px;
+            padding: 10px 24px;
             border: none;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            transition: all 0.2s;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+            background: #111827;
             color: white;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+            background: #1f2937;
         }
 
         .btn-secondary {
             background: white;
             color: #6b7280;
-            border: 2px solid #d1d5db;
+            border: 1px solid #d1d5db;
         }
 
         .btn-secondary:hover {
             background: #f9fafb;
-            border-color: #9ca3af;
-            transform: translateY(-1px);
         }
 
-        /* Category Badge */
-        .category-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #1e40af;
+        /* Footer - Minimal */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
             font-size: 11px;
-            font-weight: 600;
-            border-radius: 4px;
-            border: 1px solid #93c5fd;
+            color: #9ca3af;
         }
 
-        .payment-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-            color: #4338ca;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 4px;
-            border: 1px solid #a5b4fc;
+        .footer-note {
+            margin-bottom: 4px;
         }
 
         @media print {
             body {
-                padding: 15px;
+                padding: 0;
+                background: white;
             }
             .no-print {
                 display: none !important;
             }
-            .table-wrapper {
-                border: 1px solid #cccccc;
-            }
-            tbody tr:nth-child(even) {
-                background-color: #fafafa;
+            .container {
+                box-shadow: none;
+                padding: 30px;
             }
         }
 
@@ -395,104 +336,104 @@
 </head>
 <body>
     <div class="container">
-        <!-- Professional Header -->
+        <!-- Clean Header -->
         <div class="report-header">
-            <div class="company-name">
-                <h1>Restaurant Accounting</h1>
-                <p class="report-subtitle">Financial Management System</p>
-            </div>
+            <div class="company-name">Restaurant Accounting</div>
+            <div class="report-subtitle">Financial Management System</div>
+            <div class="report-title">Transaction Report</div>
+        </div>
 
-            <div class="report-title-section">
-                <h2>Transaction Report</h2>
-                <p class="report-period">Period: {{ $date_from }} to {{ $date_to }}</p>
+        <!-- Meta Section with Local Timezone -->
+        <div class="meta-section">
+            <div class="generated-time">
+                <strong>Generated on:</strong> {{ $generated_at->format('d M Y, h:i A') }} (Local Time)
+            </div>
+            <div class="report-period">
+                <strong>Period:</strong> {{ $date_from }} → {{ $date_to }}
             </div>
         </div>
 
-        <!-- Current Date & Time Display -->
-        <div class="generation-info">
-            <strong>Generated on:</strong> {{ \Carbon\Carbon::now()->format('d M Y, h:i A') }}
-        </div>
-
-
-        <!-- Info Cards -->
-        <div class="info-grid">
-            <div class="info-card">
+        <!-- Info Row -->
+        <div class="info-row">
+            <div class="info-item">
                 <div class="info-label">Currency</div>
-                <div class="info-value">{{ $activeCurrency->name }} ({{ $activeCurrency->code }})</div>
+                <div class="info-value">{{ $activeCurrency->code }} ({{ $activeCurrency->symbol }})</div>
             </div>
-            <div class="info-card">
-                <div class="info-label">Total Transactions</div>
-                <div class="info-value">{{ $transactions->count() }} Records</div>
-            </div>
-            <div class="info-card">
+            <div class="info-item">
                 <div class="info-label">Report ID</div>
                 <div class="info-value">TXN-{{ date('YmdHis') }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Total Records</div>
+                <div class="info-value">{{ $transactions->count() }} transactions</div>
             </div>
         </div>
 
         <!-- Transaction Table -->
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 10%;">Date</th>
-                        <th style="width: 25%;">Description</th>
-                        <th style="width: 15%;">Category</th>
-                        <th style="width: 13%;">Payment</th>
-                        <th class="text-right" style="width: 12%;">Income</th>
-                        <th class="text-right" style="width: 12%;">Expense</th>
-                        <th class="text-right" style="width: 13%;">Balance</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($transactions as $transaction)
-                    <tr>
-                        <td style="white-space: nowrap;">{{ $transaction->date->format('d/m/Y') }}</td>
-                        <td>{{ strip_tags($transaction->description) }}</td>
-                        <td><span class="category-badge">{{ $transaction->category->name }}</span></td>
-                        <td><span class="payment-badge">{{ $transaction->paymentMethod->name }}</span></td>
-                        <td class="text-right">
-                            @if($transaction->income > 0)
-                                <span class="amount-positive">{{ formatCurrency($transaction->income) }}</span>
-                            @else
-                                <span class="amount-neutral">—</span>
-                            @endif
-                        </td>
-                        <td class="text-right">
-                            @if($transaction->expense > 0)
-                                <span class="amount-negative">{{ formatCurrency($transaction->expense) }}</span>
-                            @else
-                                <span class="amount-neutral">—</span>
-                            @endif
-                        </td>
-                        <td class="text-right balance-cell">{{ formatCurrency($transaction->balance) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="table-section">
+            <div class="section-title">Transaction Details</div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">Date</th>
+                            <th style="width: 25%;">Description</th>
+                            <th style="width: 14%;">Category</th>
+                            <th style="width: 13%;">Payment</th>
+                            <th class="text-right" style="width: 12%;">Income</th>
+                            <th class="text-right" style="width: 12%;">Expense</th>
+                            <th class="text-right" style="width: 14%;">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($transactions as $transaction)
+                        <tr>
+                            <td style="white-space: nowrap;">{{ $transaction->date->format('d/m/Y') }}</td>
+                            <td>{{ strip_tags($transaction->description) }}</td>
+                            <td><span class="category-badge">{{ $transaction->category->name }}</span></td>
+                            <td><span class="payment-badge">{{ $transaction->paymentMethod->name }}</span></td>
+                            <td class="text-right">
+                                @if($transaction->income > 0)
+                                    <span class="amount-income">{{ formatCurrency($transaction->income) }}</span>
+                                @else
+                                    <span class="amount-neutral">—</span>
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                @if($transaction->expense > 0)
+                                    <span class="amount-expense">{{ formatCurrency($transaction->expense) }}</span>
+                                @else
+                                    <span class="amount-neutral">—</span>
+                                @endif
+                            </td>
+                            <td class="text-right balance-cell">{{ formatCurrency($transaction->balance) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- Financial Summary -->
-        <div class="financial-summary">
-            <div class="summary-title">Financial Summary</div>
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="section-title">Financial Summary</div>
             <div class="summary-grid">
-                <div class="summary-item income">
-                    <div class="label">Total Income</div>
-                    <div class="value">{{ formatCurrency($total_income) }}</div>
+                <div class="summary-card">
+                    <div class="summary-card-label">Total Income</div>
+                    <div class="summary-card-amount amount-income">{{ formatCurrency($total_income) }}</div>
                 </div>
-                <div class="summary-item expense">
-                    <div class="label">Total Expense</div>
-                    <div class="value">{{ formatCurrency($total_expense) }}</div>
+                <div class="summary-card">
+                    <div class="summary-card-label">Total Expense</div>
+                    <div class="summary-card-amount amount-expense">{{ formatCurrency($total_expense) }}</div>
                 </div>
-                <div class="summary-item net">
-                    <div class="label">Net Amount</div>
-                    <div class="value" style="color: {{ $net_amount >= 0 ? '#27ae60' : '#e74c3c' }}">
+                <div class="summary-card">
+                    <div class="summary-card-label">Net Amount</div>
+                    <div class="summary-card-amount" style="color: {{ $net_amount >= 0 ? '#059669' : '#dc2626' }}">
                         {{ formatCurrency($net_amount) }}
                     </div>
                 </div>
             </div>
         </div>
-
 
         <!-- Action Buttons -->
         <div class="action-buttons no-print">
@@ -502,9 +443,8 @@
 
         <!-- Footer -->
         <div class="report-footer">
-            <p class="footer-note">This is a computer-generated report and does not require a signature.</p>
-            <p><strong>Restaurant Accounting System</strong> | Confidential Financial Document</p>
-            <p>© {{ date('Y') }} All Rights Reserved</p>
+            <p class="footer-note">Generated by Restaurant Accounting System</p>
+            <p>Page 1 of 1</p>
         </div>
     </div>
 </body>
