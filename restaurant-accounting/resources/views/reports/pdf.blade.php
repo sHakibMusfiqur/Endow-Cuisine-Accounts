@@ -12,65 +12,69 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: #1f2937;
-            line-height: 1.6;
-            background: #f3f4f6;
-            padding: 30px 20px;
-            font-size: 14px;
+            line-height: 1.7;
+            background: #f8f9fa;
+            padding: 40px 20px;
+            font-size: 13px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
         .container {
-            max-width: 1140px;
+            max-width: 1200px;
             margin: 0 auto;
             background: #ffffff;
-            padding: 50px 60px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            padding: 60px 70px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 4px;
         }
 
         /* CLEAN HEADER - No background, just text + divider */
         .report-header {
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 24px;
+            margin-bottom: 35px;
         }
 
         .company-name {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 700;
             color: #111827;
-            margin-bottom: 4px;
-            letter-spacing: -0.3px;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
 
         .report-subtitle {
-            font-size: 13px;
-            color: #9ca3af;
+            font-size: 14px;
+            color: #6b7280;
             font-weight: 400;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .report-title {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             color: #111827;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
         }
 
         /* Generated Time Section - clean with thin red accent */
         .meta-section {
-            margin: 25px 0;
-            padding: 16px 0;
-            border-top: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-left: 3px solid #dc2626;
+            border-radius: 4px;
         }
 
         .generated-time {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 6px;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 8px;
+            line-height: 1.6;
         }
 
         .generated-time strong {
@@ -79,8 +83,9 @@
         }
 
         .report-period {
-            font-size: 13px;
-            color: #6b7280;
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.6;
         }
 
         .report-period strong {
@@ -92,71 +97,75 @@
         .info-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin: 30px 0;
+            gap: 24px;
+            margin: 35px 0;
         }
 
         .info-item {
             background: #ffffff;
             border: 1px solid #e5e7eb;
-            border-left: 2px solid #dc2626;
-            padding: 14px 18px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            border-left: 3px solid #dc2626;
+            padding: 18px 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
         }
 
         .info-label {
             font-size: 11px;
-            color: #9ca3af;
+            color: #6b7280;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 6px;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
         .info-value {
-            font-size: 14px;
+            font-size: 15px;
             color: #111827;
             font-weight: 600;
         }
 
         /* Summary Cards - Modern Accounting Style */
         .summary-section {
-            margin: 35px 0;
+            margin: 40px 0;
         }
 
         .section-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             color: #111827;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 24px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+            letter-spacing: -0.3px;
         }
 
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            gap: 28px;
         }
 
         .summary-card {
             background: #ffffff;
             border: 1px solid #e5e7eb;
-            border-left: 2px solid #dc2626;
-            padding: 24px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            border-left: 3px solid #dc2626;
+            padding: 28px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
         }
 
         .summary-card-label {
             font-size: 12px;
             color: #6b7280;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            font-weight: 700;
         }
 
         .summary-card-amount {
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 700;
             font-family: 'Courier New', 'Consolas', monospace;
             color: #111827;
@@ -165,13 +174,15 @@
 
         /* Table Design - Enterprise Standard */
         .table-section {
-            margin: 35px 0;
+            margin: 40px 0;
         }
 
         .table-wrapper {
             overflow-x: auto;
-            margin-top: 18px;
+            margin-top: 20px;
             border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         table {
@@ -185,14 +196,14 @@
         }
 
         th {
-            padding: 12px 14px;
+            padding: 14px 16px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
         }
 
         th.text-right {
@@ -212,9 +223,10 @@
         }
 
         td {
-            padding: 10px 14px;
+            padding: 12px 16px;
             font-size: 13px;
             color: #374151;
+            line-height: 1.6;
         }
 
         td.text-right {
@@ -302,16 +314,17 @@
 
         /* Footer - Minimal */
         .report-footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 2px solid #e5e7eb;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
             color: #9ca3af;
         }
 
         .footer-note {
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
 
         @media print {
@@ -333,6 +346,32 @@
             size: A4;
         }
     </style>
+    <script>
+        // Convert server time to user's local timezone
+        function updateLocalTime() {
+            const generatedTimeElement = document.getElementById('generated-time');
+            if (generatedTimeElement) {
+                const serverTime = new Date('{{ now()->toIso8601String() }}');
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: '2-digit',
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                };
+                const localTimeString = serverTime.toLocaleString('en-US', options);
+                generatedTimeElement.textContent = localTimeString;
+            }
+        }
+        
+        // Run when DOM is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateLocalTime);
+        } else {
+            updateLocalTime();
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -346,7 +385,7 @@
         <!-- Meta Section with Local Timezone -->
         <div class="meta-section">
             <div class="generated-time">
-                <strong>Generated on:</strong> {{ $generated_at->format('d M Y, h:i A') }} (Local Time)
+                <strong>Generated on:</strong> <span id="generated-time">{{ now()->format('d M Y, h:i A') }}</span>
             </div>
             <div class="report-period">
                 <strong>Period:</strong> {{ $date_from }} → {{ $date_to }}

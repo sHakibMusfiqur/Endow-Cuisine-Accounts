@@ -89,8 +89,8 @@ class ReportController extends Controller
         $netAmount = $totalIncome - $totalExpense;
 
         // Get timezone from authenticated user or use app default
-        $timezone = auth()->user()->timezone ?? config('app.timezone');
-        $generatedAt = now()->setTimezone($timezone);
+        $timezone = config('app.timezone');
+        $generatedAt = Carbon::now($timezone);
 
         $data = [
             'transactions' => $transactions,
@@ -141,8 +141,8 @@ class ReportController extends Controller
         });
 
         // Get timezone from authenticated user or use app default
-        $timezone = auth()->user()->timezone ?? config('app.timezone');
-        $generatedAt = now()->setTimezone($timezone);
+        $timezone = config('app.timezone');
+        $generatedAt = Carbon::now($timezone);
 
         $data = [
             'date_from' => $validated['date_from'],

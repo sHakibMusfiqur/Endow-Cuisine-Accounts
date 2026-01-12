@@ -255,7 +255,7 @@
                 <div class="col-md-3">
                     <form action="{{ route('reports.export-csv') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="date_from" value="{{ date('Y-m-d', strtotime('monday this week')) }}">
+                        <input type="hidden" name="date_from" value="{{ date('Y-m-d', strtotime('-7 days')) }}">
                         <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
                         <button type="submit" class="btn btn-outline-primary w-100">
                             <i class="fas fa-calendar-week"></i> This Week (CSV)
