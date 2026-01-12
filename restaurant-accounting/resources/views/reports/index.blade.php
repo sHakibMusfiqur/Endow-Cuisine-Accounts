@@ -155,9 +155,9 @@
     <div class="row">
         <!-- CSV Export -->
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100" style="border-left: 4px solid #dc2626;">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-file-csv text-success"></i> Export to CSV</h5>
+                    <h5 class="card-title"><i class="fas fa-file-csv" style="color: #dc2626;"></i> Export to CSV</h5>
                     <p class="card-text">Export transaction data in CSV format for Excel or other spreadsheet applications.</p>
                     <form action="{{ route('reports.export-csv') }}" method="POST">
                         @csrf
@@ -169,7 +169,7 @@
                             <label class="form-label">Date To</label>
                             <input type="date" name="date_to" class="form-control" required>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">
+                        <button type="submit" class="btn w-100" style="background-color: #dc2626; color: white; border: none;">
                             <i class="fas fa-download"></i> Export CSV
                         </button>
                     </form>
@@ -179,9 +179,9 @@
 
         <!-- PDF Export -->
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100" style="border-left: 4px solid #000000;">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-file-pdf text-danger"></i> Export to PDF</h5>
+                    <h5 class="card-title"><i class="fas fa-file-pdf" style="color: #000000;"></i> Export to PDF</h5>
                     <p class="card-text">Generate a PDF report of transactions for the selected date range.</p>
                     <form action="{{ route('reports.export-pdf') }}" method="POST" target="_blank">
                         @csrf
@@ -193,7 +193,7 @@
                             <label class="form-label">Date To</label>
                             <input type="date" name="date_to" class="form-control" required>
                         </div>
-                        <button type="submit" class="btn btn-danger w-100">
+                        <button type="submit" class="btn w-100" style="background-color: #000000; color: white; border: none;">
                             <i class="fas fa-file-pdf"></i> Export PDF
                         </button>
                     </form>
@@ -203,9 +203,9 @@
 
         <!-- Summary Report -->
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100" style="border-left: 4px solid #dc2626;">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-chart-pie text-info"></i> Summary Report</h5>
+                    <h5 class="card-title"><i class="fas fa-chart-pie" style="color: #dc2626;"></i> Summary Report</h5>
                     <p class="card-text">View category-wise and payment method-wise summary for analysis.</p>
                     <form action="{{ route('reports.export-summary') }}" method="POST" target="_blank">
                         @csrf
@@ -226,7 +226,7 @@
                             <label class="form-label">Date To</label>
                             <input type="date" name="date_to" class="form-control" required>
                         </div>
-                        <button type="submit" class="btn btn-info w-100">
+                        <button type="submit" class="btn w-100" style="background-color: #dc2626; color: white; border: none;">
                             <i class="fas fa-chart-bar"></i> View Summary
                         </button>
                     </form>
@@ -236,8 +236,8 @@
     </div>
 
     <!-- Quick Reports -->
-    <div class="card">
-        <div class="card-header">
+    <div class="card" style="border-left: 4px solid #000000;">
+        <div class="card-header" style="background-color: #000000; color: white;">
             <h5><i class="fas fa-bolt"></i> Quick Reports</h5>
         </div>
         <div class="card-body">
@@ -247,7 +247,7 @@
                         @csrf
                         <input type="hidden" name="date_from" value="{{ date('Y-m-d') }}">
                         <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button type="submit" class="btn w-100" style="border: 2px solid #dc2626; color: #dc2626; background: white;">
                             <i class="fas fa-calendar-day"></i> Today's Report (CSV)
                         </button>
                     </form>
@@ -257,7 +257,7 @@
                         @csrf
                         <input type="hidden" name="date_from" value="{{ date('Y-m-d', strtotime('-7 days')) }}">
                         <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button type="submit" class="btn w-100" style="border: 2px solid #dc2626; color: #dc2626; background: white;">
                             <i class="fas fa-calendar-week"></i> This Week (CSV)
                         </button>
                     </form>
@@ -267,7 +267,7 @@
                         @csrf
                         <input type="hidden" name="date_from" value="{{ date('Y-m-01') }}">
                         <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button type="submit" class="btn w-100" style="border: 2px solid #dc2626; color: #dc2626; background: white;">
                             <i class="fas fa-calendar-alt"></i> This Month (CSV)
                         </button>
                     </form>
@@ -277,7 +277,7 @@
                         @csrf
                         <input type="hidden" name="date_from" value="{{ date('Y-01-01') }}">
                         <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button type="submit" class="btn w-100" style="border: 2px solid #dc2626; color: #dc2626; background: white;">
                             <i class="fas fa-calendar"></i> This Year (CSV)
                         </button>
                     </form>

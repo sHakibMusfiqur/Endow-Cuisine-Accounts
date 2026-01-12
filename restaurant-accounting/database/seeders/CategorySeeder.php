@@ -19,7 +19,7 @@ class CategorySeeder extends Seeder
             ['name' => 'Catering Services', 'type' => 'income'],
             ['name' => 'Delivery Services', 'type' => 'income'],
             ['name' => 'Other Income', 'type' => 'income'],
-            
+
             // Expense Categories
             ['name' => 'Food Supplies', 'type' => 'expense'],
             ['name' => 'Beverage Supplies', 'type' => 'expense'],
