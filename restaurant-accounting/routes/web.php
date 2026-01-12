@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserManagementController;
 
 
 /*
@@ -31,7 +32,7 @@ Route::middleware('guest')->group(function () {
     });
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
-    
+
     // Password Reset Routes
     Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
@@ -63,7 +64,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/transactions', [TransactionController::class, 'index'])
             ->name('transactions.index');
     });
-    
+
     Route::middleware('can:create transactions')->group(function () {
         Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
@@ -107,4 +108,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
     Route::post('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     Route::post('/reports/export-summary', [ReportController::class, 'exportSummary'])->name('reports.export-summary');
+
+    // User Management - Admin only
+    Route::middleware('can:manage users')->group(function () {
+        Route::resource('users', UserManagementController::class);
+        Route::get('/activity-logs', [UserManagementController::class, 'activityLogs'])->name('activity-logs.index');
+    });
 });

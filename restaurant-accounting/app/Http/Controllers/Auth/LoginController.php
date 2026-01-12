@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,6 +35,16 @@ class LoginController extends Controller
             $user->last_login_at = now();
             $user->save();
 
+            // Log login activity
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'login',
+                'module' => 'auth',
+                'description' => "User logged in: {$user->name}",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -47,6 +58,19 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        // Log logout activity before logging out
+        if (Auth::check()) {
+            $user = Auth::user();
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'logout',
+                'module' => 'auth',
+                'description' => "User logged out: {$user->name}",
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();

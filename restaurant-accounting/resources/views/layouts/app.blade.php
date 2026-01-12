@@ -1038,16 +1038,16 @@
             <div class="logo-icon">
                 {{-- Logo Image Placeholder - Replace src with actual logo path --}}
                 @if(file_exists(public_path('images/logo.png')))
-                    <img src="{{ asset('images/logo.png') }}" 
-                         alt="Endow Cuisine Logo" 
+                    <img src="{{ asset('images/logo.png') }}"
+                         alt="Endow Cuisine Logo"
                          style="width: 40px; height: 40px; object-fit: contain;">
                 @elseif(file_exists(public_path('images/logo.svg')))
-                    <img src="{{ asset('images/logo.svg') }}" 
-                         alt="Endow Cuisine Logo" 
+                    <img src="{{ asset('images/logo.svg') }}"
+                         alt="Endow Cuisine Logo"
                          style="width: 40px; height: 40px; object-fit: contain;">
                 @elseif(file_exists(public_path('images/logo-placeholder.svg')))
-                    <img src="{{ asset('images/logo-placeholder.svg') }}" 
-                         alt="Endow Cuisine Logo" 
+                    <img src="{{ asset('images/logo-placeholder.svg') }}"
+                         alt="Endow Cuisine Logo"
                          style="width: 40px; height: 40px; object-fit: contain;">
                 @else
                     {{-- Fallback to icon if logo doesn't exist --}}
@@ -1087,6 +1087,13 @@
                data-tooltip="Reports">
                 <i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span>
             </a>
+            @can('manage users')
+            <a class="nav-link {{ request()->routeIs('users.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}"
+               href="{{ route('users.index') }}"
+               data-tooltip="User Management">
+                <i class="fas fa-users-cog"></i> <span class="nav-text">User Management</span>
+            </a>
+            @endcan
             <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
                href="{{ route('profile.show') }}"
                data-tooltip="My Profile">
