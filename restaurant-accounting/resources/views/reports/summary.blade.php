@@ -3,574 +3,533 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summary Report - Restaurant Accounting</title>
+    <title>Financial Summary Report - Restaurant Accounting</title>
     <style>
+        /* Professional A4 PDF Styling */
+        @page {
+            size: A4;
+            margin: 20mm 15mm;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: #1f2937;
-            line-height: 1.6;
-            background: #f3f4f6;
-            padding: 30px 20px;
-            font-size: 14px;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        .container {
-            max-width: 1140px;
-            margin: 0 auto;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #000000;
             background: #ffffff;
-            padding: 50px 60px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
 
-        /* CLEAN HEADER - No background, just text + divider */
-        .report-header {
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+        /* Document Header */
+        .document-header {
+            border-bottom: 3px solid #000000;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
         }
 
-        .company-name {
-            font-size: 24px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 4px;
-            letter-spacing: -0.3px;
-        }
-
-        .report-subtitle {
-            font-size: 13px;
-            color: #9ca3af;
-            font-weight: 400;
-            margin-bottom: 20px;
-        }
-
-        .report-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 6px;
-        }
-
-        /* Generated Time Section - clean with thin red accent */
-        .meta-section {
-            margin: 25px 0;
-            padding: 16px 0;
-            border-top: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .generated-time {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 6px;
-        }
-
-        .generated-time strong {
-            color: #111827;
-            font-weight: 600;
-        }
-
-        .report-period {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .report-period strong {
-            color: #111827;
-            font-weight: 600;
-        }
-
-        /* Info Row - Minimal cards with left accent */
-        .info-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin: 30px 0;
-        }
-
-        .info-item {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-left: 2px solid #dc2626;
-            padding: 14px 18px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        }
-
-        .info-label {
-            font-size: 11px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #111827;
-            font-weight: 600;
-        }
-
-        /* Summary Cards - Modern Accounting Style */
-        .summary-section {
-            margin: 35px 0;
-        }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-        }
-
-        .summary-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-left: 2px solid #dc2626;
-            padding: 24px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        }
-
-        .summary-card-label {
-            font-size: 12px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .company-info {
             margin-bottom: 10px;
         }
 
-        .summary-card-amount {
-            font-size: 26px;
-            font-weight: 700;
-            font-family: 'Courier New', 'Consolas', monospace;
-            color: #111827;
-            letter-spacing: -0.5px;
+        .company-name {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 3px;
         }
 
-        /* Table Design - Enterprise Standard */
-        .table-section {
-            margin: 35px 0;
+        .company-tagline {
+            font-size: 9pt;
+            color: #666666;
+            margin-bottom: 12px;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-            margin-top: 18px;
-            border: 1px solid #e5e7eb;
+        .report-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #000000;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
+        /* Report Metadata */
+        .report-meta {
+            background: #f5f5f5;
+            border-left: 4px solid #000000;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            font-size: 9pt;
         }
 
-        thead {
-            background: #f9fafb;
+        .report-meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
         }
 
-        th {
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 11px;
+        .report-meta-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            color: #000000;
+        }
+
+        .meta-value {
+            color: #333333;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .info-box {
+            border: 1px solid #dddddd;
+            border-left: 3px solid #000000;
+            padding: 12px;
+            background: #fafafa;
+        }
+
+        .info-label {
+            font-size: 8pt;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
+            color: #666666;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
-        th.text-right {
-            text-align: right;
+        .info-value {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #000000;
         }
 
-        tbody tr {
-            border-bottom: 1px solid #f3f4f6;
+        /* Section Headers */
+        .section-header {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #000000;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #dddddd;
+            margin-bottom: 15px;
+            margin-top: 25px;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #fafafa;
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        tbody tr:hover:not(.total-row) {
-            background-color: #f9fafb;
+        .summary-card {
+            border: 2px solid #000000;
+            padding: 15px;
+            background: #ffffff;
         }
 
-        td {
-            padding: 12px 16px;
-            font-size: 13px;
-            color: #374151;
+        .summary-label {
+            font-size: 8pt;
+            text-transform: uppercase;
+            color: #666666;
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
 
-        td.text-right {
-            text-align: right;
-        }
-
-        .category-name {
-            font-weight: 500;
-            color: #111827;
-        }
-
-        .amount-income {
-            color: #059669;
-            font-weight: 600;
+        .summary-amount {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #000000;
             font-family: 'Courier New', monospace;
-        }
-
-        .amount-expense {
-            color: #dc2626;
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
-        }
-
-        .amount-neutral {
-            color: #d1d5db;
-        }
-
-        .count-badge {
-            display: inline-block;
-            background: #f3f4f6;
-            color: #374151;
-            padding: 3px 10px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        tbody tr.total-row {
-            background: #f9fafb;
-            border-top: 2px solid #e5e7eb;
-            font-weight: 600;
-        }
-
-        tbody tr.total-row td {
-            padding: 14px 16px;
-            color: #111827;
         }
 
         /* Insight Box */
         .insight-box {
-            background: #fafafa;
-            border-left: 2px solid #dc2626;
-            padding: 16px 20px;
-            margin: 25px 0;
-            font-size: 13px;
-            color: #4b5563;
-            line-height: 1.6;
+            background: #f0f0f0;
+            border-left: 4px solid #000000;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            font-size: 9pt;
         }
 
         .insight-title {
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 6px;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 5px;
         }
 
-        /* Action Buttons */
-        .action-buttons {
-            margin: 40px 0 30px;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
+        .insight-content {
+            color: #333333;
         }
 
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
+        /* Professional Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            font-size: 9pt;
         }
 
-        .btn-primary {
-            background: #111827;
-            color: white;
+        .data-table thead {
+            background: #000000;
+            color: #ffffff;
         }
 
-        .btn-primary:hover {
-            background: #1f2937;
+        .data-table th {
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .btn-secondary {
-            background: white;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
+        .data-table th.text-right {
+            text-align: right;
         }
 
-        .btn-secondary:hover {
-            background: #f9fafb;
+        .data-table tbody tr {
+            border-bottom: 1px solid #e0e0e0;
         }
 
-        /* Footer - Minimal */
-        .report-footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
+        .data-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .data-table tbody tr.total-row {
+            background: #e0e0e0;
+            font-weight: bold;
+            border-top: 2px solid #000000;
+        }
+
+        .data-table td {
+            padding: 8px;
+            color: #333333;
+        }
+
+        .data-table td.text-right {
+            text-align: right;
+        }
+
+        /* Financial Amounts */
+        .amount-positive {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .amount-negative {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .amount-neutral {
+            color: #999999;
+        }
+
+        /* Tags/Badges */
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e0e0e0;
+            color: #333333;
+            font-size: 8pt;
+            font-weight: bold;
+            border-radius: 3px;
+        }
+
+        /* Document Footer */
+        .document-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #000000;
+            font-size: 8pt;
             text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
+            color: #666666;
         }
 
-        .footer-note {
-            margin-bottom: 4px;
+        .footer-info {
+            margin-bottom: 5px;
         }
 
+        /* Print Optimizations */
         @media print {
             body {
-                padding: 0;
                 background: white;
             }
+
             .no-print {
                 display: none !important;
             }
-            .container {
-                box-shadow: none;
-                padding: 30px;
+
+            .page-break {
+                page-break-after: always;
             }
         }
 
-        @page {
-            margin: 15mm;
-            size: A4;
+        /* Print Buttons */
+        .print-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 10pt;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-print {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-print:hover {
+            background: #333333;
+        }
+
+        .btn-close {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+        }
+
+        .btn-close:hover {
+            background: #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Clean Header -->
-        <div class="report-header">
+    <!-- Print Controls -->
+    <div class="print-controls no-print">
+        <button class="btn btn-print" onclick="window.print()">Print Report</button>
+        <button class="btn btn-close" onclick="window.close()">Close</button>
+    </div>
+
+    <!-- Document Header -->
+    <div class="document-header">
+        <div class="company-info">
             <div class="company-name">Restaurant Accounting</div>
-            <div class="report-subtitle">Financial Management System</div>
-            <div class="report-title">Financial Summary Report</div>
+            <div class="company-tagline">Financial Management System</div>
         </div>
+        <div class="report-title">Financial Summary Report</div>
+    </div>
 
-        <!-- Meta Section with Local Timezone -->
-        <div class="meta-section">
-            <div class="generated-time">
-                <strong>Generated on:</strong> {{ $generated_at->format('d M Y, h:i A') }} (Local Time)
-            </div>
-            <div class="report-period">
-                <strong>Period:</strong> {{ $date_from }} → {{ $date_to }}
+    <!-- Report Metadata -->
+    <div class="report-meta">
+        <div class="report-meta-row">
+            <span class="meta-label">Generated:</span>
+            <span class="meta-value">{{ $generated_at->format('d M Y, h:i A') }}</span>
+        </div>
+        <div class="report-meta-row">
+            <span class="meta-label">Period:</span>
+            <span class="meta-value">{{ $date_from }} to {{ $date_to }}</span>
+        </div>
+        <div class="report-meta-row">
+            <span class="meta-label">Report ID:</span>
+            <span class="meta-value">SUM-{{ date('YmdHis') }}</span>
+        </div>
+        <div class="report-meta-row">
+            <span class="meta-label">Analysis Type:</span>
+            <span class="meta-value">{{ ucfirst($period) }}</span>
+        </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+        <div class="info-box">
+            <div class="info-label">Currency</div>
+            <div class="info-value">{{ $activeCurrency->code }} ({{ $activeCurrency->symbol }})</div>
+        </div>
+        <div class="info-box">
+            <div class="info-label">Total Transactions</div>
+            <div class="info-value">{{ collect($category_wise)->sum('count') }}</div>
+        </div>
+        <div class="info-box">
+            <div class="info-label">Categories</div>
+            <div class="info-value">{{ count($category_wise) }}</div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="section-header">Executive Summary</div>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Total Income</div>
+            <div class="summary-amount amount-positive">{{ formatCurrency($total_income) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Total Expense</div>
+            <div class="summary-amount amount-negative">{{ formatCurrency($total_expense) }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Net Amount</div>
+            <div class="summary-amount" style="color: {{ ($total_income - $total_expense) >= 0 ? '#2e7d32' : '#d32f2f' }}">
+                {{ formatCurrency($total_income - $total_expense) }}
             </div>
         </div>
+    </div>
 
-        <!-- Info Row -->
-        <div class="info-row">
-            <div class="info-item">
-                <div class="info-label">Currency</div>
-                <div class="info-value">{{ $activeCurrency->code }} ({{ $activeCurrency->symbol }})</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Report ID</div>
-                <div class="info-value">SUM-{{ date('YmdHis') }}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Total Records</div>
-                <div class="info-value">{{ collect($category_wise)->sum('count') }} transactions</div>
-            </div>
+    @php
+        $profitMargin = $total_income > 0 ? (($total_income - $total_expense) / $total_income * 100) : 0;
+    @endphp
+
+    <div class="insight-box">
+        <div class="insight-title">Financial Insight</div>
+        <div class="insight-content">
+            @if($profitMargin > 0)
+                Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> - 
+                Your restaurant is operating profitably with positive net income.
+            @elseif($profitMargin == 0)
+                Break-even Status - Income and expenses are balanced.
+            @else
+                Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> - 
+                Expenses exceed income. Review cost management strategies.
+            @endif
         </div>
+    </div>
 
-        <!-- Summary Section -->
-        <div class="summary-section">
-            <div class="section-title">Executive Summary</div>
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <div class="summary-card-label">Total Income</div>
-                    <div class="summary-card-amount amount-income">{{ formatCurrency($total_income) }}</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-label">Total Expense</div>
-                    <div class="summary-card-amount amount-expense">{{ formatCurrency($total_expense) }}</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-label">Net Amount</div>
-                    <div class="summary-card-amount" style="color: {{ ($total_income - $total_expense) >= 0 ? '#059669' : '#dc2626' }}">
-                        {{ formatCurrency($total_income - $total_expense) }}
-                    </div>
-                </div>
-            </div>
-
+    <!-- Category Analysis -->
+    <div class="section-header">Category-wise Analysis</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Category</th>
+                <th class="text-right" style="width: 17%;">Income</th>
+                <th class="text-right" style="width: 17%;">Expense</th>
+                <th class="text-right" style="width: 17%;">Net Amount</th>
+                <th class="text-right" style="width: 12%;">Count</th>
+                <th class="text-right" style="width: 12%;">% Total</th>
+            </tr>
+        </thead>
+        <tbody>
             @php
-                $profitMargin = $total_income > 0 ? (($total_income - $total_expense) / $total_income * 100) : 0;
+                $totalTransactions = collect($category_wise)->sum('count');
             @endphp
-            
-            <div class="insight-box">
-                <div class="insight-title">Financial Insight</div>
-                <div>
-                    @if($profitMargin > 0)
-                        Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> - 
-                        Your restaurant is operating profitably with a positive net income.
-                    @elseif($profitMargin == 0)
-                        Break-even Status - Income and expenses are balanced.
+            @foreach($category_wise as $category => $data)
+            <tr>
+                <td><strong>{{ $category }}</strong></td>
+                <td class="text-right">
+                    @if($data['total_income'] > 0)
+                        <span class="amount-positive">{{ formatCurrency($data['total_income']) }}</span>
                     @else
-                        Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> - 
-                        Expenses exceed income. Consider reviewing cost management strategies.
+                        <span class="amount-neutral">—</span>
                     @endif
-                </div>
-            </div>
-        </div>
+                </td>
+                <td class="text-right">
+                    @if($data['total_expense'] > 0)
+                        <span class="amount-negative">{{ formatCurrency($data['total_expense']) }}</span>
+                    @else
+                        <span class="amount-neutral">—</span>
+                    @endif
+                </td>
+                <td class="text-right">
+                    @php $netAmount = $data['total_income'] - $data['total_expense']; @endphp
+                    <span style="color: {{ $netAmount >= 0 ? '#2e7d32' : '#d32f2f' }}; font-weight: bold;">
+                        {{ formatCurrency($netAmount) }}
+                    </span>
+                </td>
+                <td class="text-right"><span class="tag">{{ $data['count'] }}</span></td>
+                <td class="text-right">{{ $totalTransactions > 0 ? number_format(($data['count'] / $totalTransactions) * 100, 1) : 0 }}%</td>
+            </tr>
+            @endforeach
+            <tr class="total-row">
+                <td>TOTAL</td>
+                <td class="text-right"><span class="amount-positive">{{ formatCurrency($total_income) }}</span></td>
+                <td class="text-right"><span class="amount-negative">{{ formatCurrency($total_expense) }}</span></td>
+                <td class="text-right">
+                    <span style="color: {{ ($total_income - $total_expense) >= 0 ? '#2e7d32' : '#d32f2f' }}">
+                        {{ formatCurrency($total_income - $total_expense) }}
+                    </span>
+                </td>
+                <td class="text-right"><span class="tag">{{ $totalTransactions }}</span></td>
+                <td class="text-right">100.0%</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <!-- Category Analysis Table -->
-        <div class="table-section">
-            <div class="section-title">Category-wise Analysis</div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th class="text-right">Income</th>
-                            <th class="text-right">Expense</th>
-                            <th class="text-right">Net Amount</th>
-                            <th class="text-right">Transactions</th>
-                            <th class="text-right">% of Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $totalTransactions = collect($category_wise)->sum('count');
-                        @endphp
-                        @foreach($category_wise as $category => $data)
-                        <tr>
-                            <td><span class="category-name">{{ $category }}</span></td>
-                            <td class="text-right">
-                                @if($data['total_income'] > 0)
-                                    <span class="amount-income">{{ formatCurrency($data['total_income']) }}</span>
-                                @else
-                                    <span class="amount-neutral">—</span>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                @if($data['total_expense'] > 0)
-                                    <span class="amount-expense">{{ formatCurrency($data['total_expense']) }}</span>
-                                @else
-                                    <span class="amount-neutral">—</span>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                @php $netAmount = $data['total_income'] - $data['total_expense']; @endphp
-                                <span style="color: {{ $netAmount >= 0 ? '#059669' : '#dc2626' }}; font-weight: 600; font-family: 'Courier New', monospace;">
-                                    {{ formatCurrency($netAmount) }}
-                                </span>
-                            </td>
-                            <td class="text-right">
-                                <span class="count-badge">{{ $data['count'] }}</span>
-                            </td>
-                            <td class="text-right">
-                                {{ $totalTransactions > 0 ? number_format(($data['count'] / $totalTransactions) * 100, 1) : 0 }}%
-                            </td>
-                        </tr>
-                        @endforeach
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td class="text-right"><span class="amount-income">{{ formatCurrency($total_income) }}</span></td>
-                            <td class="text-right"><span class="amount-expense">{{ formatCurrency($total_expense) }}</span></td>
-                            <td class="text-right">
-                                <span style="color: {{ ($total_income - $total_expense) >= 0 ? '#059669' : '#dc2626' }}; font-weight: 600; font-family: 'Courier New', monospace;">
-                                    {{ formatCurrency($total_income - $total_expense) }}
-                                </span>
-                            </td>
-                            <td class="text-right"><span class="count-badge">{{ $totalTransactions }}</span></td>
-                            <td class="text-right">100%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <!-- Payment Method Analysis -->
+    <div class="section-header">Payment Method Analysis</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Payment Method</th>
+                <th class="text-right" style="width: 17%;">Income</th>
+                <th class="text-right" style="width: 17%;">Expense</th>
+                <th class="text-right" style="width: 17%;">Net Amount</th>
+                <th class="text-right" style="width: 12%;">Count</th>
+                <th class="text-right" style="width: 12%;">% Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $totalPaymentTransactions = $payment_method_wise->sum('count');
+            @endphp
+            @foreach($payment_method_wise as $method => $data)
+            <tr>
+                <td><strong>{{ $method }}</strong></td>
+                <td class="text-right">
+                    @if($data['total_income'] > 0)
+                        <span class="amount-positive">{{ formatCurrency($data['total_income']) }}</span>
+                    @else
+                        <span class="amount-neutral">—</span>
+                    @endif
+                </td>
+                <td class="text-right">
+                    @if($data['total_expense'] > 0)
+                        <span class="amount-negative">{{ formatCurrency($data['total_expense']) }}</span>
+                    @else
+                        <span class="amount-neutral">—</span>
+                    @endif
+                </td>
+                <td class="text-right">
+                    @php $netAmount = $data['total_income'] - $data['total_expense']; @endphp
+                    <span style="color: {{ $netAmount >= 0 ? '#2e7d32' : '#d32f2f' }}; font-weight: bold;">
+                        {{ formatCurrency($netAmount) }}
+                    </span>
+                </td>
+                <td class="text-right"><span class="tag">{{ $data['count'] }}</span></td>
+                <td class="text-right">{{ $totalPaymentTransactions > 0 ? number_format(($data['count'] / $totalPaymentTransactions) * 100, 1) : 0 }}%</td>
+            </tr>
+            @endforeach
+            <tr class="total-row">
+                <td>TOTAL</td>
+                <td class="text-right"><span class="amount-positive">{{ formatCurrency($total_income) }}</span></td>
+                <td class="text-right"><span class="amount-negative">{{ formatCurrency($total_expense) }}</span></td>
+                <td class="text-right">
+                    <span style="color: {{ ($total_income - $total_expense) >= 0 ? '#2e7d32' : '#d32f2f' }}">
+                        {{ formatCurrency($total_income - $total_expense) }}
+                    </span>
+                </td>
+                <td class="text-right"><span class="tag">{{ $totalPaymentTransactions }}</span></td>
+                <td class="text-right">100.0%</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <!-- Payment Method Analysis Table -->
-        <div class="table-section">
-            <div class="section-title">Payment Method Analysis</div>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Payment Method</th>
-                            <th class="text-right">Income</th>
-                            <th class="text-right">Expense</th>
-                            <th class="text-right">Net Amount</th>
-                            <th class="text-right">Transactions</th>
-                            <th class="text-right">% of Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $totalPaymentTransactions = $payment_method_wise->sum('count');
-                        @endphp
-                        @foreach($payment_method_wise as $method => $data)
-                        <tr>
-                            <td><span class="category-name">{{ $method }}</span></td>
-                            <td class="text-right">
-                                @if($data['total_income'] > 0)
-                                    <span class="amount-income">{{ formatCurrency($data['total_income']) }}</span>
-                                @else
-                                    <span class="amount-neutral">—</span>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                @if($data['total_expense'] > 0)
-                                    <span class="amount-expense">{{ formatCurrency($data['total_expense']) }}</span>
-                                @else
-                                    <span class="amount-neutral">—</span>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                @php $netAmount = $data['total_income'] - $data['total_expense']; @endphp
-                                <span style="color: {{ $netAmount >= 0 ? '#059669' : '#dc2626' }}; font-weight: 600; font-family: 'Courier New', monospace;">
-                                    {{ formatCurrency($netAmount) }}
-                                </span>
-                            </td>
-                            <td class="text-right">
-                                <span class="count-badge">{{ $data['count'] }}</span>
-                            </td>
-                            <td class="text-right">
-                                {{ $totalPaymentTransactions > 0 ? number_format(($data['count'] / $totalPaymentTransactions) * 100, 1) : 0 }}%
-                            </td>
-                        </tr>
-                        @endforeach
-                        <tr class="total-row">
-                            <td>TOTAL</td>
-                            <td class="text-right"><span class="amount-income">{{ formatCurrency($total_income) }}</span></td>
-                            <td class="text-right"><span class="amount-expense">{{ formatCurrency($total_expense) }}</span></td>
-                            <td class="text-right">
-                                <span style="color: {{ ($total_income - $total_expense) >= 0 ? '#059669' : '#dc2626' }}; font-weight: 600; font-family: 'Courier New', monospace;">
-                                    {{ formatCurrency($total_income - $total_expense) }}
-                                </span>
-                            </td>
-                            <td class="text-right"><span class="count-badge">{{ $totalPaymentTransactions }}</span></td>
-                            <td class="text-right">100%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons no-print">
-            <button class="btn btn-primary" onclick="window.print()">Print Report</button>
-            <button class="btn btn-secondary" onclick="window.close()">Close</button>
-        </div>
-
-        <!-- Footer -->
-        <div class="report-footer">
-            <p class="footer-note">Generated by Restaurant Accounting System</p>
-            <p>Page 1 of 1</p>
-        </div>
+    <!-- Document Footer -->
+    <div class="document-footer">
+        <div class="footer-info"><strong>Restaurant Accounting System</strong></div>
+        <div class="footer-info">This report is computer-generated and does not require a signature</div>
+        <div class="footer-info">Page 1 of 1 | Generated on {{ now()->format('d M Y, H:i') }}</div>
     </div>
 </body>
 </html>
