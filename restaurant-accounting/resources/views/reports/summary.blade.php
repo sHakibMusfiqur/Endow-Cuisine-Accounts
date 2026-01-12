@@ -28,19 +28,31 @@
         /* Document Header */
         .document-header {
             border-bottom: 3px solid #000000;
-            padding-bottom: 15px;
+            padding-bottom: 20px;
             margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .company-logo {
+            margin-bottom: 15px;
+        }
+
+        .company-logo img {
+            max-width: 120px;
+            max-height: 120px;
+            object-fit: contain;
+            display: inline-block;
         }
 
         .company-info {
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
         .company-name {
-            font-size: 24pt;
+            font-size: 20pt;
             font-weight: bold;
             color: #000000;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
         }
 
         .company-tagline {
@@ -326,11 +338,15 @@
 
     <!-- Document Header -->
     <div class="document-header">
-        <div class="company-info">
-            <div class="company-name">Restaurant Accounting</div>
-            <div class="company-tagline">Financial Management System</div>
+        @if(file_exists(public_path('images/logo.png')))
+        <div class="company-logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Endow Cuisine Logo">
         </div>
-        <div class="report-title">Financial Summary Report</div>
+        @endif
+        <div class="company-info">
+            {{-- <div class="company-name">Endow Cuisine</div> --}}
+            <div class="report-title">Financial Summary Report</div>
+        </div>
     </div>
 
     <!-- Report Metadata -->
@@ -396,12 +412,12 @@
         <div class="insight-title">Financial Insight</div>
         <div class="insight-content">
             @if($profitMargin > 0)
-                Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> - 
+                Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> -
                 Your restaurant is operating profitably with positive net income.
             @elseif($profitMargin == 0)
                 Break-even Status - Income and expenses are balanced.
             @else
-                Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> - 
+                Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
                 Expenses exceed income. Review cost management strategies.
             @endif
         </div>

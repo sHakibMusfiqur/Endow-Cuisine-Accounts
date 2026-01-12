@@ -86,10 +86,11 @@
             justify-content: center;
             min-width: 44px;
             min-height: 44px;
-            background: linear-gradient(135deg, rgba(234,34,42,0.15), rgba(255,255,255,0.05));
+            background: #ffffff;
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             flex-shrink: 0;
+            padding: 4px;
         }
 
         .sidebar .logo i {
@@ -138,7 +139,7 @@
 
         .sidebar .logo:hover .logo-icon {
             transform: scale(1.1) rotate(-5deg);
-            background: linear-gradient(135deg, rgba(234,34,42,0.25), rgba(255,255,255,0.1));
+            background: #ffffff;
             box-shadow: 0 4px 12px rgba(234,34,42,0.3);
         }
 
@@ -165,7 +166,7 @@
         }
 
         .sidebar .logo.active .logo-icon {
-            background: linear-gradient(135deg, rgba(234,34,42,0.3), rgba(255,255,255,0.15));
+            background: #ffffff;
             box-shadow: 0 0 15px rgba(234,34,42,0.4);
         }
 
@@ -1045,8 +1046,8 @@
                     <img src="{{ asset('images/logo.svg') }}"
                          alt="Endow Cuisine Logo"
                          style="width: 40px; height: 40px; object-fit: contain;">
-                @elseif(file_exists(public_path('images/logo-placeholder.svg')))
-                    <img src="{{ asset('images/logo-placeholder.svg') }}"
+                @elseif(file_exists(public_path('images/logo.png')))
+                    <img src="{{ asset('images/logo.png') }}"
                          alt="Endow Cuisine Logo"
                          style="width: 40px; height: 40px; object-fit: contain;">
                 @else
@@ -1056,7 +1057,7 @@
             </div>
             <div class="logo-text">
                 <span class="app-name">Endow Cuisine</span>
-                <span class="app-tagline">Accounting System</span>
+                {{-- <span class="app-tagline">Accounting System</span> --}}
             </div>
         </a>
         <nav class="nav flex-column">

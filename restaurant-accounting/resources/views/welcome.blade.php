@@ -36,8 +36,8 @@
                     {{-- Restaurant Logo Placeholder --}}
                     @if(file_exists(public_path('images/logo.png')))
                         <img src="{{ asset('images/logo.png') }}" alt="Endow Cuisine Logo" class="h-16 w-auto">
-                    @elseif(file_exists(public_path('images/logo.svg')))
-                        <img src="{{ asset('images/logo.svg') }}" alt="Endow Cuisine Logo" class="h-16 w-auto">
+                    @elseif(file_exists(public_path('images/logo.png')))
+                        <img src="{{ asset('images/logo.png') }}" alt="Endow Cuisine Logo" class="h-16 w-auto">
                     @elseif(file_exists(public_path('images/logo-placeholder.svg')))
                         <img src="{{ asset('images/logo-placeholder.svg') }}" alt="Endow Cuisine Logo" class="h-16 w-auto">
                     @else
