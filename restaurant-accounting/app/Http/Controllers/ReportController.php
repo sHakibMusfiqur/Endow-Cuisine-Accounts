@@ -3,11 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyTransaction;
+use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    protected $transactionService;
+
+    public function __construct(TransactionService $transactionService)
+    {
+        $this->transactionService = $transactionService;
+    }
     /**
      * Display the reports page.
      */
@@ -156,5 +163,50 @@ class ReportController extends Controller
         ];
 
         return view('reports.summary', $data);
+    }
+
+    /**
+     * Get summary analysis (Daily, Weekly, Monthly, Yearly).
+     * 
+     * Returns JSON data for charts and reports.
+     * All calculations are based on KRW (base_amount).
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSummaryAnalysis(Request $request)
+    {
+        $validated = $request->validate([
+            'analysis_type' => 'required|in:daily,weekly,monthly,yearly',
+            'date_from' => 'required|date',
+            'date_to' => 'required|date|after_or_equal:date_from',
+        ]);
+
+        try {
+            $analysisData = $this->transactionService->getSummaryAnalysis(
+                $validated['analysis_type'],
+                $validated['date_from'],
+                $validated['date_to']
+            );
+
+            return response()->json([
+                'success' => true,
+                'analysis_type' => $validated['analysis_type'],
+                'date_from' => $validated['date_from'],
+                'date_to' => $validated['date_to'],
+                'data' => $analysisData,
+                'currency' => 'KRW', // All calculations are in KRW
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while generating the analysis.',
+            ], 500);
+        }
     }
 }

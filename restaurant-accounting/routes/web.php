@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/reports/export-csv', [ReportController::class, 'exportCsv'])->name('reports.export-csv');
     Route::post('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export-pdf');
     Route::post('/reports/export-summary', [ReportController::class, 'exportSummary'])->name('reports.export-summary');
+    Route::get('/reports/summary-analysis', [ReportController::class, 'getSummaryAnalysis'])->name('reports.summary-analysis');
 
     // User Management - Admin only
     Route::middleware('can:manage users')->group(function () {

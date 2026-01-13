@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DailyTransaction;
 use App\Models\Currency;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -301,5 +302,250 @@ class TransactionService
             'net_amount' => $netAmount,
             'current_balance' => $currentBalance,
         ];
+    }
+
+    /**
+     * Get summary analysis for daily, weekly, monthly, or yearly periods.
+     * 
+     * ACCOUNTING-GRADE ANALYSIS RULES:
+     * =================================
+     * 1. Date filtering FIRST (transaction_date, not created_at)
+     * 2. Use ONLY base_amount (KRW) for all calculations
+     * 3. Separate Income/Expense (never mix in SQL)
+     * 4. Calculate Net AFTER aggregation (Income - Expense)
+     * 5. Zero-fill missing periods
+     * 6. Sort chronologically
+     * 7. Consistent output structure
+     *
+     * @param string $analysisType 'daily', 'weekly', 'monthly', 'yearly'
+     * @param string $dateFrom Start date (Y-m-d)
+     * @param string $dateTo End date (Y-m-d)
+     * @return array
+     */
+    public function getSummaryAnalysis(string $analysisType, string $dateFrom, string $dateTo): array
+    {
+        $startDate = Carbon::parse($dateFrom);
+        $endDate = Carbon::parse($dateTo);
+
+        // Validate date range
+        if ($startDate->gt($endDate)) {
+            throw new \InvalidArgumentException('Start date must be before or equal to end date');
+        }
+
+        switch ($analysisType) {
+            case 'daily':
+                return $this->getDailyAnalysis($startDate, $endDate);
+            case 'weekly':
+                return $this->getWeeklyAnalysis($startDate, $endDate);
+            case 'monthly':
+                return $this->getMonthlyAnalysis($startDate, $endDate);
+            case 'yearly':
+                return $this->getYearlyAnalysis($startDate, $endDate);
+            default:
+                throw new \InvalidArgumentException('Invalid analysis type. Must be: daily, weekly, monthly, or yearly');
+        }
+    }
+
+    /**
+     * Daily Analysis - One row per calendar date.
+     */
+    private function getDailyAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        // STEP 1: Filter by date range FIRST
+        $transactions = DB::table('daily_transactions')
+            ->select(
+                DB::raw('DATE(date) as period_date'),
+                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+            )
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('period_date')
+            ->orderBy('period_date', 'asc')
+            ->get()
+            ->keyBy('period_date');
+
+        // STEP 2: Zero-fill missing dates
+        $result = [];
+        $currentDate = $startDate->copy();
+        
+        while ($currentDate->lte($endDate)) {
+            $dateKey = $currentDate->format('Y-m-d');
+            
+            if ($transactions->has($dateKey)) {
+                $data = $transactions->get($dateKey);
+                $income = (float) $data->total_income;
+                $expense = (float) $data->total_expense;
+            } else {
+                $income = 0;
+                $expense = 0;
+            }
+
+            $result[] = [
+                'label' => $currentDate->format('Y-m-d'),
+                'income' => $income,
+                'expense' => $expense,
+                'net' => $income - $expense,
+            ];
+
+            $currentDate->addDay();
+        }
+
+        return $result;
+    }
+
+    /**
+     * Weekly Analysis - ISO weeks (Monday-Sunday).
+     */
+    private function getWeeklyAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        // STEP 1: Filter by date range and group by ISO week
+        $transactions = DB::table('daily_transactions')
+            ->select(
+                DB::raw('YEAR(date) as year'),
+                DB::raw('WEEK(date, 1) as week'),
+                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+            )
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('year', 'week')
+            ->orderBy('year', 'asc')
+            ->orderBy('week', 'asc')
+            ->get();
+
+        // Convert to keyed collection
+        $transactionsByWeek = $transactions->mapWithKeys(function($item) {
+            return ["{$item->year}-W{$item->week}" => $item];
+        });
+
+        // STEP 2: Zero-fill missing weeks
+        $result = [];
+        $currentDate = $startDate->copy()->startOfWeek(Carbon::MONDAY);
+        
+        while ($currentDate->lte($endDate)) {
+            $year = $currentDate->year;
+            $week = $currentDate->isoWeek();
+            $weekKey = "{$year}-W{$week}";
+            
+            if ($transactionsByWeek->has($weekKey)) {
+                $data = $transactionsByWeek->get($weekKey);
+                $income = (float) $data->total_income;
+                $expense = (float) $data->total_expense;
+            } else {
+                $income = 0;
+                $expense = 0;
+            }
+
+            $result[] = [
+                'label' => "Week {$week} ({$year})",
+                'income' => $income,
+                'expense' => $expense,
+                'net' => $income - $expense,
+            ];
+
+            $currentDate->addWeek();
+        }
+
+        return $result;
+    }
+
+    /**
+     * Monthly Analysis - Calendar months.
+     */
+    private function getMonthlyAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        // STEP 1: Filter by date range and group by month
+        $transactions = DB::table('daily_transactions')
+            ->select(
+                DB::raw('YEAR(date) as year'),
+                DB::raw('MONTH(date) as month'),
+                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+            )
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('year', 'month')
+            ->orderBy('year', 'asc')
+            ->orderBy('month', 'asc')
+            ->get();
+
+        // Convert to keyed collection
+        $transactionsByMonth = $transactions->mapWithKeys(function($item) {
+            return ["{$item->year}-{$item->month}" => $item];
+        });
+
+        // STEP 2: Zero-fill missing months
+        $result = [];
+        $currentDate = $startDate->copy()->startOfMonth();
+        
+        while ($currentDate->lte($endDate)) {
+            $year = $currentDate->year;
+            $month = $currentDate->month;
+            $monthKey = "{$year}-{$month}";
+            
+            if ($transactionsByMonth->has($monthKey)) {
+                $data = $transactionsByMonth->get($monthKey);
+                $income = (float) $data->total_income;
+                $expense = (float) $data->total_expense;
+            } else {
+                $income = 0;
+                $expense = 0;
+            }
+
+            $result[] = [
+                'label' => $currentDate->format('F Y'),
+                'income' => $income,
+                'expense' => $expense,
+                'net' => $income - $expense,
+            ];
+
+            $currentDate->addMonth();
+        }
+
+        return $result;
+    }
+
+    /**
+     * Yearly Analysis - Calendar years.
+     */
+    private function getYearlyAnalysis(Carbon $startDate, Carbon $endDate): array
+    {
+        // STEP 1: Filter by date range and group by year
+        $transactions = DB::table('daily_transactions')
+            ->select(
+                DB::raw('YEAR(date) as year'),
+                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+            )
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->groupBy('year')
+            ->orderBy('year', 'asc')
+            ->get()
+            ->keyBy('year');
+
+        // STEP 2: Zero-fill missing years
+        $result = [];
+        $currentYear = $startDate->year;
+        $endYear = $endDate->year;
+        
+        while ($currentYear <= $endYear) {
+            if ($transactions->has($currentYear)) {
+                $data = $transactions->get($currentYear);
+                $income = (float) $data->total_income;
+                $expense = (float) $data->total_expense;
+            } else {
+                $income = 0;
+                $expense = 0;
+            }
+
+            $result[] = [
+                'label' => (string) $currentYear,
+                'income' => $income,
+                'expense' => $expense,
+                'net' => $income - $expense,
+            ];
+
+            $currentYear++;
+        }
+
+        return $result;
     }
 }
