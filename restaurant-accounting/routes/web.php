@@ -25,6 +25,11 @@ use App\Http\Controllers\UserManagementController;
 |
 */
 
+// Storage route - Serve files without symlink (for shared hosting)
+Route::get('/storage/{path}', function ($path) {
+    return \App\Helpers\StorageHelper::serveFile($path);
+})->where('path', '.*')->name('storage.file');
+
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {

@@ -15,29 +15,29 @@ if (!function_exists('getActiveCurrency')) {
     {
         // Try to get from cache first for performance
         $cacheKey = 'active_currency_' . Session::getId();
-        
+
         $currency = Cache::remember($cacheKey, 3600, function () {
             // Check if user has selected a currency in session
             $currencyId = Session::get('active_currency_id');
-            
+
             if ($currencyId) {
                 $currency = Currency::where('id', $currencyId)
                     ->where('is_active', true)
                     ->first();
-                    
+
                 if ($currency) {
                     return $currency;
                 }
             }
-            
+
             // Fallback to default currency
             $defaultCurrency = Currency::getDefault();
-            
+
             // If no default exists, get the first active currency
             if (!$defaultCurrency) {
                 $defaultCurrency = Currency::where('is_active', true)->first();
             }
-            
+
             // Ultimate fallback: create a default KRW currency if none exists
             if (!$defaultCurrency) {
                 $defaultCurrency = Currency::create([
@@ -49,10 +49,10 @@ if (!function_exists('getActiveCurrency')) {
                     'is_active' => true,
                 ]);
             }
-            
+
             return $defaultCurrency;
         });
-        
+
         return $currency;
     }
 }
@@ -69,17 +69,17 @@ if (!function_exists('setActiveCurrency')) {
         $currency = Currency::where('id', $currencyId)
             ->where('is_active', true)
             ->first();
-            
+
         if ($currency) {
             Session::put('active_currency_id', $currencyId);
-            
+
             // Clear cache
             $cacheKey = 'active_currency_' . Session::getId();
             Cache::forget($cacheKey);
-            
+
             return true;
         }
-        
+
         return false;
     }
 }
@@ -96,27 +96,27 @@ if (!function_exists('formatCurrency')) {
      * @return string
      */
     function formatCurrency(
-        float $amountInBase, 
-        bool $showCode = false, 
+        float $amountInBase,
+        bool $showCode = false,
         ?Currency $currency = null,
         bool $convertFromBase = true
     ): string {
         $currency = $currency ?? getActiveCurrency();
-        
+
         // Convert from base currency to active currency if needed
-        $amount = $convertFromBase 
-            ? $currency->convertFromBase($amountInBase) 
+        $amount = $convertFromBase
+            ? $currency->convertFromBase($amountInBase)
             : $amountInBase;
-        
+
         // Determine decimal places based on currency
         $decimals = in_array($currency->code, ['KRW', 'JPY']) ? 0 : 2;
-        
+
         $formatted = $currency->symbol . number_format($amount, $decimals);
-        
+
         if ($showCode) {
             $formatted .= ' ' . $currency->code;
         }
-        
+
         return $formatted;
     }
 }
@@ -132,8 +132,8 @@ if (!function_exists('formatCurrencyRaw')) {
      * @return string
      */
     function formatCurrencyRaw(
-        float $amount, 
-        bool $showCode = false, 
+        float $amount,
+        bool $showCode = false,
         ?Currency $currency = null
     ): string {
         return formatCurrency($amount, $showCode, $currency, false);
@@ -233,11 +233,11 @@ if (!function_exists('shouldDisplayCurrencyUpdateWarning')) {
     function shouldDisplayCurrencyUpdateWarning(): bool
     {
         $lastUpdate = getCurrencyLastUpdateTimestamp();
-        
+
         if (!$lastUpdate) {
             return true; // Never updated
         }
-        
+
         return $lastUpdate->diffInHours(now()) > 48;
     }
 }
@@ -254,5 +254,23 @@ if (!function_exists('getBaseCurrency')) {
         return Cache::remember('base_currency', 86400, function () {
             return Currency::where('is_base', true)->first();
         });
+    }
+}
+
+if (!function_exists('storage_url')) {
+    /**
+     * Generate URL for files in storage/app/public without symlink
+     * Works with Hostinger shared hosting where symlink may not work
+     *
+     * @param string|null $path Path relative to storage/app/public/
+     * @return string
+     */
+    function storage_url(?string $path = null): string
+    {
+        if (empty($path)) {
+            return '';
+        }
+
+        return url('/storage/' . ltrim($path, '/'));
     }
 }

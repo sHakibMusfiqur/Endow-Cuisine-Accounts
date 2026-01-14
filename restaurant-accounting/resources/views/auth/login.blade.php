@@ -62,16 +62,16 @@
                 max-width: 100px !important;
                 max-height: 80px !important;
             }
-            
+
             .logo-placeholder {
                 width: 90px !important;
                 height: 90px !important;
             }
-            
+
             .logo-placeholder i {
                 font-size: 40px !important;
             }
-            
+
             .login-logo h2 {
                 font-size: 1.5rem;
             }
@@ -91,14 +91,6 @@
 
         .btn-login:hover {
             background: linear-gradient(135deg, #FF3D47 0%, #EA222A 100%);
-        }
-
-        .demo-credentials {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 14px;
         }
 
         .forgot-password-link {
@@ -130,8 +122,8 @@
             @endphp
 
             @if($logoPath)
-                <img src="{{ asset($logoPath) }}" 
-                     alt="Endow Cuisine Logo" 
+                <img src="{{ asset($logoPath) }}"
+                     alt="Endow Cuisine Logo"
                      class="login-logo-img"
                      style="max-width: 150px; max-height: 120px; width: auto; height: auto; object-fit: contain; margin-bottom: 15px;">
             @else
@@ -193,15 +185,6 @@
                 <i class="fas fa-sign-in-alt"></i> Login
             </button>
         </form>
-
-        <div class="demo-credentials">
-            <strong>Demo Credentials:</strong><br>
-            <small>
-                <strong>Admin:</strong> admin@restaurant.com / password<br>
-                <strong>Accountant:</strong> accountant@restaurant.com / password<br>
-                <strong>Manager:</strong> manager@restaurant.com / password
-            </small>
-        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -96,7 +96,11 @@ php artisan serve
 
 Visit: `http://localhost:8000`
 
-## 🔐 Default Login Credentials
+## 🔐 Default Credentials (Development Only)
+
+**⚠️ IMPORTANT: Change these credentials immediately in production!**
+
+For development and testing purposes, the seeder creates these accounts:
 
 ### Admin Account
 - **Email:** admin@restaurant.com
@@ -146,8 +150,56 @@ php artisan migrate --seed
 php artisan serve
 
 # 5. Login at http://localhost:8000
-# Use: admin@restaurant.com / password
+# Development Only: admin@restaurant.com / password
 ```
+
+## 🚀 Production Deployment
+
+Ready to deploy to Hostinger or other shared hosting? Follow these comprehensive guides:
+
+### 📖 Deployment Resources
+
+1. **[HOSTINGER_QUICKSTART.md](HOSTINGER_QUICKSTART.md)** - ⚡ Quick start for experienced users (30 mins)
+2. **[deployment.md](deployment.md)** - 📋 Complete step-by-step guide with troubleshooting
+3. **[FIX_403_ERROR.md](FIX_403_ERROR.md)** - 🔧 Fix 403 Forbidden errors specifically
+4. **[PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)** - ✅ Pre-deployment checklist
+5. **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - 📚 Comprehensive deployment documentation
+
+### ⚡ Quick Deployment (TL;DR)
+
+```bash
+# 1. Prepare locally
+composer install --no-dev --optimize-autoloader
+php artisan optimize:clear
+
+# 2. Upload all files to public_html/
+# 3. Edit root .htaccess with your domain
+# 4. Create .env from .env.example
+
+# 5. Run on server via SSH
+php artisan key:generate
+php artisan migrate --force
+chmod -R 755 storage bootstrap/cache
+php artisan config:cache
+```
+
+### ✨ Special Features for Shared Hosting
+
+✅ **No Symlink Required** - Storage route configured, works without `storage:link`  
+✅ **Root .htaccess** - Auto-redirects to public folder, no document root change needed  
+✅ **Production Ready** - Demo credentials removed, security hardened  
+✅ **Hostinger Optimized** - Tested and working on Hostinger shared hosting  
+
+### Production Security
+
+✅ Demo credentials removed from login page  
+✅ Enhanced .htaccess with security headers  
+✅ Test files removed  
+✅ Environment example configured  
+✅ File protection rules enabled  
+✅ Storage served via route (no symlink)  
+
+**Important:** Always use HTTPS in production and strong passwords for all accounts.
 
 ---
 
