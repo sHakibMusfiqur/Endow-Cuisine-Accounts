@@ -137,6 +137,20 @@ class TransactionController extends Controller
     }
 
     /**
+     * Display the specified transaction.
+     */
+    public function show(DailyTransaction $transaction)
+    {
+        // Load relationships
+        $transaction->load(['category', 'paymentMethod', 'currency', 'creator']);
+        
+        // Get active currency for display
+        $activeCurrency = getActiveCurrency();
+
+        return view('transactions.show', compact('transaction', 'activeCurrency'));
+    }
+
+    /**
      * Show the form for editing the specified transaction.
      */
     public function edit(DailyTransaction $transaction)

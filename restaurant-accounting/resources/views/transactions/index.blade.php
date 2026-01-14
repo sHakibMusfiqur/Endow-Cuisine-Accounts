@@ -359,6 +359,12 @@
                     <td>{{ $transaction->creator->name }}</td>
                     <td class="text-center">
                         <div class="btn-group" role="group">
+                            <a href="{{ route('transactions.show', $transaction) }}" 
+                               class="btn btn-sm btn-primary" 
+                               title="View Transaction">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            
                             @can('edit transactions')
                                 <a href="{{ route('transactions.edit', $transaction) }}" 
                                    class="btn btn-sm btn-info" 
@@ -381,14 +387,6 @@
                                     </button>
                                 </form>
                             @endcan
-                            
-                            @cannot('edit transactions')
-                                <button class="btn btn-sm btn-secondary" 
-                                        disabled 
-                                        title="View Only">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            @endcannot
                         </div>
                     </td>
                 </tr>

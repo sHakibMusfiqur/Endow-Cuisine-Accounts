@@ -68,6 +68,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:view transactions')->group(function () {
         Route::get('/transactions', [TransactionController::class, 'index'])
             ->name('transactions.index');
+        Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])
+            ->name('transactions.show');
     });
 
     Route::middleware('can:create transactions')->group(function () {
