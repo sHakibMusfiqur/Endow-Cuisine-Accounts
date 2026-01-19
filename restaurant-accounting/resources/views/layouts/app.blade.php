@@ -865,12 +865,6 @@
             }
         }
 
-        @media (min-width: 769px) {
-            .mobile-toggle {
-                display: none;
-            }
-        }
-
         /* Extra small screens (phones in portrait) - Compact Mode */
         @media (max-width: 480px) {
             .sidebar .logo {
@@ -1186,12 +1180,8 @@
         <!-- Top Navbar -->
         <div class="navbar-top d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <!-- Desktop Toggle Button -->
-                <button class="toggle-btn d-none d-md-inline-block" id="desktopToggle" aria-label="Toggle Sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <!-- Mobile Toggle Button -->
-                <button class="toggle-btn d-md-none mobile-toggle" id="mobileToggle" aria-label="Toggle Menu">
+                <!-- Unified Sidebar Toggle - Visible on All Screens -->
+                <button class="toggle-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
                     <i class="fas fa-bars"></i>
                 </button>
                 <h4 class="mb-0">@yield('page-title', 'Dashboard')</h4>
@@ -1286,8 +1276,7 @@
 
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        const desktopToggle = document.getElementById('desktopToggle');
-        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
 
         // Local Storage Keys
@@ -1298,20 +1287,21 @@
             return window.innerWidth <= 768;
         }
 
-        // Desktop Toggle Function
-        function toggleSidebarDesktop() {
-            const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
-            mainContent.classList.toggle('sidebar-collapsed');
-            desktopToggle.classList.toggle('rotated');
+        // Unified Toggle Function
+        function toggleSidebar() {
+            if (isMobile()) {
+                // Mobile: Toggle sidebar visibility
+                sidebar.classList.toggle('show');
+                sidebarOverlay.classList.toggle('show');
+            } else {
+                // Desktop: Toggle sidebar collapse
+                const isCollapsed = sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('sidebar-collapsed');
+                sidebarToggle.classList.toggle('rotated');
 
-            // Save state to localStorage
-            localStorage.setItem(STORAGE_KEY, isCollapsed ? 'true' : 'false');
-        }
-
-        // Mobile Toggle Function
-        function toggleSidebarMobile() {
-            sidebar.classList.toggle('show');
-            sidebarOverlay.classList.toggle('show');
+                // Save state to localStorage
+                localStorage.setItem(STORAGE_KEY, isCollapsed ? 'true' : 'false');
+            }
         }
 
         // Close mobile sidebar
@@ -1328,7 +1318,7 @@
                 if (isCollapsed) {
                     sidebar.classList.add('sidebar-collapsed');
                     mainContent.classList.add('sidebar-collapsed');
-                    desktopToggle.classList.add('rotated');
+                    sidebarToggle.classList.add('rotated');
                 }
             } else {
                 // Mobile: Always start with sidebar hidden
@@ -1337,13 +1327,9 @@
             }
         }
 
-        // Event Listeners
-        if (desktopToggle) {
-            desktopToggle.addEventListener('click', toggleSidebarDesktop);
-        }
-
-        if (mobileToggle) {
-            mobileToggle.addEventListener('click', toggleSidebarMobile);
+        // Event Listener
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleSidebar);
         }
 
         if (sidebarOverlay) {
@@ -1373,7 +1359,7 @@
                     // Switched to mobile view
                     sidebar.classList.remove('sidebar-collapsed');
                     mainContent.classList.remove('sidebar-collapsed');
-                    desktopToggle.classList.remove('rotated');
+                    sidebarToggle.classList.remove('rotated');
                 }
             }, 250);
         });
@@ -1385,10 +1371,10 @@
                 closeMobileSidebar();
             }
 
-            // Press Ctrl+B to toggle desktop sidebar
-            if (e.ctrlKey && e.key === 'b' && !isMobile()) {
+            // Press Ctrl+B to toggle sidebar
+            if (e.ctrlKey && e.key === 'b') {
                 e.preventDefault();
-                toggleSidebarDesktop();
+                toggleSidebar();
             }
         });
 
