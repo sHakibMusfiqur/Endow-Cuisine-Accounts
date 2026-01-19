@@ -203,7 +203,7 @@ class UserManagementController extends Controller
 
         $logs = ActivityLog::with('user')
             ->latest()
-            ->paginate(50);
+            ->paginate(20);
 
         return view('users.activity-logs', compact('logs'));
     }
