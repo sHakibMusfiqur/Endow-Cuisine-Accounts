@@ -130,13 +130,25 @@
             font-size: 0.85rem;
         }
 
-        /* Pagination */
+        /* Pagination - Ensure Horizontal Layout */
         .pagination {
             font-size: 0.9rem;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .pagination .page-item {
+            display: inline-block;
         }
 
         .pagination .page-link {
             padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
     }
 

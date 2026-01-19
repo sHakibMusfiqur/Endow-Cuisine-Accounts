@@ -642,6 +642,73 @@
             background: linear-gradient(135deg, #e4606d 0%, #dc3545 100%);
         }
 
+        /* ============================================
+           PAGINATION - PROJECT THEME
+           ============================================ */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            margin: 20px 0;
+        }
+
+        .page-item .page-link {
+            color: #111;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            padding: 8px 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .page-item .page-link:hover {
+            background-color: #fff5f5;
+            color: #b91c1c;
+            border-color: #fecaca;
+            transform: translateY(-1px);
+        }
+
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #EA222A 0%, #C01D24 100%);
+            border-color: #EA222A;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(234, 34, 42, 0.3);
+        }
+
+        .page-item.active .page-link:hover {
+            background: linear-gradient(135deg, #FF3D47 0%, #EA222A 100%);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .page-item.disabled .page-link {
+            color: #9ca3af;
+            background-color: #f9fafb;
+            border-color: #e5e7eb;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .page-item.disabled .page-link:hover {
+            transform: none;
+        }
+
+        /* Override Bootstrap outline buttons to match project theme */
+        .btn-outline-primary {
+            color: #EA222A;
+            border-color: #EA222A;
+            background-color: transparent;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #EA222A;
+            border-color: #EA222A;
+            color: #ffffff;
+        }
+
         /* Mobile Overlay */
         .sidebar-overlay {
             display: none;
