@@ -154,7 +154,7 @@ class StockMovementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('inventory.movements.index')
+            return redirect()->route('inventory.items.index')
                 ->with('success', 'Stock added successfully and expense transaction created.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -229,7 +229,7 @@ class StockMovementController extends Controller
 
             DB::commit();
 
-            return redirect()->route('inventory.movements.index')
+            return redirect()->route('inventory.items.index')
                 ->with('success', 'Stock removed successfully.');
         } catch (\Exception $e) {
             DB::rollBack();

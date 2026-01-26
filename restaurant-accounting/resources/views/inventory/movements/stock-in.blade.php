@@ -174,8 +174,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('inventory.movements.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back
+                            <a href="{{ route('inventory.items.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Inventory
                             </a>
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-check"></i> Add Stock

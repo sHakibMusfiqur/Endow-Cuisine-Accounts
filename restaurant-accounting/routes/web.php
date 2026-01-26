@@ -141,8 +141,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/items/low-stock', [InventoryItemController::class, 'lowStock'])->name('items.low-stock');
             Route::get('/items/{item}', [InventoryItemController::class, 'show'])->name('items.show');
 
-            // Stock Movements
-            Route::get('/movements', [StockMovementController::class, 'index'])->name('movements.index');
+            // Stock Movements - INDEX DISABLED (movements work internally for calculations)
+            // Route::get('/movements', [StockMovementController::class, 'index'])->name('movements.index');
+            // Redirect movements.index access to inventory items page
+            Route::get('/movements', function () {
+                return redirect()->route('inventory.items.index')->with('info', 'Stock movements are managed internally. Use Inventory Items to view stock levels.');
+            })->name('movements.index');
 
             // Usage Recipes
             Route::get('/recipes', [ItemUsageRecipeController::class, 'index'])->name('recipes.index');

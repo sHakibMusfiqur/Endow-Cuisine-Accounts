@@ -152,8 +152,8 @@ class DashboardController extends Controller
                 $itemName = $stockMovement->inventoryItem->name;
                 $key = $categoryName . '|' . $itemName;
             } else {
-                // Use transaction description
-                $itemName = $transaction->description;
+                // Use transaction description - strip HTML tags for dashboard display
+                $itemName = strip_tags($transaction->description);
                 $key = $categoryName . '|' . $itemName;
             }
 

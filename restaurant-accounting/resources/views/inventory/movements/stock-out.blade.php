@@ -96,7 +96,7 @@
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-check me-1"></i>Remove Stock
                             </button>
-                            <a href="{{ route('inventory.movements.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('inventory.items.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </a>
                         </div>
