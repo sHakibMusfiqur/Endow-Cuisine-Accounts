@@ -399,6 +399,14 @@
                     <form action="{{ route('reports.export-csv') }}" method="POST">
                         @csrf
                         <div class="form-group">
+                            <label for="csv_transaction_source">Transaction Source</label>
+                            <select id="csv_transaction_source" name="transaction_source" class="form-select" required>
+                                <option value="all" selected>All Transactions</option>
+                                <option value="normal">Normal Transactions</option>
+                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="csv_date_from">Date From</label>
                             <input type="date" id="csv_date_from" name="date_from" class="form-control" required>
                         </div>
@@ -429,6 +437,14 @@
                     <form action="{{ route('reports.export-pdf') }}" method="POST" target="_blank">
                         @csrf
                         <div class="form-group">
+                            <label for="pdf_transaction_source">Transaction Source</label>
+                            <select id="pdf_transaction_source" name="transaction_source" class="form-select" required>
+                                <option value="all" selected>All Transactions</option>
+                                <option value="normal">Normal Transactions</option>
+                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="pdf_date_from">Date From</label>
                             <input type="date" id="pdf_date_from" name="date_from" class="form-control" required>
                         </div>
@@ -458,6 +474,14 @@
                 <div class="report-card-body">
                     <form action="{{ route('reports.export-summary') }}" method="POST" target="_blank">
                         @csrf
+                        <div class="form-group">
+                            <label for="summary_transaction_source">Transaction Source</label>
+                            <select id="summary_transaction_source" name="transaction_source" class="form-select" required>
+                                <option value="all" selected>All Transactions</option>
+                                <option value="normal">Normal Transactions</option>
+                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label for="summary_period">Period</label>
                             <select id="summary_period" name="period" class="form-select" required>
@@ -492,6 +516,7 @@
             <div class="col-md-3 col-sm-6">
                 <form action="{{ route('reports.export-csv') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="transaction_source" value="all">
                     <input type="hidden" name="date_from" value="{{ date('Y-m-d') }}">
                     <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
                     <button type="submit" class="btn-quick">
@@ -503,6 +528,7 @@
             <div class="col-md-3 col-sm-6">
                 <form action="{{ route('reports.export-csv') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="transaction_source" value="all">
                     <input type="hidden" name="date_from" value="{{ date('Y-m-d', strtotime('-7 days')) }}">
                     <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
                     <button type="submit" class="btn-quick">
@@ -514,6 +540,7 @@
             <div class="col-md-3 col-sm-6">
                 <form action="{{ route('reports.export-csv') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="transaction_source" value="all">
                     <input type="hidden" name="date_from" value="{{ date('Y-m-01') }}">
                     <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
                     <button type="submit" class="btn-quick">
@@ -525,6 +552,7 @@
             <div class="col-md-3 col-sm-6">
                 <form action="{{ route('reports.export-csv') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="transaction_source" value="all">
                     <input type="hidden" name="date_from" value="{{ date('Y-01-01') }}">
                     <input type="hidden" name="date_to" value="{{ date('Y-m-d') }}">
                     <button type="submit" class="btn-quick">

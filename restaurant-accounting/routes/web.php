@@ -12,6 +12,10 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\InventoryItemController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\ItemUsageRecipeController;
+use App\Http\Controllers\InventoryReportController;
 
 
 /*
@@ -73,6 +77,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:create transactions')->group(function () {
         Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        
+        // Inventory Sale Routes (must come before {transaction} route)
+        Route::get('/transactions/inventory-sale', [TransactionController::class, 'createInventorySale'])->name('transactions.inventory-sale.create');
+        Route::post('/transactions/inventory-sale', [TransactionController::class, 'storeInventorySale'])->name('transactions.inventory-sale.store');
     });
 
     Route::middleware('can:view transactions')->group(function () {
@@ -97,6 +105,52 @@ Route::middleware('auth')->group(function () {
     // Payment Methods - Permission-based (Admin only)
     Route::middleware('can:manage payment methods')->group(function () {
         Route::resource('payment-methods', PaymentMethodController::class);
+    });
+
+    // Inventory Management - Permission-based
+    // Note: Routes with specific paths (create, edit) must come BEFORE dynamic routes ({item})
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        
+        // Manage Inventory Routes (Admin/Manager only)
+        Route::middleware('can:manage inventory')->group(function () {
+            // Inventory Items Management (specific routes first)
+            Route::get('/items/create', [InventoryItemController::class, 'create'])->name('items.create');
+            Route::post('/items', [InventoryItemController::class, 'store'])->name('items.store');
+            Route::get('/items/{item}/edit', [InventoryItemController::class, 'edit'])->name('items.edit');
+            Route::put('/items/{item}', [InventoryItemController::class, 'update'])->name('items.update');
+            Route::delete('/items/{item}', [InventoryItemController::class, 'destroy'])->name('items.destroy');
+
+            // Stock Movements Management
+            Route::get('/movements/stock-in', [StockMovementController::class, 'createStockIn'])->name('movements.stock-in');
+            Route::post('/movements/stock-in', [StockMovementController::class, 'storeStockIn'])->name('movements.stock-in.store');
+            Route::get('/movements/stock-out', [StockMovementController::class, 'createStockOut'])->name('movements.stock-out');
+            Route::post('/movements/stock-out', [StockMovementController::class, 'storeStockOut'])->name('movements.stock-out.store');
+
+            // Usage Recipes Management
+            Route::get('/recipes/create', [ItemUsageRecipeController::class, 'create'])->name('recipes.create');
+            Route::post('/recipes', [ItemUsageRecipeController::class, 'store'])->name('recipes.store');
+            Route::get('/recipes/{recipe}/edit', [ItemUsageRecipeController::class, 'edit'])->name('recipes.edit');
+            Route::put('/recipes/{recipe}', [ItemUsageRecipeController::class, 'update'])->name('recipes.update');
+            Route::delete('/recipes/{recipe}', [ItemUsageRecipeController::class, 'destroy'])->name('recipes.destroy');
+        });
+
+        // View Inventory Routes (All authenticated users with view permission)
+        Route::middleware('can:view inventory')->group(function () {
+            // Inventory Items (dynamic routes last)
+            Route::get('/items', [InventoryItemController::class, 'index'])->name('items.index');
+            Route::get('/items/low-stock', [InventoryItemController::class, 'lowStock'])->name('items.low-stock');
+            Route::get('/items/{item}', [InventoryItemController::class, 'show'])->name('items.show');
+
+            // Stock Movements
+            Route::get('/movements', [StockMovementController::class, 'index'])->name('movements.index');
+
+            // Usage Recipes
+            Route::get('/recipes', [ItemUsageRecipeController::class, 'index'])->name('recipes.index');
+
+            // Reports
+            Route::get('/reports', [InventoryReportController::class, 'index'])->name('reports.index');
+            Route::post('/reports/export-csv', [InventoryReportController::class, 'exportCsv'])->name('reports.export-csv');
+        });
     });
 
     // Currency Management - Permission-based (Admin only)

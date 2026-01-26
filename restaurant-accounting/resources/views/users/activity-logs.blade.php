@@ -45,12 +45,32 @@
         background-color: #f59e0b;
         color: white;
     }
+    .action-restock {
+        background-color: #eab308;
+        color: white;
+    }
+    .action-stock_out {
+        background-color: #ef4444;
+        color: white;
+    }
     .module-badge {
         padding: 3px 8px;
         border-radius: 10px;
         font-size: 0.75rem;
         background-color: #f3f4f6;
         color: #374151;
+    }
+    .module-inventory {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    .module-transactions {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    .module-users {
+        background-color: #fce7f3;
+        color: #9f1239;
     }
 </style>
 
@@ -71,11 +91,11 @@
             <div class="log-item">
                 <div class="row align-items-center">
                     <div class="col-md-2">
-                        <span class="action-badge action-{{ $log->action }}">
-                            {{ ucfirst($log->action) }}
+                        <span class="action-badge action-{{ str_replace('_', '-', $log->action) }}">
+                            {{ ucfirst(str_replace('_', ' ', $log->action)) }}
                         </span>
                         @if($log->module)
-                        <span class="module-badge ms-1">{{ $log->module }}</span>
+                        <span class="module-badge module-{{ $log->module }} ms-1">{{ ucfirst($log->module) }}</span>
                         @endif
                     </div>
                     <div class="col-md-3">
@@ -125,8 +145,7 @@
         </div>
     </div>
 
-    <div class="mt-3">
-        {{ $logs->links() }}
-    </div>
+    <!-- Pagination -->
+    <x-pagination :items="$logs" />
 </div>
 @endsection

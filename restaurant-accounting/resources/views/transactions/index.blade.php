@@ -129,27 +129,6 @@
             padding: 8px 10px;
             font-size: 0.85rem;
         }
-
-        /* Pagination - Ensure Horizontal Layout */
-        .pagination {
-            font-size: 0.9rem;
-            display: flex !important;
-            justify-content: center;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .pagination .page-item {
-            display: inline-block;
-        }
-
-        .pagination .page-link {
-            padding: 8px 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
     }
 
     /* Small Phones - 480px and below */
@@ -427,8 +406,6 @@
     </div>
 
     <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-3">
-        {{ $transactions->links() }}
-    </div>
+    <x-pagination :items="$transactions" />
 </div>
 @endsection

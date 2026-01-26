@@ -203,6 +203,30 @@
             min-height: 44px;
         }
     }
+
+    /* Scrollable widget styling */
+    .widget-scrollable {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .widget-scrollable::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .widget-scrollable::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .widget-scrollable::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .widget-scrollable::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 </style>
 
 <div class="container-fluid">
@@ -321,25 +345,50 @@
         </div>
     </div>
 
-    <!-- Category Expenses & Recent Transactions -->
+    <!-- Top Income & Expenses -->
     <div class="row mt-4">
         <div class="col-md-4">
-            <div class="card">
+            <!-- Top Income Card -->
+            <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-tags text-primary"></i> Top Expenses (This Month)</h5>
-                    <div class="list-group list-group-flush">
-                        @forelse($categoryExpenses as $category => $amount)
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ $category }}
-                            <span class="badge bg-danger">{{ formatCurrency($amount) }}</span>
+                    <h5 class="card-title"><i class="fas fa-arrow-trend-up text-success"></i> Top Income (This Month)</h5>
+                    <div class="list-group list-group-flush widget-scrollable">
+                        @forelse($categoryIncomes as $entry)
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="text-muted small">{{ $entry['category'] }}</div>
+                                <div class="fw-bold">{{ $entry['item'] }}</div>
+                            </div>
+                            <span class="badge bg-success rounded-pill">{{ formatCurrency($entry['amount']) }}</span>
                         </div>
                         @empty
-                        <p class="text-muted">No expenses recorded</p>
+                        <p class="text-muted">No income recorded this month</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Expenses Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-arrow-trend-down text-danger"></i> Top Expenses (This Month)</h5>
+                    <div class="list-group list-group-flush widget-scrollable">
+                        @forelse($categoryExpenses as $entry)
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="text-muted small">{{ $entry['category'] }}</div>
+                                <div class="fw-bold">{{ $entry['item'] }}</div>
+                            </div>
+                            <span class="badge bg-danger rounded-pill">{{ formatCurrency($entry['amount']) }}</span>
+                        </div>
+                        @empty
+                        <p class="text-muted">No expenses recorded this month</p>
                         @endforelse
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="col-md-8">
             <div class="card">
                 <div class="card-body">

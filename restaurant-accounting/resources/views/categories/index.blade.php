@@ -55,14 +55,6 @@
             font-size: 0.75rem;
             padding: 4px 8px;
         }
-
-        .pagination {
-            font-size: 0.9rem;
-        }
-
-        .pagination .page-link {
-            padding: 8px 12px;
-        }
     }
 
     @media (max-width: 480px) {
@@ -114,7 +106,7 @@
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Name</th>
                     <th>Type</th>
                     <th>Transactions Count</th>
@@ -124,7 +116,7 @@
             <tbody>
                 @forelse($categories as $category)
                 <tr>
-                    <td>{{ $category->id }}</td>
+                    <td>{{ $loop->iteration + (($categories->currentPage() - 1) * $categories->perPage()) }}</td>
                     <td>{{ $category->name }}</td>
                     <td>
                         <span class="badge {{ $category->type == 'income' ? 'bg-success' : 'bg-warning' }}">
@@ -156,8 +148,6 @@
     </div>
 
     <!-- Pagination -->
-    <div class="d-flex justify-content-center mt-3">
-        {{ $categories->links() }}
-    </div>
+    <x-pagination :items="$categories" />
 </div>
 @endsection

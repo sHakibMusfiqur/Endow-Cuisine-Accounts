@@ -40,17 +40,11 @@ class DashboardController extends Controller
         // Get monthly chart data (current month by day)
         $monthlyChartData = $this->getMonthlyChartData();
 
-        // Get category-wise expense for current month
-        $categoryExpenses = DailyTransaction::with('category')
-            ->thisMonth()
-            ->expense()
-            ->get()
-            ->groupBy('category.name')
-            ->map(function ($transactions) {
-                return $transactions->sum('expense');
-            })
-            ->sortDesc()
-            ->take(5);
+        // Get ALL income entries for current month grouped by category and item
+        $categoryIncomes = $this->getGroupedIncomeExpenseData('income');
+
+        // Get ALL expense entries for current month grouped by category and item
+        $categoryExpenses = $this->getGroupedIncomeExpenseData('expense');
 
         return view('dashboard.index', compact(
             'todaySummary',
@@ -60,6 +54,7 @@ class DashboardController extends Controller
             'recentTransactions',
             'weeklyChartData',
             'monthlyChartData',
+            'categoryIncomes',
             'categoryExpenses'
         ));
     }
@@ -121,5 +116,59 @@ class DashboardController extends Controller
             'income' => $income,
             'expense' => $expense,
         ];
+    }
+
+    /**
+     * Get grouped income or expense data with category and inventory item details.
+     * 
+     * @param string $type 'income' or 'expense'
+     * @return \Illuminate\Support\Collection
+     */
+    private function getGroupedIncomeExpenseData(string $type)
+    {
+        $amountColumn = $type === 'income' ? 'income' : 'expense';
+        
+        // Get all transactions for current month
+        $transactions = DailyTransaction::with(['category'])
+            ->thisMonth()
+            ->where($amountColumn, '>', 0)
+            ->get();
+
+        // Group transactions by category and description to aggregate amounts
+        $grouped = [];
+        
+        foreach ($transactions as $transaction) {
+            // Try to find related stock movement to get inventory item details
+            $stockMovement = \App\Models\StockMovement::where('reference_type', 'App\Models\DailyTransaction')
+                ->where('reference_id', $transaction->id)
+                ->with('inventoryItem')
+                ->first();
+
+            $categoryName = $transaction->category ? $transaction->category->name : 'Uncategorized';
+            $itemName = null;
+            
+            if ($stockMovement && $stockMovement->inventoryItem) {
+                // Use inventory item name if available
+                $itemName = $stockMovement->inventoryItem->name;
+                $key = $categoryName . '|' . $itemName;
+            } else {
+                // Use transaction description
+                $itemName = $transaction->description;
+                $key = $categoryName . '|' . $itemName;
+            }
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'category' => $categoryName,
+                    'item' => $itemName,
+                    'amount' => 0,
+                ];
+            }
+
+            $grouped[$key]['amount'] += $transaction->$amountColumn;
+        }
+
+        // Convert to collection and sort by amount descending
+        return collect($grouped)->sortByDesc('amount')->values();
     }
 }

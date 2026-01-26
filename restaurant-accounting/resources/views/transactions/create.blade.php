@@ -136,9 +136,29 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
+            <!-- Quick Action Card -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="mb-1"><i class="fas fa-bolt"></i> Quick Actions</h6>
+                            
+                        </div>
+                        <a href="{{ route('transactions.inventory-sale.create') }}" class="btn btn-success">
+                            <i class="fas fa-box"></i> Inventory Item Sale
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-plus-circle"></i> Add New Transaction</h5>
+                <div class="card-header bg-danger rounded-top py-3">
+                    <h5 class="mb-0 text-white fw-bold d-flex align-items-center">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-dark text-white me-2" style="width: 32px; height: 32px; font-size: 18px;">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        Add New Transaction
+                    </h5>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('transactions.store') }}" method="POST">
@@ -178,6 +198,17 @@
                             <input type="hidden" name="transaction_type" id="transaction_type" value="{{ old('transaction_type', 'income') }}">
                         </div>
 
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select class="form-select @error('category_id') is-invalid @enderror" 
+                                    id="category_id" name="category_id" required>
+                                <option value="" disabled selected>Select Category</option>
+                            </select>
+                            @error('category_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="mb-3" id="income_section" style="display: none;">
                             <label for="income" class="form-label">Income Amount (KRW) <span class="text-danger">*</span></label>
                             <div class="input-group">
@@ -199,17 +230,6 @@
                             </div>
                             @error('expense')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
-                            <select class="form-select @error('category_id') is-invalid @enderror" 
-                                    id="category_id" name="category_id" required>
-                                <option value="" disabled selected>Select Category</option>
-                            </select>
-                            @error('category_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 

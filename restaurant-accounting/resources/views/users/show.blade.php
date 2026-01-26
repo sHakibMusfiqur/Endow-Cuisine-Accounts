@@ -144,11 +144,7 @@
                     </div>
                     @endforelse
                 </div>
-                @if($activityLogs->hasPages())
-                <div class="card-footer">
-                    {{ $activityLogs->links() }}
-                </div>
-                @endif
+                <x-pagination :items="$activityLogs" />
             </div>
         </div>
     </div>

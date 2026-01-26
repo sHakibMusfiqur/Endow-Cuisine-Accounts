@@ -4,9 +4,14 @@ namespace App\Services;
 
 use App\Models\DailyTransaction;
 use App\Models\Currency;
+use App\Models\Category;
+use App\Models\ItemUsageRecipe;
+use App\Models\InventoryItem;
+use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class TransactionService
@@ -90,6 +95,25 @@ class TransactionService
             // Update balances for subsequent transactions
             $this->updateSubsequentBalances($data['date']);
 
+            // STEP 5: Auto-deduct inventory stock for income transactions (food sales)
+            if ($data['income'] > 0) {
+                $this->processInventoryUsage($transaction);
+            }
+
+            // Log the transaction creation activity
+            \App\Models\ActivityLog::log(
+                'create',
+                "Created transaction: {$transaction->description} (" . 
+                ($transaction->income > 0 ? 'Income: ₩' . number_format($transaction->income, 0) : 'Expense: ₩' . number_format($transaction->expense, 0)) . ")",
+                'transactions',
+                [
+                    'transaction_id' => $transaction->id,
+                    'date' => $transaction->date,
+                    'amount' => $transaction->income > 0 ? $transaction->income : $transaction->expense,
+                    'type' => $transaction->income > 0 ? 'income' : 'expense',
+                ]
+            );
+
             DB::commit();
 
             return $transaction;
@@ -165,6 +189,19 @@ class TransactionService
             $earliestDate = $oldDate < $data['date'] ? $oldDate : $data['date'];
             $this->updateSubsequentBalances($earliestDate);
 
+            // Log the transaction update activity
+            \App\Models\ActivityLog::log(
+                'update',
+                "Updated transaction: {$transaction->description}",
+                'transactions',
+                [
+                    'transaction_id' => $transaction->id,
+                    'date' => $transaction->date,
+                    'amount' => $transaction->income > 0 ? $transaction->income : $transaction->expense,
+                    'type' => $transaction->income > 0 ? 'income' : 'expense',
+                ]
+            );
+
             DB::commit();
 
             return $transaction;
@@ -187,10 +224,26 @@ class TransactionService
 
         try {
             $date = $transaction->date;
+            $description = $transaction->description;
+            $amount = $transaction->income > 0 ? $transaction->income : $transaction->expense;
+            $type = $transaction->income > 0 ? 'income' : 'expense';
+            
             $transaction->delete();
 
             // Update balances for subsequent transactions
             $this->updateSubsequentBalances($date);
+
+            // Log the transaction deletion activity
+            \App\Models\ActivityLog::log(
+                'delete',
+                "Deleted transaction: {$description} ({$type}: ₩" . number_format($amount, 0) . ")",
+                'transactions',
+                [
+                    'date' => $date,
+                    'amount' => $amount,
+                    'type' => $type,
+                ]
+            );
 
             DB::commit();
 
@@ -547,5 +600,54 @@ class TransactionService
         }
 
         return $result;
+    }
+
+    /**
+     * Process inventory usage when a food sale (income transaction) occurs.
+     * Auto-deduct stock based on usage recipes.
+     *
+     * @param DailyTransaction $transaction
+     * @return void
+     */
+    private function processInventoryUsage(DailyTransaction $transaction): void
+    {
+        try {
+            // Get usage recipes for this category
+            $recipes = ItemUsageRecipe::where('category_id', $transaction->category_id)
+                ->where('is_active', true)
+                ->with('inventoryItem')
+                ->get();
+
+            foreach ($recipes as $recipe) {
+                $item = $recipe->inventoryItem;
+                
+                // Check if sufficient stock
+                if ($item->current_stock >= $recipe->quantity_per_sale) {
+                    // Create stock movement
+                    StockMovement::create([
+                        'inventory_item_id' => $item->id,
+                        'type' => 'usage',
+                        'quantity' => $recipe->quantity_per_sale,
+                        'unit_cost' => $item->unit_cost,
+                        'total_cost' => $recipe->quantity_per_sale * $item->unit_cost,
+                        'balance_after' => $item->current_stock - $recipe->quantity_per_sale,
+                        'reference_type' => 'transaction',
+                        'reference_id' => $transaction->id,
+                        'notes' => "Auto-deducted from sale: {$transaction->description}",
+                        'movement_date' => $transaction->date,
+                        'created_by' => Auth::id(),
+                    ]);
+
+                    // Update item stock
+                    $item->updateStock($recipe->quantity_per_sale, 'usage');
+                } else {
+                    // Log warning but don't fail the transaction
+                    Log::warning("Insufficient stock for item {$item->name} (ID: {$item->id}). Required: {$recipe->quantity_per_sale}, Available: {$item->current_stock}");
+                }
+            }
+        } catch (Exception $e) {
+            // Log error but don't fail the transaction
+            Log::error("Inventory usage processing failed: " . $e->getMessage());
+        }
     }
 }

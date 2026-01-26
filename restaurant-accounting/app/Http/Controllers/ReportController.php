@@ -31,11 +31,16 @@ class ReportController extends Controller
         $validated = $request->validate([
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
+            'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
-        $transactions = DailyTransaction::with(['category', 'paymentMethod', 'creator', 'currency'])
-            ->dateRange($validated['date_from'], $validated['date_to'])
-            ->orderBy('date', 'asc')
+        $query = DailyTransaction::with(['category', 'paymentMethod', 'creator', 'currency'])
+            ->dateRange($validated['date_from'], $validated['date_to']);
+
+        // Apply transaction source filter
+        $query = $this->applyTransactionSourceFilter($query, $validated['transaction_source'] ?? 'all');
+
+        $transactions = $query->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
@@ -83,11 +88,16 @@ class ReportController extends Controller
         $validated = $request->validate([
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
+            'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
-        $transactions = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
-            ->dateRange($validated['date_from'], $validated['date_to'])
-            ->orderBy('date', 'asc')
+        $query = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
+            ->dateRange($validated['date_from'], $validated['date_to']);
+
+        // Apply transaction source filter
+        $query = $this->applyTransactionSourceFilter($query, $validated['transaction_source'] ?? 'all');
+
+        $transactions = $query->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
@@ -123,11 +133,16 @@ class ReportController extends Controller
             'period' => 'required|in:daily,weekly,monthly,yearly',
             'date_from' => 'required|date',
             'date_to' => 'required|date|after_or_equal:date_from',
+            'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
-        $transactions = DailyTransaction::with(['category'])
-            ->dateRange($validated['date_from'], $validated['date_to'])
-            ->get();
+        $query = DailyTransaction::with(['category'])
+            ->dateRange($validated['date_from'], $validated['date_to']);
+
+        // Apply transaction source filter
+        $query = $this->applyTransactionSourceFilter($query, $validated['transaction_source'] ?? 'all');
+
+        $transactions = $query->get();
 
         // Group by category
         $categoryWise = $transactions->groupBy('category.name')->map(function ($group) {
@@ -163,6 +178,31 @@ class ReportController extends Controller
         ];
 
         return view('reports.summary', $data);
+    }
+
+    /**
+     * Apply transaction source filter to query.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $source
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function applyTransactionSourceFilter($query, $source)
+    {
+        if ($source === 'inventory') {
+            // Only Inventory Transactions (both income and expense)
+            $query->whereHas('category', function($q) {
+                $q->whereIn('name', ['Inventory Item Sale', 'Inventory Purchase']);
+            });
+        } elseif ($source === 'normal') {
+            // Exclude all Inventory Transactions
+            $query->whereHas('category', function($q) {
+                $q->whereNotIn('name', ['Inventory Item Sale', 'Inventory Purchase']);
+            });
+        }
+        // 'all' - no filter applied
+        
+        return $query;
     }
 
     /**

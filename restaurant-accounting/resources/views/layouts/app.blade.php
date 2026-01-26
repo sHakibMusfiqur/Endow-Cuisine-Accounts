@@ -651,6 +651,7 @@
             align-items: center;
             gap: 6px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
 
         .page-item .page-link {
@@ -661,6 +662,9 @@
             font-weight: 500;
             border-radius: 6px;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .page-item .page-link:hover {
@@ -694,6 +698,34 @@
 
         .page-item.disabled .page-link:hover {
             transform: none;
+            background-color: #f9fafb;
+            color: #9ca3af;
+        }
+
+        /* Mobile Pagination Responsiveness */
+        @media (max-width: 768px) {
+            .pagination {
+                font-size: 0.9rem;
+                gap: 4px;
+                margin: 15px 0;
+            }
+
+            .page-item .page-link {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pagination {
+                font-size: 0.85rem;
+                gap: 3px;
+            }
+
+            .page-item .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
         }
 
         /* Override Bootstrap outline buttons to match project theme */
@@ -1148,6 +1180,13 @@
                 <i class="fas fa-credit-card"></i> <span class="nav-text">Payment Methods</span>
             </a>
             @endcan
+            @can('view inventory')
+            <a class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}"
+               href="{{ route('inventory.items.index') }}"
+               data-tooltip="Inventory">
+                <i class="fas fa-boxes"></i> <span class="nav-text">Inventory</span>
+            </a>
+            @endcan
             <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                href="{{ route('reports.index') }}"
                data-tooltip="Reports">
@@ -1247,6 +1286,20 @@
         @if(session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+
+        @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle"></i> {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+
+        @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         @endif

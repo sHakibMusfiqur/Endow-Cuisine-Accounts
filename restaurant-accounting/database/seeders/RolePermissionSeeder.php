@@ -80,6 +80,10 @@ class RolePermissionSeeder extends Seeder
             'manage currencies',
             'view reports',
             'view dashboard',
+            
+            // Inventory permissions
+            'view inventory',
+            'manage inventory',
         ];
 
         foreach ($permissions as $permission) {
@@ -123,10 +127,12 @@ class RolePermissionSeeder extends Seeder
             'manage currencies',
             'view reports',
             'view dashboard',
+            'view inventory',
+            'manage inventory',
         ]);
         $this->command->info('✓ Admin permissions assigned');
 
-        // ACCOUNTANT - Can create, edit, view transactions + reports
+        // ACCOUNTANT - Can create, edit, delete transactions + reports + manage inventory (add, edit, delete items)
         $accountant = Role::findByName('accountant');
         $accountant->syncPermissions([
             'create transactions',
@@ -134,15 +140,19 @@ class RolePermissionSeeder extends Seeder
             'view transactions',
             'view reports',
             'view dashboard',
+            'view inventory',
+            'manage inventory',  // Added to allow accountants to add, edit, and delete inventory items
         ]);
         $this->command->info('✓ Accountant permissions assigned');
 
-        // MANAGER - View only (transactions and reports)
+        // MANAGER - View only (transactions and reports) + manage inventory
         $manager = Role::findByName('manager');
         $manager->syncPermissions([
             'view transactions',
             'view reports',
             'view dashboard',
+            'view inventory',
+            'manage inventory',
         ]);
         $this->command->info('✓ Manager permissions assigned');
     }
