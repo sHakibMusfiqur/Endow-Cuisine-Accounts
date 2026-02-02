@@ -411,39 +411,50 @@
     </div>
 
     @php
-        // Calculate net profit/loss
-        $netAmount = $total_income - $total_expense;
+        // PRODUCTION-SAFE: Type casting and null handling
+        $safeIncome = isset($total_income) ? (float) $total_income : 0.0;
+        $safeExpense = isset($total_expense) ? (float) $total_expense : 0.0;
+        $netAmount = $safeIncome - $safeExpense;
         
-        // Calculate profit margin (accounting-correct)
-        if ($total_income > 0) {
-            // Standard profit margin calculation: (Net Income / Revenue) × 100
-            $profitMargin = ($netAmount / $total_income) * 100;
-        } elseif ($total_expense > 0) {
-            // Edge case: No income but expenses exist = 100% loss (cannot calculate traditional margin)
-            $profitMargin = -100;
+        // PRODUCTION-SAFE: Epsilon for float comparison (avoids floating-point precision issues)
+        $epsilon = 0.01; // Considered equal if difference < 1 cent
+        
+        // Calculate profit margin (accounting-correct, production-hardened)
+        if ($safeIncome > $epsilon) {
+            // Standard profit margin: (Net Income / Revenue) × 100
+            $profitMargin = ($netAmount / $safeIncome) * 100;
+        } elseif ($safeExpense > $epsilon) {
+            // No income but expenses exist = 100% loss
+            $profitMargin = -100.0;
         } else {
-            // Edge case: No income and no expenses = true break-even
-            $profitMargin = 0;
+            // No income and no expenses = true break-even
+            $profitMargin = 0.0;
         }
+        
+        // PRODUCTION-SAFE: Classify financial status explicitly
+        $isProfit = $profitMargin > $epsilon;
+        $isLoss = $profitMargin < -$epsilon;
+        $isBreakeven = abs($profitMargin) <= $epsilon;
+        $hasNoActivity = (abs($safeIncome) < $epsilon && abs($safeExpense) < $epsilon);
+        $hasPureLoss = (abs($safeIncome) < $epsilon && $safeExpense > $epsilon);
     @endphp
 
     <div class="insight-box">
         <div class="insight-title">Financial Insight</div>
         <div class="insight-content">
-            @if($profitMargin > 0)
+            @if($isProfit)
                 Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> -
                 Your restaurant is operating profitably with positive net income.
-            @elseif($profitMargin == 0 && $total_income == 0 && $total_expense == 0)
+            @elseif($hasNoActivity)
                 No Activity - No income or expenses recorded for this period.
-            @elseif($profitMargin == 0)
+            @elseif($isBreakeven)
                 Break-even Status - Income and expenses are balanced.
+            @elseif($hasPureLoss)
+                Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
+                Operating at a loss with no income. Immediate action required.
             @else
                 Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
-                @if($total_income == 0)
-                    Operating at a loss with no income. Immediate action required.
-                @else
-                    Expenses exceed income. Review cost management strategies.
-                @endif
+                Expenses exceed income. Review cost management strategies.
             @endif
         </div>
     </div>
