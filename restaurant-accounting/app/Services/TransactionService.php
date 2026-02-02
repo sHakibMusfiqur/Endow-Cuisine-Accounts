@@ -329,18 +329,19 @@ class TransactionService
                 break;
         }
 
-        // Use amount_base for all calculations (always in KRW)
+        // CRITICAL FIX: Query LIVE from expense/income columns, not cached amount_base
+        // This ensures corrections are immediately reflected in dashboard
         $totalIncome = DailyTransaction::where('income', '>', 0)
             ->when($period !== 'all', function($q) use ($query) {
                 return $q->whereIn('id', $query->pluck('id'));
             })
-            ->sum('amount_base');
+            ->sum('income');
             
         $totalExpense = DailyTransaction::where('expense', '>', 0)
             ->when($period !== 'all', function($q) use ($query) {
                 return $q->whereIn('id', $query->pluck('id'));
             })
-            ->sum('amount_base');
+            ->sum('expense');
             
         $netAmount = $totalIncome - $totalExpense;
         
@@ -405,11 +406,12 @@ class TransactionService
     private function getDailyAnalysis(Carbon $startDate, Carbon $endDate): array
     {
         // STEP 1: Filter by date range FIRST
+        // CRITICAL FIX: Use income/expense columns for live data
         $transactions = DB::table('daily_transactions')
             ->select(
                 DB::raw('DATE(date) as period_date'),
-                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
-                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+                DB::raw('SUM(CASE WHEN income > 0 THEN income ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN expense ELSE 0 END) as total_expense')
             )
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->groupBy('period_date')
@@ -452,12 +454,13 @@ class TransactionService
     private function getWeeklyAnalysis(Carbon $startDate, Carbon $endDate): array
     {
         // STEP 1: Filter by date range and group by ISO week
+        // CRITICAL FIX: Use income/expense columns for live data
         $transactions = DB::table('daily_transactions')
             ->select(
                 DB::raw('YEAR(date) as year'),
                 DB::raw('WEEK(date, 1) as week'),
-                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
-                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+                DB::raw('SUM(CASE WHEN income > 0 THEN income ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN expense ELSE 0 END) as total_expense')
             )
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->groupBy('year', 'week')
@@ -507,12 +510,13 @@ class TransactionService
     private function getMonthlyAnalysis(Carbon $startDate, Carbon $endDate): array
     {
         // STEP 1: Filter by date range and group by month
+        // CRITICAL FIX: Use income/expense columns for live data
         $transactions = DB::table('daily_transactions')
             ->select(
                 DB::raw('YEAR(date) as year'),
                 DB::raw('MONTH(date) as month'),
-                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
-                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+                DB::raw('SUM(CASE WHEN income > 0 THEN income ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN expense ELSE 0 END) as total_expense')
             )
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->groupBy('year', 'month')
@@ -562,11 +566,12 @@ class TransactionService
     private function getYearlyAnalysis(Carbon $startDate, Carbon $endDate): array
     {
         // STEP 1: Filter by date range and group by year
+        // CRITICAL FIX: Use income/expense columns for live data
         $transactions = DB::table('daily_transactions')
             ->select(
                 DB::raw('YEAR(date) as year'),
-                DB::raw('SUM(CASE WHEN income > 0 THEN amount_base ELSE 0 END) as total_income'),
-                DB::raw('SUM(CASE WHEN expense > 0 THEN amount_base ELSE 0 END) as total_expense')
+                DB::raw('SUM(CASE WHEN income > 0 THEN income ELSE 0 END) as total_income'),
+                DB::raw('SUM(CASE WHEN expense > 0 THEN expense ELSE 0 END) as total_expense')
             )
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->groupBy('year')

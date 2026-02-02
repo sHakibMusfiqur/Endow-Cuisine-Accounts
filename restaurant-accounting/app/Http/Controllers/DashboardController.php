@@ -34,6 +34,42 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // Enrich purchase correction descriptions for dashboard display
+        foreach ($recentTransactions as $transaction) {
+            // Check if this is a purchase correction transaction
+            if (is_object($transaction->category) && 
+                $transaction->category->name === 'Inventory Purchase') {
+                
+                // Look for related inventory adjustment (purchase correction)
+                // CRITICAL: Get the LATEST adjustment if multiple corrections exist
+                // Multiple corrections create multiple adjustment records for same transaction
+                $adjustment = \App\Models\InventoryAdjustment::where('expense_transaction_id', $transaction->id)
+                    ->where('correction_type', 'purchase_correction')
+                    ->with('inventoryItem')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                
+                if ($adjustment && $adjustment->inventoryItem) {
+                    // Build short, clean description format
+                    $itemName = $adjustment->inventoryItem->name;
+                    $unit = $adjustment->inventoryItem->unit ?? 'unit';
+                    
+                    // Use the stored old/new quantities from the LATEST adjustment record
+                    $oldQty = rtrim(rtrim(number_format($adjustment->old_quantity, 2), '0'), '.');
+                    $newQty = rtrim(rtrim(number_format($adjustment->new_quantity, 2), '0'), '.');
+                    
+                    // Short format: "Stock Correction – Item (old → new unit)"
+                    $transaction->description = sprintf(
+                        'Stock Correction – %s (%s → %s %s)',
+                        $itemName,
+                        $oldQty,
+                        $newQty,
+                        $unit
+                    );
+                }
+            }
+        }
+
         // Get weekly chart data (last 7 days)
         $weeklyChartData = $this->getWeeklyChartData();
 

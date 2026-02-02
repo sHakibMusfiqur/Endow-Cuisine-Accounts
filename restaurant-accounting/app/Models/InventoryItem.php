@@ -48,6 +48,14 @@ class InventoryItem extends Model
     }
 
     /**
+     * Get all adjustments made to this item.
+     */
+    public function adjustments()
+    {
+        return $this->hasMany(InventoryAdjustment::class);
+    }
+
+    /**
      * Get usage recipes that use this item.
      */
     public function usageRecipes()

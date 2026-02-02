@@ -231,16 +231,38 @@
     }
 
     /* Mobile Responsive Styles */
+    @media (max-width: 991px) {
+        .page-header {
+            padding: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .report-card-header {
+            padding: 20px;
+        }
+
+        .report-card-body {
+            padding: 20px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 16px; /* Prevents iOS zoom on mobile */
+            padding: 10px 14px;
+        }
+
+        .btn-export {
+            padding: 12px 18px;
+            font-size: 0.9rem;
+        }
+    }
+
     @media (max-width: 768px) {
         .container-fluid {
             padding: 0 10px;
-        }
-
-        /* Report Cards - Stack Vertically */
-        .row > [class*='col-md'] {
-            width: 100%;
-            flex: 0 0 100%;
-            max-width: 100%;
         }
 
         .card {
@@ -268,12 +290,6 @@
             margin-bottom: 6px;
         }
 
-        .form-control,
-        .form-select {
-            font-size: 16px; /* Prevents iOS zoom */
-            padding: 10px 12px;
-        }
-
         .mb-3 {
             margin-bottom: 12px !important;
         }
@@ -291,10 +307,6 @@
         /* Quick Reports Section */
         .card-header h5 {
             font-size: 1rem;
-        }
-
-        .row.g-3 {
-            gap: 10px !important;
         }
 
         .row.g-3 > div {
@@ -315,6 +327,22 @@
             padding: 0 5px;
         }
 
+        .page-header {
+            padding: 20px;
+        }
+
+        .page-header h1 {
+            font-size: 1.25rem;
+        }
+
+        .report-card-header {
+            padding: 16px;
+        }
+
+        .report-card-body {
+            padding: 16px;
+        }
+
         .card-body {
             padding: 12px;
         }
@@ -327,7 +355,8 @@
             font-size: 0.85rem;
         }
 
-        .form-label {
+        .form-label,
+        .form-group label {
             font-size: 0.85rem;
         }
 
@@ -342,24 +371,14 @@
             font-size: 0.85rem;
         }
 
-        .btn-outline-primary {
+        .btn-export {
             padding: 10px 14px;
             font-size: 0.85rem;
         }
-    }
 
-    /* Tablet - Side by side for 2 columns */
-    @media (min-width: 481px) and (max-width: 768px) {
-        .row > [class*='col-md-4'] {
-            width: 100%;
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        .row.g-3 > div {
-            width: 50%;
-            flex: 0 0 50%;
-            max-width: 50%;
+        .btn-outline-primary {
+            padding: 10px 14px;
+            font-size: 0.85rem;
         }
     }
 
@@ -383,11 +402,154 @@
         <p>Generate comprehensive financial reports and export data for analysis</p>
     </div>
 
+    <!-- Filters and Summary Section -->
+    <div class="mb-4">
+        <div class="bg-danger text-white py-2 px-3 fw-semibold rounded d-flex align-items-center mb-3">
+            <i class="fas fa-filter me-2"></i>
+            <span>Report Filters & Summary</span>
+        </div>
+        <div class="bg-white rounded p-3">
+            <!-- Filter Form -->
+            <form method="GET" action="{{ route('reports.index') }}" class="mb-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label fw-semibold small mb-1">From Date</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" 
+                               value="{{ $date_from }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label fw-semibold small mb-1">To Date</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" 
+                               value="{{ $date_to }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="transaction_source" class="form-label fw-semibold small mb-1">Transaction Source</label>
+                        <select class="form-select" id="transaction_source" name="transaction_source">
+                            <option value="all" {{ $transaction_source === 'all' ? 'selected' : '' }}>All Transactions</option>
+                            <option value="normal" {{ $transaction_source === 'normal' ? 'selected' : '' }}>Normal Transactions</option>
+                            <option value="inventory" {{ $transaction_source === 'inventory' ? 'selected' : '' }}>Inventory Transactions</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-sync me-1"></i>Update
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Summary Cards -->
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3 text-center">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Records</div>
+                        <div class="fs-5 fw-semibold text-primary">{{ number_format($total_records) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3 text-center">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Income</div>
+                        <div class="fs-5 fw-semibold text-success">₩{{ number_format($total_income, 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3 text-center">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Total Expense</div>
+                        <div class="fs-5 fw-semibold text-danger">₩{{ number_format($total_expense, 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="bg-light rounded p-3 text-center">
+                        <div class="text-muted small fw-semibold text-uppercase mb-1">Net Amount</div>
+                        <div class="fs-5 fw-semibold {{ $net_amount >= 0 ? 'text-success' : 'text-danger' }}">
+                            ₩{{ number_format($net_amount, 0) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            @if($transaction_source === 'inventory' && $total_damage_loss > 0)
+            <!-- Inventory Damage Loss Summary -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="bg-warning bg-opacity-10 rounded p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="text-warning mb-1"><i class="fas fa-exclamation-triangle me-2"></i>Total Inventory Damage / Loss</h6>
+                                <p class="text-muted small mb-0">Includes all spoilage and damage entries from stock movements</p>
+                            </div>
+                            <h3 class="mb-0 text-warning">₩{{ number_format($total_damage_loss, 0) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    @if($total_records > 0)
+    <div class="mb-4">
+        <div class="bg-danger text-white py-2 px-3 fw-semibold rounded d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-table me-2"></i>
+                <span>Transaction Details</span>
+            </div>
+            <span class="badge bg-white text-dark fw-semibold">({{ number_format($total_records) }} records)</span>
+        </div>
+        <div class="p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="py-2 px-3 fw-semibold small">Date</th>
+                            <th class="py-2 px-3 fw-semibold small">Description</th>
+                            <th class="py-2 px-3 fw-semibold small">Category</th>
+                            <th class="py-2 px-3 fw-semibold small">Payment Method</th>
+                            <th class="py-2 px-3 text-end fw-semibold small">Income</th>
+                            <th class="py-2 px-3 text-end fw-semibold small">Expense</th>
+                            <th class="py-2 px-3 text-end fw-semibold small">Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($transactions as $transaction)
+                        <tr>
+                            <td class="py-2 px-3 align-middle small">{{ $transaction->date->format('Y-m-d') }}</td>
+                            <td class="py-2 px-3 align-middle small" style="max-width: 300px; white-space: normal; word-wrap: break-word;" title="{{ strip_tags($transaction->description) }}">{{ Str::limit(strip_tags($transaction->description), 50) }}</td>
+                            <td class="py-2 px-3 align-middle">
+                                <span class="badge bg-{{ $transaction->category->type === 'income' ? 'success' : 'danger' }} badge-sm">
+                                    {{ $transaction->category->name }}
+                                </span>
+                            </td>
+                            <td class="py-2 px-3 align-middle small">{{ $transaction->paymentMethod->name }}</td>
+                            <td class="py-2 px-3 text-end align-middle text-success fw-semibold small">
+                                {{ $transaction->income > 0 ? '₩' . number_format($transaction->income, 0) : '-' }}
+                            </td>
+                            <td class="py-2 px-3 text-end align-middle text-danger fw-semibold small">
+                                {{ $transaction->expense > 0 ? '₩' . number_format($transaction->expense, 0) : '-' }}
+                            </td>
+                            <td class="py-2 px-3 text-end align-middle fw-bold small">
+                                ₩{{ number_format($transaction->balance, 0) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @else
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No transactions found for the selected date range and filters.
+    </div>
+    @endif
+
     <!-- Report Export Cards -->
-    <div class="row mb-4">
+    <div class="row mb-4 row-cols-1 row-cols-lg-3 g-4">
         <!-- CSV Export -->
-        <div class="col-md-4 mb-4">
-            <div class="report-card">
+        <div class="col">
+            <div class="report-card h-100 d-flex flex-column">
                 <div class="report-card-header">
                     <div class="report-card-icon icon-csv">
                         <i class="fas fa-file-csv"></i>
@@ -395,26 +557,28 @@
                     <h3>CSV Export</h3>
                     <p>Download transaction data for Excel and spreadsheet applications</p>
                 </div>
-                <div class="report-card-body">
-                    <form action="{{ route('reports.export-csv') }}" method="POST">
+                <div class="report-card-body flex-grow-1 d-flex flex-column">
+                    <form action="{{ route('reports.export-csv') }}" method="POST" class="d-flex flex-column h-100">
                         @csrf
-                        <div class="form-group">
-                            <label for="csv_transaction_source">Transaction Source</label>
-                            <select id="csv_transaction_source" name="transaction_source" class="form-select" required>
-                                <option value="all" selected>All Transactions</option>
-                                <option value="normal">Normal Transactions</option>
-                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
-                            </select>
+                        <div class="flex-grow-1">
+                            <div class="form-group">
+                                <label for="csv_transaction_source">Transaction Source</label>
+                                <select id="csv_transaction_source" name="transaction_source" class="form-select" required>
+                                    <option value="all" {{ $transaction_source === 'all' ? 'selected' : '' }}>All Transactions</option>
+                                    <option value="normal" {{ $transaction_source === 'normal' ? 'selected' : '' }}>Normal Transactions</option>
+                                    <option value="inventory" {{ $transaction_source === 'inventory' ? 'selected' : '' }}>Inventory Transactions (Sales & Purchases)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="csv_date_from">Date From</label>
+                                <input type="date" id="csv_date_from" name="date_from" class="form-control" value="{{ $date_from }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="csv_date_to">Date To</label>
+                                <input type="date" id="csv_date_to" name="date_to" class="form-control" value="{{ $date_to }}" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="csv_date_from">Date From</label>
-                            <input type="date" id="csv_date_from" name="date_from" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="csv_date_to">Date To</label>
-                            <input type="date" id="csv_date_to" name="date_to" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn-export btn-csv">
+                        <button type="submit" class="btn-export btn-csv mt-auto">
                             <i class="fas fa-download"></i>
                             <span>Download CSV</span>
                         </button>
@@ -424,8 +588,8 @@
         </div>
 
         <!-- PDF Export -->
-        <div class="col-md-4 mb-4">
-            <div class="report-card">
+        <div class="col">
+            <div class="report-card h-100 d-flex flex-column">
                 <div class="report-card-header">
                     <div class="report-card-icon icon-pdf">
                         <i class="fas fa-file-pdf"></i>
@@ -433,26 +597,28 @@
                     <h3>PDF Report</h3>
                     <p>Generate professional PDF reports for printing and archiving</p>
                 </div>
-                <div class="report-card-body">
-                    <form action="{{ route('reports.export-pdf') }}" method="POST" target="_blank">
+                <div class="report-card-body flex-grow-1 d-flex flex-column">
+                    <form action="{{ route('reports.export-pdf') }}" method="POST" target="_blank" class="d-flex flex-column h-100">
                         @csrf
-                        <div class="form-group">
-                            <label for="pdf_transaction_source">Transaction Source</label>
-                            <select id="pdf_transaction_source" name="transaction_source" class="form-select" required>
-                                <option value="all" selected>All Transactions</option>
-                                <option value="normal">Normal Transactions</option>
-                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
-                            </select>
+                        <div class="flex-grow-1">
+                            <div class="form-group">
+                                <label for="pdf_transaction_source">Transaction Source</label>
+                                <select id="pdf_transaction_source" name="transaction_source" class="form-select" required>
+                                    <option value="all" {{ $transaction_source === 'all' ? 'selected' : '' }}>All Transactions</option>
+                                    <option value="normal" {{ $transaction_source === 'normal' ? 'selected' : '' }}>Normal Transactions</option>
+                                    <option value="inventory" {{ $transaction_source === 'inventory' ? 'selected' : '' }}>Inventory Transactions (Sales & Purchases)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="pdf_date_from">Date From</label>
+                                <input type="date" id="pdf_date_from" name="date_from" class="form-control" value="{{ $date_from }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pdf_date_to">Date To</label>
+                                <input type="date" id="pdf_date_to" name="date_to" class="form-control" value="{{ $date_to }}" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="pdf_date_from">Date From</label>
-                            <input type="date" id="pdf_date_from" name="date_from" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="pdf_date_to">Date To</label>
-                            <input type="date" id="pdf_date_to" name="date_to" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn-export btn-pdf">
+                        <button type="submit" class="btn-export btn-pdf mt-auto">
                             <i class="fas fa-file-pdf"></i>
                             <span>Generate PDF</span>
                         </button>
@@ -462,8 +628,8 @@
         </div>
 
         <!-- Summary Report -->
-        <div class="col-md-4 mb-4">
-            <div class="report-card">
+        <div class="col">
+            <div class="report-card h-100 d-flex flex-column">
                 <div class="report-card-header">
                     <div class="report-card-icon icon-summary">
                         <i class="fas fa-chart-pie"></i>
@@ -471,35 +637,37 @@
                     <h3>Summary Report</h3>
                     <p>View detailed analytics with category and payment breakdowns</p>
                 </div>
-                <div class="report-card-body">
-                    <form action="{{ route('reports.export-summary') }}" method="POST" target="_blank">
+                <div class="report-card-body flex-grow-1 d-flex flex-column">
+                    <form action="{{ route('reports.export-summary') }}" method="POST" target="_blank" class="d-flex flex-column h-100">
                         @csrf
-                        <div class="form-group">
-                            <label for="summary_transaction_source">Transaction Source</label>
-                            <select id="summary_transaction_source" name="transaction_source" class="form-select" required>
-                                <option value="all" selected>All Transactions</option>
-                                <option value="normal">Normal Transactions</option>
-                                <option value="inventory">Inventory Transactions (Sales & Purchases)</option>
-                            </select>
+                        <div class="flex-grow-1">
+                            <div class="form-group">
+                                <label for="summary_transaction_source">Transaction Source</label>
+                                <select id="summary_transaction_source" name="transaction_source" class="form-select" required>
+                                    <option value="all" {{ $transaction_source === 'all' ? 'selected' : '' }}>All Transactions</option>
+                                    <option value="normal" {{ $transaction_source === 'normal' ? 'selected' : '' }}>Normal Transactions</option>
+                                    <option value="inventory" {{ $transaction_source === 'inventory' ? 'selected' : '' }}>Inventory Transactions (Sales & Purchases)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="summary_period">Period</label>
+                                <select id="summary_period" name="period" class="form-select" required>
+                                    <option value="daily">Daily Analysis</option>
+                                    <option value="weekly">Weekly Analysis</option>
+                                    <option value="monthly" selected>Monthly Analysis</option>
+                                    <option value="yearly">Yearly Analysis</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="summary_date_from">Date From</label>
+                                <input type="date" id="summary_date_from" name="date_from" class="form-control" value="{{ $date_from }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="summary_date_to">Date To</label>
+                                <input type="date" id="summary_date_to" name="date_to" class="form-control" value="{{ $date_to }}" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="summary_period">Period</label>
-                            <select id="summary_period" name="period" class="form-select" required>
-                                <option value="daily">Daily Analysis</option>
-                                <option value="weekly">Weekly Analysis</option>
-                                <option value="monthly" selected>Monthly Analysis</option>
-                                <option value="yearly">Yearly Analysis</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="summary_date_from">Date From</label>
-                            <input type="date" id="summary_date_from" name="date_from" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="summary_date_to">Date To</label>
-                            <input type="date" id="summary_date_to" name="date_to" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn-export btn-summary">
+                        <button type="submit" class="btn-export btn-summary mt-auto">
                             <i class="fas fa-chart-bar"></i>
                             <span>View Summary</span>
                         </button>

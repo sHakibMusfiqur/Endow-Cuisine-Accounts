@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
+use App\Services\PurchaseCorrectionService;
+use App\Services\InventoryItemDeletionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -192,37 +194,225 @@ class InventoryItemController extends Controller
             'description' => 'nullable|string',
             'unit' => 'required|string|max:50',
             'minimum_stock' => 'required|numeric|min:0',
-            'unit_cost' => 'required|numeric|min:0',
             'selling_price_per_unit' => 'required|numeric|min:0',
             'is_active' => 'required|boolean',
+            'adjusted_stock' => 'nullable|numeric|min:0',
+            'corrected_unit_cost' => 'nullable|numeric|min:0',
+            'adjustment_notes' => 'nullable|string|max:1000',
+            'correction_type' => 'nullable|string|in:purchase_correction,inventory_adjustment,damage_spoilage',
         ]);
 
-        // is_active is already validated as boolean (0 or 1), cast to ensure type safety
-        $validated['is_active'] = (bool) $validated['is_active'];
+        // Validate: If stock or unit cost adjustment is provided, notes and correction type are required
+        if ($request->filled('adjusted_stock') || $request->filled('corrected_unit_cost')) {
+            if (!$request->filled('adjustment_notes')) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['adjustment_notes' => 'Adjustment reason/notes are required when correcting stock or unit cost.']);
+            }
+            
+            if (!$request->filled('correction_type')) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['correction_type' => 'Correction type is required when adjusting stock or unit cost.']);
+            }
+            
+            // Unit cost correction is only allowed with purchase_correction type
+            if ($request->filled('corrected_unit_cost') && $request->correction_type !== 'purchase_correction') {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['corrected_unit_cost' => 'Unit cost correction is only allowed with Purchase Entry Correction type.']);
+            }
+            
+            // Damage/Spoilage specific validation
+            // For damage, adjusted_stock represents the DAMAGE QUANTITY (amount lost), not the corrected total
+            if ($request->correction_type === 'damage_spoilage') {
+                $damageQuantity = (float) $request->adjusted_stock;
+                $currentStock = (float) $item->current_stock;
+                
+                // Damage quantity must be positive
+                if ($damageQuantity <= 0) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['adjusted_stock' => 'Damage quantity must be greater than 0.']);
+                }
+                
+                // Damage cannot exceed current stock
+                if ($damageQuantity > $currentStock) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['adjusted_stock' => 'Damage quantity (' . number_format($damageQuantity, 2) . ' ' . $item->unit . ') cannot exceed current stock (' . number_format($currentStock, 2) . ' ' . $item->unit . ').']);
+                }
+            }
+            
+            // Purchase Correction specific validation
+            if ($request->correction_type === 'purchase_correction') {
+                $correctedStock = (float) $request->adjusted_stock;
+                
+                // Corrected stock cannot be negative
+                if ($correctedStock < 0) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['adjusted_stock' => 'Corrected stock quantity cannot be negative.']);
+                }
+            }
+        }
 
-        // Log the update activity
-        $changes = array_diff_assoc($validated, $item->only(array_keys($validated)));
-        \App\Models\ActivityLog::log(
-            'update',
-            "Updated inventory item: {$item->name}",
-            'inventory',
-            [
-                'item_id' => $item->id,
-                'item_name' => $item->name,
-                'changes' => $changes,
-            ]
-        );
+        DB::beginTransaction();
+        
+        try {
+            // is_active is already validated as boolean (0 or 1), cast to ensure type safety
+            $validated['is_active'] = (bool) $validated['is_active'];
 
-        $item->update($validated);
+            // Track changes for activity log (excluding adjustment fields)
+            $itemData = collect($validated)->except(['adjusted_stock', 'corrected_unit_cost', 'adjustment_notes', 'correction_type'])->toArray();
+            $changes = array_diff_assoc($itemData, $item->only(array_keys($itemData)));
 
-        return redirect()->route('inventory.items.index')
-            ->with('success', 'Inventory item updated successfully.');
+            // Update basic item information (NOT stock quantity or unit cost yet)
+            $item->update($itemData);
+
+            $correctionMessage = '';
+            $correctionMade = false;
+
+            // Handle stock corrections based on correction type
+            if ($request->filled('correction_type') && ($request->filled('adjusted_stock') || $request->filled('corrected_unit_cost'))) {
+                $oldStock = (float) $item->current_stock;
+                
+                // IMPORTANT: For damage_spoilage, adjusted_stock is the DAMAGE QUANTITY (amount lost)
+                // For other types, adjusted_stock is the CORRECTED TOTAL QUANTITY
+                if ($validated['correction_type'] === 'damage_spoilage') {
+                    $damageQuantity = (float) $validated['adjusted_stock'];
+                    $newStock = $oldStock - $damageQuantity; // Calculate new stock after damage
+                } else {
+                    $newStock = $request->filled('adjusted_stock') ? (float) $validated['adjusted_stock'] : $oldStock;
+                }
+                
+                // Only proceed if there's an actual change in stock or unit cost
+                if ($oldStock != $newStock || $request->filled('corrected_unit_cost')) {
+                    $correctionService = new PurchaseCorrectionService();
+                    
+                    switch ($validated['correction_type']) {
+                        case 'purchase_correction':
+                            // Purchase Entry Correction: Update original expense
+                            $correctedUnitCost = $request->filled('corrected_unit_cost') ? (float) $validated['corrected_unit_cost'] : null;
+                            
+                            $result = $correctionService->correctPurchaseEntry(
+                                $item,
+                                $oldStock,
+                                $newStock,
+                                $correctedUnitCost,
+                                $validated['adjustment_notes']
+                            );
+                            
+                            // Build correction message
+                            $correctionParts = [];
+                            if ($oldStock != $newStock) {
+                                $correctionParts[] = sprintf(
+                                    'quantity corrected from %s to %s %s',
+                                    number_format($oldStock, 2),
+                                    number_format($newStock, 2),
+                                    $item->unit
+                                );
+                            }
+                            if ($correctedUnitCost !== null && $correctedUnitCost != $result['old_unit_cost']) {
+                                $correctionParts[] = sprintf(
+                                    'unit cost corrected from ₩%s to ₩%s',
+                                    number_format($result['old_unit_cost'], 2),
+                                    number_format($correctedUnitCost, 2)
+                                );
+                            }
+                            
+                            $correctionMessage = sprintf(
+                                ' Purchase Entry Correction: %s. Original expense updated from ₩%s to ₩%s (Transaction #%d).',
+                                implode(', ', $correctionParts),
+                                number_format($result['old_expense'], 0),
+                                number_format($result['corrected_expense'], 0),
+                                $result['transaction_id']
+                            );
+                            $correctionMade = true;
+                            break;
+                            
+                        case 'inventory_adjustment':
+                            // Non-financial adjustment (physical count correction)
+                            $result = $correctionService->adjustInventory(
+                                $item,
+                                $oldStock,
+                                $newStock,
+                                $validated['adjustment_notes']
+                            );
+                            
+                            $correctionMessage = sprintf(
+                                ' Stock adjusted from %s to %s %s (no financial impact).',
+                                number_format($oldStock, 2),
+                                number_format($newStock, 2),
+                                $item->unit
+                            );
+                            $correctionMade = true;
+                            break;
+                            
+                        case 'damage_spoilage':
+                            // Record inventory loss (NO FINANCIAL IMPACT)
+                            // This reduces inventory asset only, does not affect expenses or cash
+                            $damageQuantity = (float) $validated['adjusted_stock'];
+                            
+                            $result = $correctionService->recordDamageSpoilage(
+                                $item,
+                                $oldStock,
+                                $newStock,
+                                $validated['adjustment_notes']
+                            );
+                            
+                            $correctionMessage = sprintf(
+                                ' Damage/Spoilage recorded. %s %s lost. Stock reduced from %s to %s %s. Inventory write-down value: ₩%s (NO expense transaction created - inventory-only adjustment).',
+                                number_format($damageQuantity, 2),
+                                $item->unit,
+                                number_format($oldStock, 2),
+                                number_format($newStock, 2),
+                                $item->unit,
+                                number_format($result['loss_value'], 0)
+                            );
+                            $correctionMade = true;
+                            break;
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $message = 'Inventory item updated successfully.' . $correctionMessage;
+
+            return redirect()->route('inventory.items.index')
+                ->with('success', $message);
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update inventory item: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Remove the specified inventory item.
-     * Admin and Accountant users can delete items.
-     * They can delete any item regardless of stock movements or active status.
+     * Remove the specified inventory item and ALL related data.
+     * 
+     * CRITICAL BUSINESS RULE:
+     * When an inventory item is deleted, ALL data related to that item
+     * must be completely removed and all financial summaries must update automatically.
+     * 
+     * This includes:
+     * - The inventory item itself
+     * - All stock movements (purchases, sales, usage, adjustments)
+     * - All inventory adjustments (corrections, damage/spoilage)
+     * - All usage recipes
+     * - All financial transactions generated from this item
+     * 
+     * After deletion:
+     * - Dashboard totals recalculate automatically
+     * - Reports & Analytics reflect updated values
+     * - No stale balances or cached values
+     * - No orphan transactions
+     * 
+     * Authorization: Admin and Accountant users only.
      */
     public function destroy(InventoryItem $item)
     {
@@ -232,27 +422,68 @@ class InventoryItemController extends Controller
                 ->with('error', 'You do not have permission to delete inventory items.');
         }
 
-        // Log the deletion activity
-        \App\Models\ActivityLog::log(
-            'delete',
-            "Deleted inventory item: {$item->name} (SKU: {$item->sku}, Stock: {$item->current_stock} {$item->unit})",
-            'inventory',
-            [
-                'item_id' => $item->id,
-                'item_name' => $item->name,
-                'sku' => $item->sku,
-                'current_stock' => $item->current_stock,
-                'unit' => $item->unit,
-            ]
-        );
+        try {
+            // Get deletion impact for detailed logging
+            $deletionService = new InventoryItemDeletionService();
+            $impact = $deletionService->getDeletionImpact($item);
 
-        // Admin and Accountant can delete any item - no restrictions
-        // Note: Related stock movements will be handled by database cascade if configured,
-        // or remain as orphaned records depending on your database schema
-        $item->delete();
+            // Log the deletion attempt before proceeding
+            \App\Models\ActivityLog::log(
+                'delete',
+                "Attempting to delete inventory item: {$item->name} (SKU: {$item->sku}, Stock: {$item->current_stock} {$item->unit})",
+                'inventory',
+                [
+                    'item_id' => $item->id,
+                    'item_name' => $item->name,
+                    'sku' => $item->sku,
+                    'current_stock' => $item->current_stock,
+                    'unit' => $item->unit,
+                    'impact' => $impact,
+                ]
+            );
 
-        return redirect()->route('inventory.items.index')
-            ->with('success', 'Inventory item deleted successfully.');
+            // Perform comprehensive deletion using the service
+            $summary = $deletionService->deleteInventoryItem($item);
+
+            // Log successful deletion with complete summary
+            \App\Models\ActivityLog::log(
+                'delete',
+                "Successfully deleted inventory item: {$summary['item_name']} and all related data",
+                'inventory',
+                [
+                    'summary' => $summary,
+                ]
+            );
+
+            // Build success message with deletion details
+            $message = sprintf(
+                'Inventory item "%s" deleted successfully. Removed: %d transactions, %d stock movements, %d adjustments, %d usage recipes.',
+                $summary['item_name'],
+                $summary['deleted_records']['transactions'] ?? 0,
+                $summary['deleted_records']['stock_movements'] ?? 0,
+                $summary['deleted_records']['adjustments'] ?? 0,
+                $summary['deleted_records']['usage_recipes'] ?? 0
+            );
+
+            return redirect()->route('inventory.items.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            // Log the error
+            \App\Models\ActivityLog::log(
+                'error',
+                "Failed to delete inventory item: {$item->name}",
+                'inventory',
+                [
+                    'item_id' => $item->id,
+                    'item_name' => $item->name,
+                    'error' => $e->getMessage(),
+                ]
+            );
+
+            return redirect()->back()
+                ->with('error', 'Failed to delete inventory item: ' . $e->getMessage());
+        }
     }
 
     /**

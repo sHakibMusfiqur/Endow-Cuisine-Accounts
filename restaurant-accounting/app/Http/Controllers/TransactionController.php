@@ -62,8 +62,46 @@ class TransactionController extends Controller
         // Order by date and id
         $transactions = $query->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(20)
-            ->appends($request->query()); // Preserve filter parameters in pagination
+            ->paginate(20);
+
+        // Enrich purchase correction descriptions for transaction list display
+        foreach ($transactions as $transaction) {
+            // Check if this is a purchase correction transaction
+            if (is_object($transaction->category) && 
+                $transaction->category->name === 'Inventory Purchase') {
+                
+                // Look for related inventory adjustment (purchase correction)
+                // CRITICAL: Get the LATEST adjustment if multiple corrections exist
+                // Multiple corrections create multiple adjustment records for same transaction
+                $adjustment = \App\Models\InventoryAdjustment::where('expense_transaction_id', $transaction->id)
+                    ->where('correction_type', 'purchase_correction')
+                    ->with('inventoryItem')
+                    ->orderBy('id', 'desc')
+                    ->first();
+                
+                if ($adjustment && $adjustment->inventoryItem) {
+                    // Build short, clean description format for transaction list
+                    $itemName = $adjustment->inventoryItem->name;
+                    $unit = $adjustment->inventoryItem->unit ?? 'unit';
+                    
+                    // Use the stored old/new quantities from the LATEST adjustment record
+                    $oldQty = rtrim(rtrim(number_format($adjustment->old_quantity, 2), '0'), '.');
+                    $newQty = rtrim(rtrim(number_format($adjustment->new_quantity, 2), '0'), '.');
+                    
+                    // Short format for transactions list: "Stock Correction – Item (old → new unit)"
+                    $transaction->description = sprintf(
+                        'Stock Correction – %s (%s → %s %s)',
+                        $itemName,
+                        $oldQty,
+                        $newQty,
+                        $unit
+                    );
+                }
+            }
+        }
+        
+        // Preserve filter parameters in pagination
+        $transactions->appends($request->query());
 
         // Get filter options (load dynamically from database)
         $categories = Category::all();

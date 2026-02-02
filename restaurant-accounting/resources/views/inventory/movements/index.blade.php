@@ -119,7 +119,7 @@
                                 @endif
                             </td>
                             <td>{{ number_format($movement->balance_after, 2) }} {{ $movement->inventoryItem->unit }}</td>
-                            <td>{{ Str::limit($movement->notes ?? '-', 30) }}</td>
+                            <td title="{{ $movement->notes ?? '-' }}">{{ Str::limit($movement->notes ?? '-', 30) }}</td>
                             <td>{{ $movement->creator->name }}</td>
                         </tr>
                         @empty

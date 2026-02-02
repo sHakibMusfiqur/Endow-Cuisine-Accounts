@@ -147,15 +147,21 @@
                                     <span class="badge bg-danger">Stock Out</span>
                                 @elseif($movement->type == 'usage')
                                     <span class="badge bg-info">Usage</span>
+                                @elseif($movement->type == 'adjustment' && $movement->reference_type == 'damage_spoilage')
+                                    <span class="badge bg-warning text-dark">Damage/Spoilage</span>
+                                @elseif($movement->type == 'sale')
+                                    <span class="badge bg-primary">Sale</span>
+                                @elseif($movement->type == 'opening')
+                                    <span class="badge bg-secondary">Opening Stock</span>
                                 @else
-                                    <span class="badge bg-warning">Adjustment</span>
+                                    <span class="badge bg-secondary">Adjustment</span>
                                 @endif
                             </td>
                             <td>
-                                @if($movement->type == 'in')
-                                    <span class="text-success">+{{ number_format($movement->quantity, 2) }}</span>
+                                @if($movement->type == 'in' || $movement->type == 'opening')
+                                    <span class="text-success">+{{ number_format(abs($movement->quantity), 2) }}</span>
                                 @else
-                                    <span class="text-danger">-{{ number_format($movement->quantity, 2) }}</span>
+                                    <span class="text-danger">-{{ number_format(abs($movement->quantity), 2) }}</span>
                                 @endif
                                 {{ $item->unit }}
                             </td>
@@ -168,7 +174,7 @@
                             </td>
                             <td>{{ number_format($movement->balance_after, 2) }} {{ $item->unit }}</td>
                             <td>{{ Str::limit($movement->notes ?? '-', 40) }}</td>
-                            <td>{{ $movement->creator->name }}</td>
+                            <td>{{ $movement->creator->name ?? 'System' }}</td>
                         </tr>
                         @empty
                         <tr>

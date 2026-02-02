@@ -310,10 +310,8 @@
                 @forelse($transactions as $transaction)
                 <tr>
                     <td>{{ $transaction->date->format('M d, Y') }}</td>
-                    <td>
-                        <div class="text-truncate" style="max-width: 250px;" title="{{ strip_tags($transaction->description) }}">
-                            {!! Str::limit(strip_tags($transaction->description), 50) !!}
-                        </div>
+                    <td title="{{ strip_tags($transaction->description) }}">
+                        {{ Str::limit(strip_tags($transaction->description), 50) }}
                     </td>
                     <td>
                         <span class="badge {{ $transaction->category->type == 'income' ? 'bg-success' : 'bg-warning' }}">

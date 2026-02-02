@@ -115,6 +115,17 @@ class StockMovement extends Model
     {
         return $query->where('type', 'opening');
     }
+
+    /**
+     * Scope for damage/spoilage movements.
+     * These are stored as 'adjustment' type with reference_type = 'damage_spoilage'
+     */
+    public function scopeDamage($query)
+    {
+        return $query->where('type', 'adjustment')
+                     ->where('reference_type', 'damage_spoilage');
+    }
+
     /**
      * Scope for date range.
      */
@@ -128,6 +139,11 @@ class StockMovement extends Model
      */
     public function getTypeNameAttribute(): string
     {
+        // Special case: adjustments with damage_spoilage reference are displayed as damage
+        if ($this->type === 'adjustment' && $this->reference_type === 'damage_spoilage') {
+            return 'Damage / Spoilage';
+        }
+
         return match($this->type) {
             'opening' => 'Opening Stock',
             'in' => 'Stock In (Purchase)',

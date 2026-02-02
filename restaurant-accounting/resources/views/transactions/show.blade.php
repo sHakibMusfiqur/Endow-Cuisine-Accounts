@@ -120,17 +120,22 @@
 
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4><i class="fas fa-receipt"></i> Transaction Details</h4>
-        <div>
-            <a href="{{ route('transactions.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Transactions
-            </a>
-            @can('edit transactions')
-            <a href="{{ route('transactions.edit', $transaction) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit
-            </a>
-            @endcan
+    <div class="mb-4">
+        <div class="bg-danger text-white py-2 px-3 fw-semibold rounded d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-receipt me-2"></i>
+                <span>Transaction Details</span>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('transactions.index') }}" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to Transactions
+                </a>
+                @can('edit transactions')
+                <a href="{{ route('transactions.edit', $transaction) }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                @endcan
+            </div>
         </div>
     </div>
 
