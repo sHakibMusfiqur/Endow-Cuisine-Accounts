@@ -411,7 +411,20 @@
     </div>
 
     @php
-        $profitMargin = $total_income > 0 ? (($total_income - $total_expense) / $total_income * 100) : 0;
+        // Calculate net profit/loss
+        $netAmount = $total_income - $total_expense;
+        
+        // Calculate profit margin (accounting-correct)
+        if ($total_income > 0) {
+            // Standard profit margin calculation: (Net Income / Revenue) × 100
+            $profitMargin = ($netAmount / $total_income) * 100;
+        } elseif ($total_expense > 0) {
+            // Edge case: No income but expenses exist = 100% loss (cannot calculate traditional margin)
+            $profitMargin = -100;
+        } else {
+            // Edge case: No income and no expenses = true break-even
+            $profitMargin = 0;
+        }
     @endphp
 
     <div class="insight-box">
@@ -420,11 +433,17 @@
             @if($profitMargin > 0)
                 Profit Margin: <strong>{{ number_format($profitMargin, 2) }}%</strong> -
                 Your restaurant is operating profitably with positive net income.
+            @elseif($profitMargin == 0 && $total_income == 0 && $total_expense == 0)
+                No Activity - No income or expenses recorded for this period.
             @elseif($profitMargin == 0)
                 Break-even Status - Income and expenses are balanced.
             @else
                 Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
-                Expenses exceed income. Review cost management strategies.
+                @if($total_income == 0)
+                    Operating at a loss with no income. Immediate action required.
+                @else
+                    Expenses exceed income. Review cost management strategies.
+                @endif
             @endif
         </div>
     </div>
