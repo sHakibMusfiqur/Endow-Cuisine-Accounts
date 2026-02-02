@@ -78,6 +78,15 @@ class DailyTransaction extends Model
     }
 
     /**
+     * Get inventory adjustments linked to this transaction.
+     * Used for filtering inventory-related transactions.
+     */
+    public function inventoryAdjustments()
+    {
+        return $this->hasMany(InventoryAdjustment::class, 'expense_transaction_id');
+    }
+
+    /**
      * Scope a query to only include transactions for a specific date range.
      */
     public function scopeDateRange($query, $startDate, $endDate)

@@ -24,7 +24,9 @@ class ReportController extends Controller
         // Set default date range if not provided (both dates default to TODAY)
         $dateFrom = $request->input('date_from', now()->format('Y-m-d'));
         $dateTo = $request->input('date_to', now()->format('Y-m-d'));
-        $transactionSource = $request->input('transaction_source', 'all');
+        
+        // PRODUCTION-SAFE: Validate and sanitize transaction source
+        $transactionSource = $this->validateTransactionSource($request->input('transaction_source'));
 
         // Get transactions using unified method
         $transactions = $this->getTransactionsForReport(
@@ -86,11 +88,14 @@ class ReportController extends Controller
             'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
+        // PRODUCTION-SAFE: Validate transaction source
+        $transactionSource = $this->validateTransactionSource($validated['transaction_source'] ?? null);
+
         // Get transactions based on source filter
         $transactions = $this->getTransactionsForReport(
             $validated['date_from'],
             $validated['date_to'],
-            $validated['transaction_source'] ?? 'all'
+            $transactionSource
         );
 
         $activeCurrency = getActiveCurrency();
@@ -143,15 +148,18 @@ class ReportController extends Controller
             'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
+        // PRODUCTION-SAFE: Validate transaction source
+        $transactionSource = $this->validateTransactionSource($validated['transaction_source'] ?? null);
+
         // Get transactions based on source filter
         $transactions = $this->getTransactionsForReport(
             $validated['date_from'],
             $validated['date_to'],
-            $validated['transaction_source'] ?? 'all'
+            $transactionSource
         );
 
         // For inventory reports, exclude damage from expense/net calculations
-        if (($validated['transaction_source'] ?? 'all') === 'inventory') {
+        if ($transactionSource === 'inventory') {
             // Separate damage entries from regular transactions
             $regularTransactions = $transactions->filter(function ($item) {
                 return !isset($item->is_damage_entry) || $item->is_damage_entry !== true;
@@ -208,11 +216,14 @@ class ReportController extends Controller
             'transaction_source' => 'nullable|in:all,normal,inventory',
         ]);
 
+        // PRODUCTION-SAFE: Validate transaction source
+        $transactionSource = $this->validateTransactionSource($validated['transaction_source'] ?? null);
+
         // Get transactions based on source filter
         $transactions = $this->getTransactionsForReport(
             $validated['date_from'],
             $validated['date_to'],
-            $validated['transaction_source'] ?? 'all'
+            $transactionSource
         );
 
         // Group by category
@@ -238,7 +249,7 @@ class ReportController extends Controller
         $generatedAt = Carbon::now($timezone);
         
         // For inventory reports, exclude damage from expense/net calculations
-        if (($validated['transaction_source'] ?? 'all') === 'inventory') {
+        if ($transactionSource === 'inventory') {
             // Separate damage entries from regular transactions
             $regularTransactions = $transactions->filter(function ($item) {
                 return !isset($item->is_damage_entry) || $item->is_damage_entry !== true;
@@ -277,28 +288,71 @@ class ReportController extends Controller
     }
 
     /**
-     * Apply transaction source filter to query.
-     * Uses category-based filtering since source column doesn't exist.
+     * PRODUCTION-SAFE: Validate and sanitize transaction source input.
+     * Prevents invalid values from causing empty results or errors.
+     * 
+     * @param mixed $source
+     * @return string Valid source: 'all', 'normal', or 'inventory'
+     */
+    private function validateTransactionSource($source): string
+    {
+        // Defensive: handle null, empty, or invalid input
+        if (!is_string($source) || !in_array($source, ['all', 'normal', 'inventory'], true)) {
+            return 'all'; // Safe default
+        }
+        
+        return $source;
+    }
+
+    /**
+     * STRICT & PRODUCTION-SAFE: Apply transaction source filter to query.
+     * 
+     * Uses robust multi-criteria filtering:
+     * - Category names (primary identifier)
+     * - InventoryAdjustment links (ensures all inventory transactions captured)
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $source
+     * @param string $source Validated source: 'all', 'normal', or 'inventory'
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    private function applyTransactionSourceFilter($query, $source)
+    private function applyTransactionSourceFilter($query, string $source)
     {
         if ($source === 'normal') {
-            // Only Normal Transactions (exclude inventory-related categories)
-            $query->whereHas('category', function($q) {
-                $q->whereNotIn('name', ['Inventory Item Sale', 'Inventory Purchase']);
+            // STRICT: Only Normal Transactions
+            // Exclude ALL inventory-related transactions by multiple criteria
+            $query->where(function($q) {
+                // Exclude by category name
+                $q->whereHas('category', function($subQ) {
+                    $subQ->whereNotIn('name', [
+                        'Inventory Item Sale',
+                        'Inventory Purchase',
+                        'Inventory Damage' // Explicitly exclude damage category
+                    ]);
+                });
+                
+                // CRITICAL: Also exclude transactions linked to inventory adjustments
+                // This catches any transaction that touched inventory, regardless of category
+                $q->whereDoesntHave('inventoryAdjustments');
             });
+            
         } elseif ($source === 'inventory') {
-            // Only Inventory Transactions (sales, purchases, damage, spoilage)
-            $query->whereHas('category', function($q) {
-                $q->whereIn('name', ['Inventory Item Sale', 'Inventory Purchase']);
+            // STRICT: Only Inventory Transactions
+            // Include ALL inventory-related transactions by multiple criteria
+            $query->where(function($q) {
+                $q->orWhereHas('category', function($subQ) {
+                    $subQ->whereIn('name', [
+                        'Inventory Item Sale',
+                        'Inventory Purchase',
+                        'Inventory Damage'
+                    ]);
+                })
+                // CRITICAL: Also include any transaction linked to inventory adjustments
+                // This ensures all purchase corrections and inventory operations are included
+                ->orWhereHas('inventoryAdjustments');
             });
         }
-        // 'all' - no filter applied
         
+        // 'all' - no filter applied, returns everything
         return $query;
     }
 
@@ -306,21 +360,23 @@ class ReportController extends Controller
      * UNIFIED METHOD: Get transactions for all report types.
      * This is the single source of truth for transaction queries.
      * 
-     * Filters by source (via category) and date range.
+     * PRODUCTION-SAFE: Validated source parameter ensures consistent filtering.
+     * Filters by source (via category + inventory adjustments) and date range.
      * Used by: index (view), exportCsv, exportPdf, exportSummary
      *
-     * @param string $dateFrom
-     * @param string $dateTo
-     * @param string $source
+     * @param string $dateFrom Date in Y-m-d format
+     * @param string $dateTo Date in Y-m-d format
+     * @param string $source Validated source: 'all', 'normal', or 'inventory'
      * @return \Illuminate\Support\Collection
      */
     private function getTransactionsForReport($dateFrom, $dateTo, $source)
     {
         // Base query using Transaction (alias for DailyTransaction)
         $query = Transaction::query()
-            ->with(['category', 'paymentMethod', 'creator', 'currency']);
+            ->with(['category', 'paymentMethod', 'creator', 'currency', 'inventoryAdjustments']);
         
-        // Apply source filter FIRST (before date)
+        // CRITICAL: Apply source filter FIRST (before date) for efficiency
+        // This method handles production-safe filtering with multiple criteria
         $query = $this->applyTransactionSourceFilter($query, $source);
         
         // Apply date range filter (using 'date' column as transaction_date equivalent)
@@ -332,17 +388,20 @@ class ReportController extends Controller
             ->get();
         
         // If inventory source, include damage/spoilage from stock_movements
+        // PRODUCTION-SAFE: Only fetch damage entries when specifically filtering for inventory
         if ($source === 'inventory') {
             $damageEntries = $this->getDamageEntriesForReport($dateFrom, $dateTo);
             
-            // Convert to plain collection and merge
+            // Convert to plain collection and merge (defensive against empty collections)
             $transactions = collect($transactions->all())->merge($damageEntries);
             
-            // Re-sort the merged collection
+            // Re-sort the merged collection by date (desc) then ID (desc)
             $transactions = $transactions->sortByDesc(function ($item) {
+                // Handle both Carbon date objects and string dates
                 $date = is_object($item->date) ? $item->date->format('Y-m-d H:i:s') : $item->date;
+                // Handle pseudo IDs (like 'damage-123') vs numeric IDs
                 $id = is_string($item->id) ? 0 : ($item->id ?? 0);
-                return $date . '-' . $id;
+                return $date . '-' . str_pad($id, 10, '0', STR_PAD_LEFT);
             })->values();
         }
         
@@ -356,25 +415,42 @@ class ReportController extends Controller
     /**
      * Get damage/spoilage entries from stock_movements table.
      * Converts them to transaction-like objects for report display.
+     * 
+     * PRODUCTION-SAFE: Handles missing relationships and null values gracefully.
      *
-     * @param string $dateFrom
-     * @param string $dateTo
+     * @param string $dateFrom Date in Y-m-d format
+     * @param string $dateTo Date in Y-m-d format
      * @return \Illuminate\Support\Collection
      */
     private function getDamageEntriesForReport($dateFrom, $dateTo)
     {
-        $damageMovements = \App\Models\StockMovement::query()
-            ->with(['inventoryItem', 'creator'])
-            ->where('type', 'adjustment')
-            ->where('reference_type', 'damage_spoilage')
-            ->whereBetween('movement_date', [$dateFrom, $dateTo])
-            ->orderBy('movement_date', 'desc')
-            ->get();
+        try {
+            $damageMovements = \App\Models\StockMovement::query()
+                ->with(['inventoryItem', 'creator'])
+                ->where('type', 'adjustment')
+                ->where('reference_type', 'damage_spoilage')
+                ->whereBetween('movement_date', [$dateFrom, $dateTo])
+                ->orderBy('movement_date', 'desc')
+                ->get();
+        } catch (\Exception $e) {
+            // PRODUCTION-SAFE: Return empty collection on query failure
+            \Illuminate\Support\Facades\Log::error('Failed to fetch damage entries for report', [
+                'error' => $e->getMessage(),
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo
+            ]);
+            return collect([]);
+        }
         
         // Convert stock movements to transaction-like objects
         return $damageMovements->map(function ($movement) {
-            // Calculate the damage cost (absolute value)
-            $damageExpense = abs($movement->quantity * $movement->unit_cost);
+            // DEFENSIVE: Handle missing inventory item
+            if (!$movement->inventoryItem) {
+                return null;
+            }
+            
+            // Calculate the damage cost (absolute value, with fallback)
+            $damageExpense = abs(($movement->quantity ?? 0) * ($movement->unit_cost ?? 0));
             
             // Format description in professional format
             $itemName = $movement->inventoryItem->name ?? 'Unknown Item';
@@ -411,8 +487,8 @@ class ReportController extends Controller
             // Payment method N/A for damage
             $pseudo->paymentMethod = (object) ['name' => 'N/A'];
             
-            // Creator from stock movement
-            $pseudo->creator = $movement->creator;
+            // Creator from stock movement (with fallback)
+            $pseudo->creator = $movement->creator ?? null;
             
             // Currency - inventory is always in base currency (KRW)
             $pseudo->currency = null;
@@ -422,7 +498,7 @@ class ReportController extends Controller
             $pseudo->stock_movement_id = $movement->id;
             
             return $pseudo;
-        });
+        })->filter(); // PRODUCTION-SAFE: Remove null entries from failed mappings
     }
     
     /**
