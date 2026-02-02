@@ -375,7 +375,10 @@ class ReportController extends Controller
      * Identifies inventory transactions using ALL possible linkage methods:
      * 1. Category names (Inventory Item Sale, Inventory Purchase, Inventory Damage)
      * 2. InventoryAdjustment linkage (purchase corrections)
-     * 3. StockMovement linkage (inventory sales and item expenses)
+     * 3. StockMovement linkage (ALL inventory operations including opening stock)
+     * 4. Description pattern matching (opening stock, etc.)
+     * 
+     * CRITICAL: Includes Opening Stock transactions (accounting requirement)
      * 
      * @return \Illuminate\Support\Collection Collection of transaction IDs
      */
@@ -384,6 +387,7 @@ class ReportController extends Controller
         $transactionIds = collect();
         
         // Method 1: Get transactions by inventory category names
+        // Includes: Inventory Item Sale, Inventory Purchase (including opening stock), Inventory Damage
         $categoryBasedIds = DailyTransaction::whereHas('category', function($q) {
             $q->whereIn('name', [
                 'Inventory Item Sale',
@@ -400,13 +404,30 @@ class ReportController extends Controller
         
         $transactionIds = $transactionIds->merge($adjustmentLinkedIds);
         
-        // Method 3: Get transactions linked via StockMovement (inventory sales and expenses)
-        // StockMovements with reference_type pointing to DailyTransaction
-        $stockMovementLinkedIds = \App\Models\StockMovement::where('reference_type', \App\Models\DailyTransaction::class)
-            ->whereNotNull('reference_id')
-            ->pluck('reference_id');
+        // Method 3: Get transactions linked via StockMovement (ALL inventory operations)
+        // CRITICAL: Captures opening stock, inventory sales, and item expenses
+        // Get all possible reference_ids from stock movements that might point to transactions
+        $allStockMovementRefIds = \App\Models\StockMovement::whereNotNull('reference_id')
+            ->pluck('reference_id')
+            ->unique();
         
-        $transactionIds = $transactionIds->merge($stockMovementLinkedIds);
+        // Verify which reference_ids are actual transaction IDs (defensive filtering)
+        if ($allStockMovementRefIds->isNotEmpty()) {
+            $stockMovementLinkedIds = DailyTransaction::whereIn('id', $allStockMovementRefIds)
+                ->pluck('id');
+            
+            $transactionIds = $transactionIds->merge($stockMovementLinkedIds);
+        }
+        
+        // Method 4: Get transactions by description pattern (opening stock, inventory operations)
+        // CRITICAL: Ensures opening stock transactions are ALWAYS captured
+        $descriptionBasedIds = DailyTransaction::where(function($q) {
+            $q->where('description', 'LIKE', 'Opening Stock:%')
+              ->orWhere('description', 'LIKE', 'Inventory%')
+              ->orWhere('description', 'LIKE', '%Opening Stock Correction%');
+        })->pluck('id');
+        
+        $transactionIds = $transactionIds->merge($descriptionBasedIds);
         
         // Return unique transaction IDs
         return $transactionIds->unique();
