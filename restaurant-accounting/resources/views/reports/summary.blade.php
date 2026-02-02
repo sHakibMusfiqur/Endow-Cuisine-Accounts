@@ -419,16 +419,28 @@
         // PRODUCTION-SAFE: Epsilon for float comparison (avoids floating-point precision issues)
         $epsilon = 0.01; // Considered equal if difference < 1 cent
         
-        // Calculate profit margin (accounting-correct, production-hardened)
+        // ACCOUNTING-COMPLIANT: Calculate profit/loss margin with 100% cap
         if ($safeIncome > $epsilon) {
             // Standard profit margin: (Net Income / Revenue) × 100
-            $profitMargin = ($netAmount / $safeIncome) * 100;
+            $rawMargin = ($netAmount / $safeIncome) * 100;
+            
+            // MANDATORY: Cap loss margin at -100% (prevents absurd 1000%+ losses)
+            // Accounting standard: Loss margin cannot meaningfully exceed 100%
+            if ($rawMargin < -100.0) {
+                $profitMargin = -100.0;
+                $isLossCapped = true;
+            } else {
+                $profitMargin = $rawMargin;
+                $isLossCapped = false;
+            }
         } elseif ($safeExpense > $epsilon) {
-            // No income but expenses exist = 100% loss
+            // No income but expenses exist = 100% loss (capped)
             $profitMargin = -100.0;
+            $isLossCapped = true;
         } else {
             // No income and no expenses = true break-even
             $profitMargin = 0.0;
+            $isLossCapped = false;
         }
         
         // PRODUCTION-SAFE: Classify financial status explicitly
@@ -436,7 +448,8 @@
         $isLoss = $profitMargin < -$epsilon;
         $isBreakeven = abs($profitMargin) <= $epsilon;
         $hasNoActivity = (abs($safeIncome) < $epsilon && abs($safeExpense) < $epsilon);
-        $hasPureLoss = (abs($safeIncome) < $epsilon && $safeExpense > $epsilon);
+        $hasNoIncome = (abs($safeIncome) < $epsilon && $safeExpense > $epsilon);
+        $isSevereLoss = ($profitMargin <= -100.0);
     @endphp
 
     <div class="insight-box">
@@ -449,9 +462,14 @@
                 No Activity - No income or expenses recorded for this period.
             @elseif($isBreakeven)
                 Break-even Status - Income and expenses are balanced.
-            @elseif($hasPureLoss)
-                Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
-                Operating at a loss with no income. Immediate action required.
+            @elseif($hasNoIncome)
+                <strong>No income recorded for this period.</strong> 
+                Total expenses: {{ formatCurrency($safeExpense) }}. 
+                Immediate action required to generate revenue.
+            @elseif($isSevereLoss)
+                <strong>Severe Loss</strong> - Expenses significantly exceed income. 
+                Loss: {{ formatCurrency(abs($netAmount)) }}. 
+                Critical financial review required.
             @else
                 Loss Margin: <strong>{{ number_format(abs($profitMargin), 2) }}%</strong> -
                 Expenses exceed income. Review cost management strategies.
