@@ -135,8 +135,8 @@
                                     </a>
                                     @endcan
                                     
-                                    {{-- Delete button: Admin and Accountant only --}}
-                                    @if(Auth::user()->hasRole(['admin', 'accountant']))
+                                    {{-- Delete button: Admin only --}}
+                                    @can('delete inventory')
                                     <button type="button" 
                                             class="btn btn-outline-danger btn-sm" 
                                             data-bs-toggle="tooltip" 
@@ -144,7 +144,7 @@
                                             onclick="confirmDelete({{ $item->id }}, '{{ addslashes($item->name) }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                    @endif
+                                    @endcan
                                     
                                     {{-- Restock button - shown ONLY for low stock items --}}
                                     @if($item->isLowStock())
@@ -178,7 +178,7 @@
     </div>
 </div>
 
-@if(Auth::user()->hasRole(['admin', 'accountant']))
+@can('delete inventory')
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -259,5 +259,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endif
+@endcan
 @endsection

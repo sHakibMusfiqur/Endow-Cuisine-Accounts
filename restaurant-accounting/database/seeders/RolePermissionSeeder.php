@@ -84,6 +84,7 @@ class RolePermissionSeeder extends Seeder
             // Inventory permissions
             'view inventory',
             'manage inventory',
+            'delete inventory',  // Granular permission for deleting inventory items
         ];
 
         foreach ($permissions as $permission) {
@@ -129,10 +130,11 @@ class RolePermissionSeeder extends Seeder
             'view dashboard',
             'view inventory',
             'manage inventory',
+            'delete inventory',
         ]);
         $this->command->info('✓ Admin permissions assigned');
 
-        // ACCOUNTANT - Can create, edit, delete transactions + reports + manage inventory (add, edit, delete items)
+        // ACCOUNTANT - Can create, edit transactions + reports + manage inventory (add, edit items but NOT delete)
         $accountant = Role::findByName('accountant');
         $accountant->syncPermissions([
             'create transactions',
@@ -141,7 +143,10 @@ class RolePermissionSeeder extends Seeder
             'view reports',
             'view dashboard',
             'view inventory',
-            'manage inventory',  // Added to allow accountants to add, edit, and delete inventory items
+            'manage inventory',  // Allows accountants to add and edit inventory items
+            'manage categories',  // Allows accountants to manage categories
+            'manage payment methods',  // Allows accountants to manage payment methods
+            // NOTE: 'delete inventory' is NOT included - only Admin can delete inventory items
         ]);
         $this->command->info('✓ Accountant permissions assigned');
 

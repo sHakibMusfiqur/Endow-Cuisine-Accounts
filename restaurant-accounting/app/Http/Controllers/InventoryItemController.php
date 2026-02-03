@@ -416,8 +416,8 @@ class InventoryItemController extends Controller
      */
     public function destroy(InventoryItem $item)
     {
-        // Check if user is Admin or Accountant
-        if (!Auth::user()->hasRole(['admin', 'accountant'])) {
+        // Check if user has delete inventory permission (Admin only)
+        if (!Auth::user()->can('delete inventory')) {
             return redirect()->back()
                 ->with('error', 'You do not have permission to delete inventory items.');
         }
