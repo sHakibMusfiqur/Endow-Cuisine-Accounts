@@ -203,6 +203,30 @@ class PurchaseCorrectionService
             $activityData
         );
 
+        // ==========================================
+        // SPATIE ACTIVITY LOG FOR AUDIT COMPLIANCE
+        // ==========================================
+        $spatieProperties = [
+            'item' => $item->name,
+            'old_qty' => $oldQuantity,
+            'new_qty' => $correctedQuantity,
+            'old_amount' => $oldExpenseAmount,
+            'new_amount' => $correctedExpenseAmount,
+            'correction_type' => 'purchase_correction',
+        ];
+        
+        if ($correctedUnitCost !== null) {
+            $spatieProperties['old_unit_cost'] = $oldUnitCost;
+            $spatieProperties['new_unit_cost'] = $correctedUnitCost;
+        }
+        
+        activity()
+            ->useLog('inventory')
+            ->causedBy(auth()->user())
+            ->performedOn($expenseTransaction)
+            ->withProperties($spatieProperties)
+            ->log("Purchase Entry Corrected – {$item->name} ({$oldQuantity} → {$correctedQuantity})");
+
         return $result;
     }
 
@@ -318,6 +342,24 @@ class PurchaseCorrectionService
                 'accounting_impact' => 'NONE - Inventory write-down only, no expense created',
             ]
         );
+
+        // ==========================================
+        // SPATIE ACTIVITY LOG FOR AUDIT COMPLIANCE
+        // ==========================================
+        activity()
+            ->useLog('inventory')
+            ->causedBy(auth()->user())
+            ->performedOn($item)
+            ->withProperties([
+                'item' => $item->name,
+                'damage_qty' => $quantityLost,
+                'unit_cost' => $item->unit_cost,
+                'loss_amount' => $lossValue,
+                'old_quantity' => $oldQuantity,
+                'new_quantity' => $correctedQuantity,
+                'correction_type' => 'damage_spoilage',
+            ])
+            ->log("Inventory Damage – {$item->name} ({$quantityLost} {$item->unit})");
 
         // ==========================================
         // RETURN RESULT
