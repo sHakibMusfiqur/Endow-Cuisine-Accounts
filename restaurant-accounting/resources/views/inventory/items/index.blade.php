@@ -146,8 +146,7 @@
                                     </button>
                                     @endcan
                                     
-                                    {{-- Restock button - shown ONLY for low stock items --}}
-                                    @if($item->isLowStock())
+                                    {{-- Restock button - always visible for authorized users --}}
                                     @can('manage inventory')
                                     <a href="{{ route('inventory.movements.stock-in', ['item_id' => $item->id]) }}" 
                                        class="btn btn-outline-success btn-sm rounded" 
@@ -156,7 +155,6 @@
                                         <i class="fas fa-box"></i>
                                     </a>
                                     @endcan
-                                    @endif
                                 </div>
                             </td>
                         </tr>

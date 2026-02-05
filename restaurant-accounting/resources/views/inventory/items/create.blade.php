@@ -86,6 +86,7 @@
                                             <option value="L" {{ old('unit') == 'L' ? 'selected' : '' }}>L (Liter)</option>
                                             <option value="mL" {{ old('unit') == 'mL' ? 'selected' : '' }}>mL (Milliliter)</option>
                                             <option value="pcs" {{ old('unit') == 'pcs' ? 'selected' : '' }}>pcs (Pieces)</option>
+                                            <option value="packet" {{ old('unit') == 'packet' ? 'selected' : '' }}>packet (Packet)</option>
                                             <option value="box" {{ old('unit') == 'box' ? 'selected' : '' }}>box (Box)</option>
                                             <option value="bag" {{ old('unit') == 'bag' ? 'selected' : '' }}>bag (Bag)</option>
                                             <option value="bottle" {{ old('unit') == 'bottle' ? 'selected' : '' }}>bottle (Bottle)</option>

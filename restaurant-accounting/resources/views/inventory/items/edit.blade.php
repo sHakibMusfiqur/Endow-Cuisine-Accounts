@@ -126,6 +126,7 @@
                                     <option value="L" {{ old('unit', $item->unit) == 'L' ? 'selected' : '' }}>L</option>
                                     <option value="mL" {{ old('unit', $item->unit) == 'mL' ? 'selected' : '' }}>mL</option>
                                     <option value="pcs" {{ old('unit', $item->unit) == 'pcs' ? 'selected' : '' }}>pcs</option>
+                                    <option value="packet" {{ old('unit', $item->unit) == 'packet' ? 'selected' : '' }}>packet</option>
                                     <option value="box" {{ old('unit', $item->unit) == 'box' ? 'selected' : '' }}>box</option>
                                     <option value="bag" {{ old('unit', $item->unit) == 'bag' ? 'selected' : '' }}>bag</option>
                                     <option value="bottle" {{ old('unit', $item->unit) == 'bottle' ? 'selected' : '' }}>bottle</option>
