@@ -229,6 +229,50 @@ class TransactionController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         
+        // Determine original transaction type
+        $originalType = $transaction->income > 0 ? 'income' : 'expense';
+        $newType = $validated['transaction_type'];
+        
+        // CRITICAL: Transaction type changes are ONLY allowed for NORMAL transactions
+        // ALL inventory-related transactions are protected to maintain inventory integrity
+        if ($originalType !== $newType) {
+            // Check if this is ANY type of inventory transaction
+            $isInventoryTransaction = false;
+            
+            // Method 1: Check if linked to inventory adjustments
+            if ($transaction->inventoryAdjustments()->exists()) {
+                $isInventoryTransaction = true;
+            }
+            
+            // Method 2: Check if category name indicates inventory transaction
+            $inventoryCategories = [
+                'Inventory Purchase',
+                'Inventory Item Sale',
+                'Inventory Damage',
+                'Inventory Adjustment'
+            ];
+            
+            if ($transaction->category && in_array($transaction->category->name, $inventoryCategories)) {
+                $isInventoryTransaction = true;
+            }
+            
+            // Method 3: Check if description contains inventory indicators (purchase corrections, etc.)
+            if (stripos($transaction->description, 'Stock Correction') !== false ||
+                stripos($transaction->description, 'Inventory') !== false) {
+                $isInventoryTransaction = true;
+            }
+            
+            // Block type change if this is any type of inventory transaction
+            if ($isInventoryTransaction) {
+                $categoryName = $transaction->category ? $transaction->category->name : 'Unknown';
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors([
+                        'transaction_type' => 'Transaction type change is ONLY allowed for NORMAL transactions. This is an INVENTORY transaction (Category: ' . $categoryName . ') and cannot be changed from ' . strtoupper($originalType) . ' to ' . strtoupper($newType) . '. Changing inventory transaction types would corrupt inventory stock records and financial data.'
+                    ]);
+            }
+        }
+        
         // Validate that category type matches transaction type
         $category = Category::findOrFail($validated['category_id']);
         if ($category->type !== $validated['transaction_type']) {

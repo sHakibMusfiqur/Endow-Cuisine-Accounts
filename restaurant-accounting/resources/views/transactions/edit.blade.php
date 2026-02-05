@@ -137,10 +137,48 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
+                <!-- <div class="card-header">
                     <h5><i class="fas fa-edit"></i> Edit Transaction</h5>
+                </div> -->
+                                <div class="card-header bg-danger rounded-top py-3">
+                    <h5 class="mb-0 text-white fw-bold d-flex align-items-center">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-dark text-white me-2" style="width: 32px; height: 32px; font-size: 18px;">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        Edit Transaction
+                    </h5>
                 </div>
                 <div class="card-body">
+                    @php
+                        // Check if this is ANY type of inventory transaction
+                        $isInventoryTransaction = $transaction->inventoryAdjustments()->exists() ||
+                            ($transaction->category && in_array($transaction->category->name, [
+                                'Inventory Purchase',
+                                'Inventory Item Sale', 
+                                'Inventory Damage',
+                                'Inventory Adjustment'
+                            ])) ||
+                            (stripos($transaction->description, 'Stock Correction') !== false) ||
+                            (stripos($transaction->description, 'Inventory') !== false);
+                    @endphp
+                    
+                    @if($isInventoryTransaction)
+                    <!-- Critical Warning for ANY inventory transaction -->
+                    <div class="alert alert-danger border-danger" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-ban"></i> <strong>Inventory Transaction - Type Change Disabled</strong></h6>
+                        <p class="mb-0">This is an <strong>INVENTORY transaction</strong> ({{ $transaction->category ? $transaction->category->name : 'Inventory-related' }}). <strong>Transaction type cannot be changed</strong> as it would corrupt inventory stock records and financial data.</p>
+                        <hr>
+                        <small class="mb-0"><i class="fas fa-info-circle"></i> Transaction type changes are <strong>only allowed for normal transactions</strong> (non-inventory).</small>
+                    </div>
+                    @else
+                    <!-- Info banner for normal transactions -->
+                    <div class="alert alert-success border-success" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-check-circle"></i> <strong>Normal Transaction - Type Change Allowed</strong></h6>
+                        <p class="mb-0">You can safely change the transaction type between Income and Expense for this normal transaction. All balances will be automatically recalculated.</p>
+                        <small class="text-muted"><i class="fas fa-lightbulb"></i> Make sure the category matches your selected transaction type.</small>
+                    </div>
+                    @endif
+
                     <form action="{{ route('transactions.update', $transaction) }}" method="POST">
                         @csrf
                         @method('PUT')
@@ -168,15 +206,29 @@
 
                         <div class="mb-3">
                             <label class="form-label">Transaction Type <span class="text-danger">*</span></label>
+                            @if($isInventoryTransaction)
+                            <div class="alert alert-warning py-2 mb-2">
+                                <small><i class="fas fa-lock"></i> <strong>Locked:</strong> Type change only available for normal transactions (not inventory)</small>
+                            </div>
+                            @endif
                             <div class="btn-group w-100" role="group" aria-label="Transaction Type">
-                                <button type="button" class="btn btn-outline-success transaction-type-btn {{ ($transaction->income > 0 || old('transaction_type') == 'income') ? 'active' : '' }}" data-type="income">
+                                <button type="button" 
+                                    class="btn btn-outline-success transaction-type-btn {{ ($transaction->income > 0 || old('transaction_type') == 'income') ? 'active' : '' }}" 
+                                    data-type="income" 
+                                    {{ $isInventoryTransaction ? 'disabled title="Cannot change type for inventory transactions"' : '' }}>
                                     <i class="fas fa-arrow-up"></i> Income
                                 </button>
-                                <button type="button" class="btn btn-outline-danger transaction-type-btn {{ ($transaction->expense > 0 || old('transaction_type') == 'expense') ? 'active' : '' }}" data-type="expense">
+                                <button type="button" 
+                                    class="btn btn-outline-danger transaction-type-btn {{ ($transaction->expense > 0 || old('transaction_type') == 'expense') ? 'active' : '' }}" 
+                                    data-type="expense" 
+                                    {{ $isInventoryTransaction ? 'disabled title="Cannot change type for inventory transactions"' : '' }}>
                                     <i class="fas fa-arrow-down"></i> Expense
                                 </button>
                             </div>
                             <input type="hidden" name="transaction_type" id="transaction_type" value="{{ old('transaction_type', $transaction->income > 0 ? 'income' : 'expense') }}">
+                            @if($isInventoryTransaction)
+                            <small class="text-danger d-block mt-2"><i class="fas fa-ban"></i> Transaction type is locked for ALL inventory transactions. Only normal transactions can be changed.</small>
+                            @endif
                         </div>
 
                         <div class="mb-3" id="income_section">
@@ -248,6 +300,8 @@
 @push('styles')
 <!-- Quill CSS -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<!-- SweetAlert2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
 <style>
     .ql-editor {
         min-height: 120px;
@@ -287,6 +341,8 @@
 @push('scripts')
 <!-- Quill JS -->
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize Quill Editor
@@ -337,7 +393,13 @@
             // Validate that description is not empty
             if (text.length === 0) {
                 e.preventDefault();
-                alert('Please enter a description for the transaction.');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Description Required',
+                    text: 'Please enter a description for the transaction.',
+                    confirmButtonColor: '#0d6efd',
+                    confirmButtonText: 'OK'
+                });
                 quill.focus();
                 return false;
             }
@@ -394,23 +456,112 @@
          */
         transactionTypeButtons.forEach(button => {
             button.addEventListener('click', function() {
+                // CRITICAL: Prevent type changes for ANY inventory transaction
+                // Type changes are ONLY allowed for normal (non-inventory) transactions
+                if (this.disabled) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Inventory Transaction - Type Change Blocked',
+                        html: `
+                            <div style="text-align: left;">
+                                <p><strong>This is an INVENTORY transaction.</strong></p>
+                                <p>Transaction type changes are <strong>only allowed for NORMAL transactions</strong> (non-inventory).</p>
+                                <hr>
+                                <p><strong>Why is this blocked?</strong></p>
+                                <ul style="text-align: left;">
+                                    <li><strong>ALL</strong> inventory transactions are protected (purchases, sales, adjustments, damage)</li>
+                                    <li>Changing Income ↔ Expense would corrupt inventory stock records</li>
+                                    <li>Financial data and stock levels would be compromised</li>
+                                    <li>Inventory adjustments linked to this transaction would be invalid</li>
+                                </ul>
+                                <p class="mb-0"><small><i class="fas fa-info-circle"></i> Only normal/regular transactions (not related to inventory) can have their type changed.</small></p>
+                            </div>
+                        `,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'I Understand'
+                    });
+                    return;
+                }
+                
+                const newType = this.dataset.type;
+                const currentType = transactionTypeInput.value;
+                
+                // If switching types and there's already an amount entered, confirm
+                if (newType !== currentType) {
+                    const currentAmount = (currentType === 'income' ? incomeInput.value : expenseInput.value);
+                    
+                    if (currentAmount && parseFloat(currentAmount) > 0) {
+                        Swal.fire({
+                            icon: 'question',
+                            title: 'Change Transaction Type?',
+                            html: `
+                                <div style="text-align: left;">
+                                    <p>You are changing this transaction from <strong>${currentType.toUpperCase()}</strong> to <strong>${newType.toUpperCase()}</strong>.</p>
+                                    <p><strong>Current ${currentType} amount:</strong> ₩${parseFloat(currentAmount).toLocaleString()}</p>
+                                    <hr>
+                                    <p><strong>This will:</strong></p>
+                                    <ul style="text-align: left;">
+                                        <li>Change this from ${currentType} to ${newType}</li>
+                                        <li>Move the amount to the ${newType} field</li>
+                                        <li>Update categories to show only ${newType} categories</li>
+                                        <li>Automatically recalculate all balances</li>
+                                    </ul>
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonColor: newType === 'income' ? '#198754' : '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: `Yes, change to ${newType}`,
+                            cancelButtonText: 'Cancel',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                return; // User cancelled
+                            }
+                            
+                            // Transfer amount to the new field
+                            if (newType === 'income') {
+                                incomeInput.value = currentAmount;
+                                expenseInput.value = '';
+                            } else {
+                                expenseInput.value = currentAmount;
+                                incomeInput.value = '';
+                            }
+                            
+                            // Remove active class from all buttons
+                            transactionTypeButtons.forEach(btn => btn.classList.remove('active'));
+                            
+                            // Add active class to clicked button
+                            button.classList.add('active');
+                            
+                            // Update hidden input
+                            transactionTypeInput.value = newType;
+                            
+                            // Update form sections
+                            updateFormSections(newType);
+                            
+                            // Load categories for selected type
+                            loadCategories(newType);
+                        });
+                        
+                        return; // Exit here since Swal handles the rest
+                    }
+                }
+                
                 // Remove active class from all buttons
                 transactionTypeButtons.forEach(btn => btn.classList.remove('active'));
                 
                 // Add active class to clicked button
                 this.classList.add('active');
                 
-                // Get transaction type
-                const transactionType = this.dataset.type;
-                
                 // Update hidden input
-                transactionTypeInput.value = transactionType;
+                transactionTypeInput.value = newType;
                 
                 // Update form sections
-                updateFormSections(transactionType);
+                updateFormSections(newType);
                 
                 // Load categories for selected type
-                loadCategories(transactionType);
+                loadCategories(newType);
             });
         });
 
