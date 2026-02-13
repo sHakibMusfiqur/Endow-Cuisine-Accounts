@@ -73,6 +73,31 @@
         </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form action="{{ route('inventory.items.index') }}" method="GET" class="row g-2">
+                <div class="col-md-10">
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="Search by item name, SKU, or unit..." 
+                           value="{{ $search ?? '' }}">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                    @if($search)
+                    <a href="{{ route('inventory.items.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Items Table -->
     <div class="card border-0 shadow-sm">
         <div class="card-body">

@@ -71,6 +71,10 @@
                             <td>₩{{ number_format($item->unit_cost, 0) }}</td>
                         </tr>
                         <tr>
+                            <th>Selling Price per Unit:</th>
+                            <td>₩{{ number_format($item->selling_price_per_unit, 0) }}</td>
+                        </tr>
+                        <tr>
                             <th>Total Value:</th>
                             <td><strong>₩{{ number_format($item->stock_value, 0) }}</strong></td>
                         </tr>

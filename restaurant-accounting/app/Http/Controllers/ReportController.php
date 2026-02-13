@@ -64,6 +64,9 @@ class ReportController extends Controller
             $totalDamageLoss = 0;
         }
 
+        // Calculate profit metrics
+        $profitSummary = $this->transactionService->getProfitSummaryByDateRange($dateFrom, $dateTo);
+
         return view('reports.index', [
             'transactions' => $transactions,
             'date_from' => $dateFrom,
@@ -74,6 +77,7 @@ class ReportController extends Controller
             'total_expense' => $totalExpense,
             'net_amount' => $netAmount,
             'total_damage_loss' => $totalDamageLoss,
+            'profitSummary' => $profitSummary,
         ]);
     }
 
@@ -98,6 +102,29 @@ class ReportController extends Controller
             $transactionSource
         );
 
+        // Calculate profit based on transaction source
+        $profit = $this->calculateProfitBySource(
+            $validated['date_from'],
+            $validated['date_to'],
+            $transactionSource
+        );
+
+        // Calculate totals for summary
+        // For inventory reports, exclude damage from expense/net calculations
+        if ($transactionSource === 'inventory') {
+            $regularTransactions = $transactions->filter(function ($item) {
+                return !isset($item->is_damage_entry) || $item->is_damage_entry !== true;
+            });
+            
+            $totalIncome = $regularTransactions->sum('income');
+            $totalExpense = $regularTransactions->sum('expense');
+        } else {
+            $totalIncome = $transactions->sum('income');
+            $totalExpense = $transactions->sum('expense');
+        }
+        
+        $netAmount = $totalIncome - $totalExpense;
+
         $activeCurrency = getActiveCurrency();
         $filename = 'transactions_' . $validated['date_from'] . '_to_' . $validated['date_to'] . '_' . $activeCurrency->code . '.csv';
 
@@ -106,7 +133,7 @@ class ReportController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($transactions, $activeCurrency) {
+        $callback = function() use ($transactions, $activeCurrency, $totalIncome, $totalExpense, $netAmount, $profit) {
             $file = fopen('php://output', 'w');
 
             // Add CSV headers with currency information
@@ -131,6 +158,16 @@ class ReportController extends Controller
                 ]);
             }
 
+            // Add summary section
+            fputcsv($file, []); // Empty row
+            fputcsv($file, []); // Empty row
+            fputcsv($file, ['FINANCIAL SUMMARY']);
+            fputcsv($file, []); // Empty row
+            fputcsv($file, ['Total Income', number_format(convertCurrency($totalIncome, $activeCurrency), 2)]);
+            fputcsv($file, ['Total Expense', number_format(convertCurrency($totalExpense, $activeCurrency), 2)]);
+            fputcsv($file, ['Net Amount', number_format(convertCurrency($netAmount, $activeCurrency), 2)]);
+            fputcsv($file, ['Profit', number_format(convertCurrency($profit, $activeCurrency), 2)]);
+
             fclose($file);
         };
 
@@ -153,6 +190,13 @@ class ReportController extends Controller
 
         // Get transactions based on source filter
         $transactions = $this->getTransactionsForReport(
+            $validated['date_from'],
+            $validated['date_to'],
+            $transactionSource
+        );
+
+        // Calculate profit based on transaction source
+        $profit = $this->calculateProfitBySource(
             $validated['date_from'],
             $validated['date_to'],
             $transactionSource
@@ -195,6 +239,7 @@ class ReportController extends Controller
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
             'net_amount' => $netAmount,
+            'profit' => $profit,
             'total_damage_loss' => $totalDamageLoss,
             'generated_at' => $generatedAt,
         ];
@@ -221,6 +266,13 @@ class ReportController extends Controller
 
         // Get transactions based on source filter
         $transactions = $this->getTransactionsForReport(
+            $validated['date_from'],
+            $validated['date_to'],
+            $transactionSource
+        );
+
+        // Calculate profit based on transaction source
+        $profit = $this->calculateProfitBySource(
             $validated['date_from'],
             $validated['date_to'],
             $transactionSource
@@ -278,6 +330,7 @@ class ReportController extends Controller
             'period' => $validated['period'],
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
+            'profit' => $profit,
             'category_wise' => $categoryWise,
             'payment_method_wise' => $paymentMethodWise,
             'total_damage_loss' => $totalDamageLoss,
@@ -285,6 +338,41 @@ class ReportController extends Controller
         ];
 
         return view('reports.summary', $data);
+    }
+
+    /**
+     * Calculate profit based on transaction source and date range.
+     * 
+     * PROFIT CALCULATION RULES:
+     * 1. Normal Transaction Profit: total_normal_income - total_normal_expense
+     * 2. Inventory Profit: total_inventory_sales - FIFO_inventory_cost
+     * 3. Result depends on transaction_source filter
+     * 
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @param string $transactionSource 'all', 'normal', or 'inventory'
+     * @return float Calculated profit
+     */
+    private function calculateProfitBySource(string $dateFrom, string $dateTo, string $transactionSource): float
+    {
+        // Get full profit breakdown from TransactionService
+        $profitSummary = $this->transactionService->getProfitSummaryByDateRange($dateFrom, $dateTo);
+        
+        // Return profit based on transaction source filter
+        switch ($transactionSource) {
+            case 'normal':
+                // Only normal transaction profit
+                return $profitSummary['normal_profit'];
+                
+            case 'inventory':
+                // Only inventory profit
+                return $profitSummary['inventory_profit'];
+                
+            case 'all':
+            default:
+                // Combined profit (normal + inventory)
+                return $profitSummary['total_profit'];
+        }
     }
 
     /**

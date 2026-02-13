@@ -655,4 +655,150 @@ class TransactionService
             Log::error("Inventory usage processing failed: " . $e->getMessage());
         }
     }
+
+    /**
+     * Get profit calculations for a given period.
+     * 
+     * @param string $period 'today', 'week', 'month', 'year'
+     * @return array
+     */
+    public function getProfitSummary($period = 'today'): array
+    {
+        $query = DailyTransaction::query();
+
+        switch ($period) {
+            case 'today':
+                $query->today();
+                break;
+            case 'week':
+                $query->thisWeek();
+                break;
+            case 'month':
+                $query->thisMonth();
+                break;
+            case 'year':
+                $query->thisYear();
+                break;
+        }
+
+        // Get transaction IDs for the period
+        $transactionIds = $query->pluck('id');
+
+        // Calculate Normal Profit (exclude inventory-related transactions)
+        $normalIncome = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('income', '>', 0)
+            ->where(function($q) {
+                $q->whereDoesntHave('category', function($catQuery) {
+                    $catQuery->where('name', 'Inventory Item Sale');
+                })
+                ->orWhereNull('category_id');
+            })
+            ->sum('income');
+
+        $normalExpense = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('expense', '>', 0)
+            ->where(function($q) {
+                $q->whereDoesntHave('category', function($catQuery) {
+                    $catQuery->whereIn('name', ['Inventory Purchase', 'Inventory Damage']);
+                })
+                ->orWhereNull('category_id');
+            })
+            ->sum('expense');
+
+        $normalProfit = $normalIncome - $normalExpense;
+
+        // Calculate Inventory Profit (Revenue - COGS)
+        $inventorySaleRevenue = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('income', '>', 0)
+            ->whereHas('category', function($catQuery) {
+                $catQuery->where('name', 'Inventory Item Sale');
+            })
+            ->sum('income');
+
+        // Get COGS from stock movements for inventory sales
+        $inventoryCOGS = StockMovement::whereIn('type', ['sale', 'internal_purchase'])
+            ->whereIn('reference_id', $transactionIds)
+            ->where('reference_type', DailyTransaction::class)
+            ->sum('total_cost');
+
+        $inventoryProfit = $inventorySaleRevenue - $inventoryCOGS;
+
+        // Calculate Total Profit
+        $totalProfit = $normalProfit + $inventoryProfit;
+
+        return [
+            'normal_income' => $normalIncome,
+            'normal_expense' => $normalExpense,
+            'normal_profit' => $normalProfit,
+            'inventory_sale_revenue' => $inventorySaleRevenue,
+            'inventory_cogs' => $inventoryCOGS,
+            'inventory_profit' => $inventoryProfit,
+            'total_profit' => $totalProfit,
+        ];
+    }
+
+    /**
+     * Get profit calculations for a custom date range.
+     * 
+     * @param string $dateFrom
+     * @param string $dateTo
+     * @return array
+     */
+    public function getProfitSummaryByDateRange(string $dateFrom, string $dateTo): array
+    {
+        $query = DailyTransaction::whereBetween('date', [$dateFrom, $dateTo]);
+        $transactionIds = $query->pluck('id');
+
+        // Calculate Normal Profit (exclude inventory-related transactions)
+        $normalIncome = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('income', '>', 0)
+            ->where(function($q) {
+                $q->whereDoesntHave('category', function($catQuery) {
+                    $catQuery->where('name', 'Inventory Item Sale');
+                })
+                ->orWhereNull('category_id');
+            })
+            ->sum('income');
+
+        $normalExpense = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('expense', '>', 0)
+            ->where(function($q) {
+                $q->whereDoesntHave('category', function($catQuery) {
+                    $catQuery->whereIn('name', ['Inventory Purchase', 'Inventory Damage']);
+                })
+                ->orWhereNull('category_id');
+            })
+            ->sum('expense');
+
+        $normalProfit = $normalIncome - $normalExpense;
+
+        // Calculate Inventory Profit (Revenue - COGS)
+        $inventorySaleRevenue = DailyTransaction::whereIn('id', $transactionIds)
+            ->where('income', '>', 0)
+            ->whereHas('category', function($catQuery) {
+                $catQuery->where('name', 'Inventory Item Sale');
+            })
+            ->sum('income');
+
+        // Get COGS from stock movements for inventory sales
+        $inventoryCOGS = StockMovement::whereIn('type', ['sale', 'internal_purchase'])
+            ->whereIn('reference_id', $transactionIds)
+            ->where('reference_type', DailyTransaction::class)
+            ->sum('total_cost');
+
+        $inventoryProfit = $inventorySaleRevenue - $inventoryCOGS;
+
+        // Calculate Total Profit
+        $totalProfit = $normalProfit + $inventoryProfit;
+
+        return [
+            'normal_income' => $normalIncome,
+            'normal_expense' => $normalExpense,
+            'normal_profit' => $normalProfit,
+            'inventory_sale_revenue' => $inventorySaleRevenue,
+            'inventory_cogs' => $inventoryCOGS,
+            'inventory_profit' => $inventoryProfit,
+            'total_profit' => $totalProfit,
+        ];
+    }
 }

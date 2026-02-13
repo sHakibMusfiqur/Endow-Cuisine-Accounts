@@ -27,6 +27,12 @@ class DashboardController extends Controller
         $monthSummary = $this->transactionService->getSummary('month');
         $yearSummary = $this->transactionService->getSummary('year');
 
+        // Get profit calculations
+        $todayProfit = $this->transactionService->getProfitSummary('today');
+        $weekProfit = $this->transactionService->getProfitSummary('week');
+        $monthProfit = $this->transactionService->getProfitSummary('month');
+        $yearProfit = $this->transactionService->getProfitSummary('year');
+
         // Get recent transactions
         $recentTransactions = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
             ->orderBy('date', 'desc')
@@ -87,6 +93,10 @@ class DashboardController extends Controller
             'weekSummary',
             'monthSummary',
             'yearSummary',
+            'todayProfit',
+            'weekProfit',
+            'monthProfit',
+            'yearProfit',
             'recentTransactions',
             'weeklyChartData',
             'monthlyChartData',

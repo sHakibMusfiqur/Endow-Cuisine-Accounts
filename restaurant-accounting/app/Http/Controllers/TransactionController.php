@@ -483,4 +483,160 @@ class TransactionController extends Controller
                 ->with('error', 'Failed to record inventory sale: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Show the form for creating a multi-item inventory sale transaction.
+     */
+    public function createInventorySaleMulti()
+    {
+        // Get all active inventory items with stock
+        $inventoryItems = InventoryItem::active()
+            ->where('current_stock', '>', 0)
+            ->orderBy('name')
+            ->get();
+        
+        $paymentMethods = PaymentMethod::active()->get();
+        $defaultCurrency = Currency::getDefault();
+
+        // Get or create "Inventory Item Sale" category
+        $category = Category::firstOrCreate(
+            ['name' => 'Inventory Item Sale', 'type' => 'income'],
+            ['description' => 'Sales of inventory items']
+        );
+
+        return view('transactions.inventory-sale-multi', compact(
+            'inventoryItems',
+            'paymentMethods',
+            'defaultCurrency',
+            'category'
+        ));
+    }
+
+    /**
+     * Store a multi-item inventory sale transaction.
+     * Each item creates its own transaction record, but all share a batch_id.
+     */
+    public function storeInventorySaleMulti(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => 'required|date',
+            'items' => 'required|array|min:1',
+            'items.*.inventory_item_id' => 'required|exists:inventory_items,id',
+            'items.*.quantity' => 'required|numeric|min:0.01',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'description' => 'nullable|string|max:5000',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Generate unique batch ID for all items in this multi-item transaction
+            $batchId = 'BATCH-' . $validated['date'] . '-' . uniqid();
+            $grandTotal = 0;
+            $processedItems = [];
+
+            // Get or create "Inventory Item Sale" category
+            $category = Category::firstOrCreate(
+                ['name' => 'Inventory Item Sale', 'type' => 'income'],
+                ['description' => 'Sales of inventory items']
+            );
+
+            foreach ($validated['items'] as $itemData) {
+                // Get inventory item
+                $inventoryItem = InventoryItem::findOrFail($itemData['inventory_item_id']);
+
+                // Get selling price from inventory item (CRITICAL: Never trust frontend)
+                $sellingPrice = (float) $inventoryItem->selling_price_per_unit;
+
+                // Validate that selling price is set
+                if ($sellingPrice <= 0) {
+                    DB::rollBack();
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', "Item '{$inventoryItem->name}' does not have a valid selling price set. Please update the inventory item master first.");
+                }
+
+                // Validate stock availability (CRITICAL)
+                if ($itemData['quantity'] > $inventoryItem->current_stock) {
+                    DB::rollBack();
+                    return redirect()->back()
+                        ->withInput()
+                        ->with('error', sprintf(
+                            'Insufficient stock for %s! Available: %s %s, Requested: %s %s',
+                            $inventoryItem->name,
+                            number_format((float)$inventoryItem->current_stock, 2),
+                            $inventoryItem->unit,
+                            number_format($itemData['quantity'], 2),
+                            $inventoryItem->unit
+                        ));
+                }
+
+                $quantity = $itemData['quantity'];
+                $totalSaleAmount = $quantity * $sellingPrice;
+
+                // Create the income transaction for this item
+                $description = $validated['description'] ?? sprintf(
+                    'Sale of %s %s of %s @ ₩%s per %s',
+                    number_format($quantity, 2),
+                    $inventoryItem->unit,
+                    $inventoryItem->name,
+                    number_format($sellingPrice, 2),
+                    $inventoryItem->unit
+                );
+
+                $transaction = $this->transactionService->createTransaction([
+                    'date' => $validated['date'],
+                    'description' => $this->sanitizeHtml($description),
+                    'income' => $totalSaleAmount,
+                    'expense' => 0,
+                    'category_id' => $category->id,
+                    'payment_method_id' => $validated['payment_method_id'],
+                    'currency_id' => Currency::getDefault()->id,
+                    'batch_id' => $batchId,
+                ]);
+
+                // Update inventory stock
+                $oldStock = $inventoryItem->current_stock;
+                $inventoryItem->current_stock -= $quantity;
+                $inventoryItem->save();
+
+                // Create stock movement record
+                StockMovement::create([
+                    'inventory_item_id' => $inventoryItem->id,
+                    'type' => 'sale',
+                    'quantity' => $quantity,
+                    'unit_cost' => $inventoryItem->unit_cost,
+                    'total_cost' => $quantity * $inventoryItem->unit_cost,
+                    'balance_after' => $inventoryItem->current_stock,
+                    'reference_type' => DailyTransaction::class,
+                    'reference_id' => $transaction->id,
+                    'notes' => sprintf(
+                        'Multi-item sale via transaction #%d at ₩%s per %s',
+                        $transaction->id,
+                        number_format($sellingPrice, 2),
+                        $inventoryItem->unit
+                    ),
+                    'movement_date' => $validated['date'],
+                    'created_by' => Auth::id(),
+                ]);
+
+                $grandTotal += $totalSaleAmount;
+                $processedItems[] = "{$inventoryItem->name} ({$quantity} {$inventoryItem->unit})";
+            }
+
+            DB::commit();
+
+            return redirect()->route('transactions.index')
+                ->with('success', sprintf(
+                    'Multi-item inventory sale recorded successfully! %d items processed. Total: ₩%s',
+                    count($validated['items']),
+                    number_format($grandTotal, 0)
+                ));
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to record multi-item inventory sale: ' . $e->getMessage());
+        }
+    }
 }

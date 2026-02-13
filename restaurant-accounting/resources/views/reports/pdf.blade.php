@@ -377,6 +377,12 @@
                 {{ formatCurrency($net_amount) }}
             </div>
         </div>
+        <div class="summary-card">
+            <div class="summary-label">Profit</div>
+            <div class="summary-amount" style="color: {{ $profit >= 0 ? '#2e7d32' : '#d32f2f' }}">
+                {{ formatCurrency($profit) }}
+            </div>
+        </div>
         @if(isset($total_damage_loss) && $total_damage_loss > 0)
         <div class="summary-card" style="border-left-color: #f57c00;">
             <div class="summary-label">Total Inventory Damage / Loss</div>

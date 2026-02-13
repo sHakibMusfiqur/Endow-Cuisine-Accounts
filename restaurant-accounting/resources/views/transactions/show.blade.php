@@ -237,6 +237,72 @@
                     </div>
                 </div>
             </div>
+
+            @if($transaction->isDualEntry())
+            <!-- Linked Transactions (Dual-Entry) -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-link"></i> Linked Transactions (Dual-Entry Accounting)
+                    </h5>
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Reference ID:</strong> {{ $transaction->internal_reference_id }}<br>
+                        <strong>Type:</strong> {{ ucwords(str_replace('_', ' ', $transaction->internal_reference_type)) }}<br>
+                        <small class="text-muted">This transaction is part of a dual-entry accounting set.</small>
+                    </div>
+                    
+                    @php
+                        $linkedTransactions = $transaction->linkedTransactions();
+                    @endphp
+                    
+                    @if($linkedTransactions->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Source</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Category</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($linkedTransactions as $linked)
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ ucfirst($linked->source ?? 'N/A') }}</span>
+                                        </td>
+                                        <td>
+                                            @if($linked->income > 0)
+                                                <span class="badge bg-success">Income</span>
+                                            @else
+                                                <span class="badge bg-danger">Expense</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($linked->income > 0)
+                                                <span class="text-success fw-bold">₩{{ number_format($linked->income, 0) }}</span>
+                                            @else
+                                                <span class="text-danger fw-bold">₩{{ number_format($linked->expense, 0) }}</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $linked->category->name ?? 'N/A' }}</td>
+                                        <td>
+                                            <a href="{{ route('transactions.show', $linked) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
 
         <!-- Right Column: Financial Information -->

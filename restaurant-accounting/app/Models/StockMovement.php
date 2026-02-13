@@ -117,6 +117,14 @@ class StockMovement extends Model
     }
 
     /**
+     * Scope for internal purchase movements (consumption from own inventory).
+     */
+    public function scopeInternalPurchase($query)
+    {
+        return $query->where('type', 'internal_purchase');
+    }
+
+    /**
      * Scope for damage/spoilage movements.
      * These are stored as 'adjustment' type with reference_type = 'damage_spoilage'
      */

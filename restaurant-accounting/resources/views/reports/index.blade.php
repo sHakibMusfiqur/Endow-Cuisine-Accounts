@@ -468,6 +468,72 @@
                 </div>
             </div>
             
+            <!-- Profit Summary -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="bg-primary bg-opacity-10 rounded p-3">
+                        <h6 class="text-primary mb-3"><i class="fas fa-chart-line me-2"></i>Profit Analysis</h6>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block mb-1">Normal Profit</small>
+                                    <h5 class="{{ $profitSummary['normal_profit'] >= 0 ? 'text-success' : 'text-danger' }} fw-bold mb-0">
+                                        ₩{{ number_format($profitSummary['normal_profit'], 0) }}
+                                    </h5>
+                                    <small class="text-muted">(Income - Expense)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block mb-1">Inventory Revenue</small>
+                                    <h5 class="text-success fw-bold mb-0">
+                                        ₩{{ number_format($profitSummary['inventory_sale_revenue'], 0) }}
+                                    </h5>
+                                    <small class="text-muted">(Sales)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <small class="text-muted d-block mb-1">Inventory COGS</small>
+                                    <h5 class="text-danger fw-bold mb-0">
+                                        ₩{{ number_format($profitSummary['inventory_cogs'], 0) }}
+                                    </h5>
+                                    <small class="text-muted">(Cost)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center border-start border-2 border-primary">
+                                    <small class="text-muted d-block mb-1 fw-bold">TOTAL PROFIT</small>
+                                    <h4 class="{{ $profitSummary['total_profit'] >= 0 ? 'text-success' : 'text-danger' }} fw-bold mb-0">
+                                        ₩{{ number_format($profitSummary['total_profit'], 0) }}
+                                    </h4>
+                                    <small class="text-muted">(Normal + Inventory)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">Inventory Profit = Revenue - COGS: </small>
+                                <span class="{{ $profitSummary['inventory_profit'] >= 0 ? 'text-success' : 'text-danger' }} fw-semibold">
+                                    ₩{{ number_format($profitSummary['inventory_profit'], 0) }}
+                                </span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <small class="text-muted">Profit Margin: </small>
+                                <span class="fw-semibold text-primary">
+                                    @if($total_income > 0)
+                                        {{ number_format(($profitSummary['total_profit'] / $total_income) * 100, 1) }}%
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             @if($transaction_source === 'inventory' && $total_damage_loss > 0)
             <!-- Inventory Damage Loss Summary -->
             <div class="row mt-3">

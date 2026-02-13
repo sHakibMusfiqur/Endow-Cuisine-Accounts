@@ -325,6 +325,130 @@
         </div>
     </div>
 
+    <!-- Profit Summary -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted text-uppercase d-block mb-1">Today</small>
+                        <h6 class="mb-0">Profit Breakdown</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Restaurant</small>
+                        <span class="fw-semibold {{ $todayProfit['normal_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($todayProfit['normal_profit']) }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Inventory</small>
+                        <span class="fw-semibold {{ $todayProfit['inventory_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($todayProfit['inventory_profit']) }}
+                        </span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Total Profit</span>
+                            <h5 class="mb-0 fw-semibold {{ $todayProfit['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ formatCurrency($todayProfit['total_profit']) }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted text-uppercase d-block mb-1">This Week</small>
+                        <h6 class="mb-0">Profit Breakdown</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Restaurant</small>
+                        <span class="fw-semibold {{ $weekProfit['normal_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($weekProfit['normal_profit']) }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Inventory</small>
+                        <span class="fw-semibold {{ $weekProfit['inventory_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($weekProfit['inventory_profit']) }}
+                        </span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Total Profit</span>
+                            <h5 class="mb-0 fw-semibold {{ $weekProfit['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ formatCurrency($weekProfit['total_profit']) }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted text-uppercase d-block mb-1">This Month</small>
+                        <h6 class="mb-0">Profit Breakdown</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Restaurant</small>
+                        <span class="fw-semibold {{ $monthProfit['normal_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($monthProfit['normal_profit']) }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Inventory</small>
+                        <span class="fw-semibold {{ $monthProfit['inventory_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($monthProfit['inventory_profit']) }}
+                        </span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Total Profit</span>
+                            <h5 class="mb-0 fw-semibold {{ $monthProfit['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ formatCurrency($monthProfit['total_profit']) }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <small class="text-muted text-uppercase d-block mb-1">This Year</small>
+                        <h6 class="mb-0">Profit Breakdown</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Restaurant</small>
+                        <span class="fw-semibold {{ $yearProfit['normal_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($yearProfit['normal_profit']) }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">Inventory</small>
+                        <span class="fw-semibold {{ $yearProfit['inventory_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ formatCurrency($yearProfit['inventory_profit']) }}
+                        </span>
+                    </div>
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Total Profit</span>
+                            <h5 class="mb-0 fw-semibold {{ $yearProfit['total_profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ formatCurrency($yearProfit['total_profit']) }}
+                            </h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts -->
     <div class="row mt-4">
         <div class="col-md-6">

@@ -18,6 +18,7 @@ class DailyTransaction extends Model
     protected $fillable = [
         'date',
         'description',
+        'source',
         'income',
         'expense',
         'balance',
@@ -27,6 +28,9 @@ class DailyTransaction extends Model
         'amount_original',
         'amount_base',
         'exchange_rate_snapshot',
+        'internal_reference_id',
+        'internal_reference_type',
+        'batch_id',
         'created_by',
     ];
 
@@ -214,4 +218,59 @@ class DailyTransaction extends Model
     {
         return $this->income - $this->expense;
     }
+
+    /**
+     * Scope a query to filter by source.
+     */
+    public function scopeBySource($query, string $source)
+    {
+        return $query->where('source', $source);
+    }
+
+    /**
+     * Scope for inventory source transactions.
+     */
+    public function scopeInventorySource($query)
+    {
+        return $query->where('source', 'inventory');
+    }
+
+    /**
+     * Scope for restaurant source transactions.
+     */
+    public function scopeRestaurantSource($query)
+    {
+        return $query->where('source', 'restaurant');
+    }
+
+    /**
+     * Scope for internal consumption transactions.
+     */
+    public function scopeInternalConsumption($query)
+    {
+        return $query->where('internal_reference_type', 'inventory_internal_consumption');
+    }
+
+    /**
+     * Get linked transactions (transactions with same internal_reference_id).
+     */
+    public function linkedTransactions()
+    {
+        if (!$this->internal_reference_id) {
+            return collect();
+        }
+
+        return self::where('internal_reference_id', $this->internal_reference_id)
+            ->where('id', '!=', $this->id)
+            ->get();
+    }
+
+    /**
+     * Check if this transaction is part of a dual-entry set.
+     */
+    public function isDualEntry(): bool
+    {
+        return !empty($this->internal_reference_id) && !empty($this->internal_reference_type);
+    }
 }
+

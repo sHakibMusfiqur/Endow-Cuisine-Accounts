@@ -161,7 +161,14 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h5><i class="fas fa-box"></i> Inventory Item Sale Transaction</h5>
+                    <h5 class="mb-0 d-flex align-items-center justify-content-between">
+                        <span>
+                            <i class="fas fa-box"></i> Inventory Item Sale (Single Item)
+                        </span>
+                        <a href="{{ route('transactions.inventory-sale-multi.create') }}" class="btn btn-sm btn-light">
+                            <i class="fas fa-boxes"></i> Multi-Item Version
+                        </a>
+                    </h5>
                 </div>
                 <div class="card-body">
                     @if(session('error'))

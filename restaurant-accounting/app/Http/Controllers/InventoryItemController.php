@@ -15,16 +15,26 @@ class InventoryItemController extends Controller
     /**
      * Display a listing of inventory items.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->query('search');
+
         $items = InventoryItem::with('stockMovements')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%")
+                      ->orWhere('unit', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(20)
+            ->appends(['search' => $search]);
 
         $lowStockCount = InventoryItem::lowStock()->count();
         $totalValue = InventoryItem::active()->get()->sum('stock_value');
 
-        return view('inventory.items.index', compact('items', 'lowStockCount', 'totalValue'));
+        return view('inventory.items.index', compact('items', 'lowStockCount', 'totalValue', 'search'));
     }
 
     /**

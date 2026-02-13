@@ -144,9 +144,16 @@
                             <h6 class="mb-1"><i class="fas fa-bolt"></i> Quick Actions</h6>
                             
                         </div>
-                        <a href="{{ route('transactions.inventory-sale.create') }}" class="btn btn-success">
-                            <i class="fas fa-box"></i> Inventory Item Sale
-                        </a>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ route('transactions.inventory-sale-multi.create') }}" class="btn btn-success">
+                                <i class="fas fa-boxes"></i> Inventory Sale
+                            </a>
+                            @can('manage inventory')
+                            <a href="{{ route('inventory.movements.internal-purchase-multi') }}" class="btn btn-info text-white">
+                                <i class="fas fa-dolly-flatbed"></i> Inventory Consumption
+                            </a>
+                            @endcan
+                        </div>
                     </div>
                 </div>
             </div>
@@ -251,7 +258,7 @@
 
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('transactions.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back
+                                <i class="fas fa-arrow-left"></i> Back Transactions
                             </a>
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Save Transaction

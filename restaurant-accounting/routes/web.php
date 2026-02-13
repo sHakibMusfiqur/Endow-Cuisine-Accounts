@@ -78,9 +78,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
         Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
         
-        // Inventory Sale Routes (must come before {transaction} route)
-        Route::get('/transactions/inventory-sale', [TransactionController::class, 'createInventorySale'])->name('transactions.inventory-sale.create');
-        Route::post('/transactions/inventory-sale', [TransactionController::class, 'storeInventorySale'])->name('transactions.inventory-sale.store');
+        // Inventory Sale Routes - DEPRECATED: Redirect to Multi-Item
+        Route::get('/transactions/inventory-sale', function () {
+            return redirect()->route('transactions.inventory-sale-multi.create')
+                ->with('info', 'Please use the Multi-Item Inventory Sale for better workflow.');
+        })->name('transactions.inventory-sale.create');
+        
+        // Multi-Item Inventory Sale
+        Route::get('/transactions/inventory-sale-multi', [TransactionController::class, 'createInventorySaleMulti'])->name('transactions.inventory-sale-multi.create');
+        Route::post('/transactions/inventory-sale-multi', [TransactionController::class, 'storeInventorySaleMulti'])->name('transactions.inventory-sale-multi.store');
     });
 
     Route::middleware('can:view transactions')->group(function () {
@@ -125,6 +131,16 @@ Route::middleware('auth')->group(function () {
             Route::post('/movements/stock-in', [StockMovementController::class, 'storeStockIn'])->name('movements.stock-in.store');
             Route::get('/movements/stock-out', [StockMovementController::class, 'createStockOut'])->name('movements.stock-out');
             Route::post('/movements/stock-out', [StockMovementController::class, 'storeStockOut'])->name('movements.stock-out.store');
+            
+            // Internal Purchase - DEPRECATED: Redirect to Multi-Item
+            Route::get('/movements/internal-purchase', function () {
+                return redirect()->route('inventory.movements.internal-purchase-multi')
+                    ->with('info', 'Please use the Multi-Item Internal Consumption for better workflow.');
+            })->name('movements.internal-purchase');
+            
+            // Multi-Item Internal Purchase
+            Route::get('/movements/internal-purchase-multi', [StockMovementController::class, 'createInternalPurchaseMulti'])->name('movements.internal-purchase-multi');
+            Route::post('/movements/internal-purchase-multi', [StockMovementController::class, 'storeInternalPurchaseMulti'])->name('movements.internal-purchase-multi.store');
 
             // Usage Recipes Management
             Route::get('/recipes/create', [ItemUsageRecipeController::class, 'create'])->name('recipes.create');
