@@ -393,16 +393,15 @@ class ReportController extends Controller
     }
 
     /**
-     * STRICT & PRODUCTION-SAFE: Apply transaction source filter to query.
+     * Apply transaction source filter based on category module.
      * 
-     * Uses comprehensive multi-criteria filtering to identify ALL inventory transactions:
-     * - Category names (primary identifier for inventory sales, purchases, damage)
-     * - InventoryAdjustment relationship (captures purchase corrections)
-     * - StockMovement relationship via transaction description (captures inventory item expenses)
+     * SIMPLIFIED: Uses ONLY category.module for filtering.
+     * No complex logic, no source column, no description matching.
      * 
-     * MANDATORY FILTERING RULES:
-     * - INVENTORY: Include ALL transactions related to inventory in ANY way
-     * - NORMAL: Exclude ALL transactions with ANY inventory linkage
+     * FILTERING RULES:
+     * - INVENTORY: Show transactions where category.module = 'inventory'
+     * - NORMAL: Show transactions where category.module = 'restaurant'
+     * - ALL: No filter (show everything)
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $source Validated source: 'all', 'normal', or 'inventory'
@@ -410,115 +409,22 @@ class ReportController extends Controller
      */
     private function applyTransactionSourceFilter($query, string $source)
     {
-        if ($source === 'normal') {
-            // STRICT: Only Normal Transactions
-            // MUST exclude ALL inventory-related transactions using comprehensive criteria
-            
-            // Get all transaction IDs that have inventory linkages
-            $inventoryTransactionIds = $this->getInventoryTransactionIds();
-            
-            // Exclude transactions by ID (most reliable method)
-            if ($inventoryTransactionIds->isNotEmpty()) {
-                $query->whereNotIn('id', $inventoryTransactionIds);
-            }
-            
-            // Additional safety: Exclude by category name as secondary filter
-            $query->whereHas('category', function($subQ) {
-                $subQ->whereNotIn('name', [
-                    'Inventory Item Sale',
-                    'Inventory Purchase',
-                    'Inventory Damage'
-                ]);
+        if ($source === 'inventory') {
+            // Inventory Report: Show only transactions with inventory module categories
+            $query->whereHas('category', function ($q) {
+                $q->where('module', 'inventory');
             });
-            
-        } elseif ($source === 'inventory') {
-            // STRICT: Only Inventory Transactions
-            // MUST include ALL inventory-related transactions using comprehensive criteria
-            
-            // Get all transaction IDs that have inventory linkages
-            $inventoryTransactionIds = $this->getInventoryTransactionIds();
-            
-            // Include transactions by ID (most reliable method)
-            if ($inventoryTransactionIds->isNotEmpty()) {
-                $query->whereIn('id', $inventoryTransactionIds);
-            } else {
-                // Fallback: If no inventory transactions found, use category-based filter
-                $query->whereHas('category', function($subQ) {
-                    $subQ->whereIn('name', [
-                        'Inventory Item Sale',
-                        'Inventory Purchase',
-                        'Inventory Damage'
-                    ]);
-                });
-            }
         }
-        
+
+        if ($source === 'normal') {
+            // Normal Report: Show only transactions with restaurant module categories
+            $query->whereHas('category', function ($q) {
+                $q->where('module', 'restaurant');
+            });
+        }
+
         // 'all' - no filter applied, returns everything
         return $query;
-    }
-    
-    /**
-     * Get all transaction IDs that are inventory-related.
-     * 
-     * Identifies inventory transactions using ALL possible linkage methods:
-     * 1. Category names (Inventory Item Sale, Inventory Purchase, Inventory Damage)
-     * 2. InventoryAdjustment linkage (purchase corrections)
-     * 3. StockMovement linkage (ALL inventory operations including opening stock)
-     * 4. Description pattern matching (opening stock, etc.)
-     * 
-     * CRITICAL: Includes Opening Stock transactions (accounting requirement)
-     * 
-     * @return \Illuminate\Support\Collection Collection of transaction IDs
-     */
-    private function getInventoryTransactionIds()
-    {
-        $transactionIds = collect();
-        
-        // Method 1: Get transactions by inventory category names
-        // Includes: Inventory Item Sale, Inventory Purchase (including opening stock), Inventory Damage
-        $categoryBasedIds = DailyTransaction::whereHas('category', function($q) {
-            $q->whereIn('name', [
-                'Inventory Item Sale',
-                'Inventory Purchase',
-                'Inventory Damage'
-            ]);
-        })->pluck('id');
-        
-        $transactionIds = $transactionIds->merge($categoryBasedIds);
-        
-        // Method 2: Get transactions linked via InventoryAdjustment (purchase corrections)
-        $adjustmentLinkedIds = \App\Models\InventoryAdjustment::whereNotNull('expense_transaction_id')
-            ->pluck('expense_transaction_id');
-        
-        $transactionIds = $transactionIds->merge($adjustmentLinkedIds);
-        
-        // Method 3: Get transactions linked via StockMovement (ALL inventory operations)
-        // CRITICAL: Captures opening stock, inventory sales, and item expenses
-        // Get all possible reference_ids from stock movements that might point to transactions
-        $allStockMovementRefIds = \App\Models\StockMovement::whereNotNull('reference_id')
-            ->pluck('reference_id')
-            ->unique();
-        
-        // Verify which reference_ids are actual transaction IDs (defensive filtering)
-        if ($allStockMovementRefIds->isNotEmpty()) {
-            $stockMovementLinkedIds = DailyTransaction::whereIn('id', $allStockMovementRefIds)
-                ->pluck('id');
-            
-            $transactionIds = $transactionIds->merge($stockMovementLinkedIds);
-        }
-        
-        // Method 4: Get transactions by description pattern (opening stock, inventory operations)
-        // CRITICAL: Ensures opening stock transactions are ALWAYS captured
-        $descriptionBasedIds = DailyTransaction::where(function($q) {
-            $q->where('description', 'LIKE', 'Opening Stock:%')
-              ->orWhere('description', 'LIKE', 'Inventory%')
-              ->orWhere('description', 'LIKE', '%Opening Stock Correction%');
-        })->pluck('id');
-        
-        $transactionIds = $transactionIds->merge($descriptionBasedIds);
-        
-        // Return unique transaction IDs
-        return $transactionIds->unique();
     }
 
     /**

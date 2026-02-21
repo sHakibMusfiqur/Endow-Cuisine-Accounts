@@ -17,6 +17,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'type',
+        'module',
     ];
 
     /**
@@ -41,5 +42,21 @@ class Category extends Model
     public function scopeExpense($query)
     {
         return $query->where('type', 'expense');
+    }
+
+    /**
+     * Scope a query to only include restaurant module categories.
+     */
+    public function scopeRestaurant($query)
+    {
+        return $query->where('module', 'restaurant');
+    }
+
+    /**
+     * Scope a query to only include inventory module categories.
+     */
+    public function scopeInventory($query)
+    {
+        return $query->where('module', 'inventory');
     }
 }

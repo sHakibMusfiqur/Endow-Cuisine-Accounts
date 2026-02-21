@@ -108,6 +108,7 @@
                 <tr>
                     <th>#</th>
                     <th>Name</th>
+                    <th>Module</th>
                     <th>Type</th>
                     <th>Transactions Count</th>
                     <th>Actions</th>
@@ -118,6 +119,12 @@
                 <tr>
                     <td>{{ $loop->iteration + (($categories->currentPage() - 1) * $categories->perPage()) }}</td>
                     <td>{{ $category->name }}</td>
+                    <td>
+                        <span class="badge {{ $category->module == 'restaurant' ? 'bg-primary' : 'bg-info' }}">
+                            <i class="fas fa-{{ $category->module == 'restaurant' ? 'utensils' : 'boxes' }}"></i>
+                            {{ ucfirst($category->module ?? 'restaurant') }}
+                        </span>
+                    </td>
                     <td>
                         <span class="badge {{ $category->type == 'income' ? 'bg-success' : 'bg-warning' }}">
                             {{ ucfirst($category->type) }}
@@ -140,7 +147,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center text-muted">No categories found</td>
+                    <td colspan="6" class="text-center text-muted">No categories found</td>
                 </tr>
                 @endforelse
             </tbody>

@@ -13,24 +13,24 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            // Income Categories
-            ['name' => 'Food Sales', 'type' => 'income'],
-            ['name' => 'Beverage Sales', 'type' => 'income'],
-            ['name' => 'Catering Services', 'type' => 'income'],
-            ['name' => 'Delivery Services', 'type' => 'income'],
-            ['name' => 'Other Income', 'type' => 'income'],
+            // Income Categories (Restaurant Module)
+            ['name' => 'Food Sales', 'type' => 'income', 'module' => 'restaurant'],
+            ['name' => 'Beverage Sales', 'type' => 'income', 'module' => 'restaurant'],
+            ['name' => 'Catering Services', 'type' => 'income', 'module' => 'restaurant'],
+            ['name' => 'Delivery Services', 'type' => 'income', 'module' => 'restaurant'],
+            ['name' => 'Other Income', 'type' => 'income', 'module' => 'restaurant'],
 
-            // Expense Categories
-            ['name' => 'Food Supplies', 'type' => 'expense'],
-            ['name' => 'Beverage Supplies', 'type' => 'expense'],
-            ['name' => 'Utilities', 'type' => 'expense'],
-            ['name' => 'Salary', 'type' => 'expense'],
-            ['name' => 'Rent', 'type' => 'expense'],
-            ['name' => 'Maintenance', 'type' => 'expense'],
-            ['name' => 'Marketing', 'type' => 'expense'],
-            ['name' => 'Transportation', 'type' => 'expense'],
-            ['name' => 'Equipment', 'type' => 'expense'],
-            ['name' => 'Other Expenses', 'type' => 'expense'],
+            // Expense Categories (Restaurant Module)
+            ['name' => 'Food Supplies', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Beverage Supplies', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Utilities', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Salary', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Rent', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Maintenance', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Marketing', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Transportation', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Equipment', 'type' => 'expense', 'module' => 'restaurant'],
+            ['name' => 'Other Expenses', 'type' => 'expense', 'module' => 'restaurant'],
         ];
 
         foreach ($categories as $category) {

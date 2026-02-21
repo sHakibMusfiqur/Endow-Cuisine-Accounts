@@ -40,7 +40,7 @@ class ActivityLog extends Model
             'user_id' => auth()->id(),
             'action' => $action,
             'module' => $module,
-            'description' => $description,
+            'description' => strip_tags($description),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'metadata' => $metadata,

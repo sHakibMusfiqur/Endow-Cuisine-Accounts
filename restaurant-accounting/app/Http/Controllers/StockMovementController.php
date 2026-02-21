@@ -96,6 +96,7 @@ class StockMovementController extends Controller
 
             // Create expense transaction for the purchase
             $expenseCategory = Category::where('type', 'expense')
+                ->where('module', 'inventory')
                 ->where(function($query) {
                     $query->where('name', 'LIKE', '%inventory%')
                           ->orWhere('name', 'LIKE', '%purchase%')
@@ -109,6 +110,7 @@ class StockMovementController extends Controller
                 $expenseCategory = Category::create([
                     'name' => 'Inventory Purchase',
                     'type' => 'expense',
+                    'module' => 'inventory',
                 ]);
             }
 
@@ -316,8 +318,9 @@ class StockMovementController extends Controller
             // ═══════════════════════════════════════════════════════════════
             // Purpose: Reduce inventory value (inventory gives out value)
             
-            // Find or create income category for inventory
+            // Find or create income category for inventory with inventory module
             $inventoryIncomeCategory = Category::where('type', 'income')
+                ->where('module', 'inventory')
                 ->where(function($query) {
                     $query->where('name', 'LIKE', '%inventory%')
                           ->orWhere('name', 'LIKE', '%internal%');
@@ -328,6 +331,7 @@ class StockMovementController extends Controller
                 $inventoryIncomeCategory = Category::create([
                     'name' => 'Inventory Internal Usage',
                     'type' => 'income',
+                    'module' => 'inventory',
                 ]);
             }
 
@@ -361,8 +365,9 @@ class StockMovementController extends Controller
             // ═══════════════════════════════════════════════════════════════
             // Purpose: Record operational cost (restaurant consumes resources)
             
-            // Find or create expense category for restaurant consumption
+            // Find or create expense category for restaurant consumption with restaurant module
             $restaurantExpenseCategory = Category::where('type', 'expense')
+                ->where('module', 'restaurant')
                 ->where(function($query) {
                     $query->where('name', 'LIKE', '%ingredient%')
                           ->orWhere('name', 'LIKE', '%consumption%')
@@ -374,6 +379,7 @@ class StockMovementController extends Controller
                 $restaurantExpenseCategory = Category::create([
                     'name' => 'Ingredients / Inventory Consumption',
                     'type' => 'expense',
+                    'module' => 'restaurant',
                 ]);
             }
 
@@ -544,8 +550,9 @@ class StockMovementController extends Controller
                 // Update item stock
                 $item->updateStock($itemData['quantity'], 'out');
 
-                // Find or create income category for inventory
+                // Find or create income category for inventory with inventory module
                 $inventoryIncomeCategory = Category::where('type', 'income')
+                    ->where('module', 'inventory')
                     ->where(function($query) {
                         $query->where('name', 'LIKE', '%inventory%')
                               ->orWhere('name', 'LIKE', '%internal%');
@@ -556,6 +563,7 @@ class StockMovementController extends Controller
                     $inventoryIncomeCategory = Category::create([
                         'name' => 'Inventory Internal Usage',
                         'type' => 'income',
+                        'module' => 'inventory',
                     ]);
                 }
 
@@ -585,8 +593,9 @@ class StockMovementController extends Controller
                     'created_by' => auth()->id(),
                 ]);
 
-                // Find or create expense category for restaurant consumption
+                // Find or create expense category for restaurant consumption with restaurant module
                 $restaurantExpenseCategory = Category::where('type', 'expense')
+                    ->where('module', 'restaurant')
                     ->where(function($query) {
                         $query->where('name', 'LIKE', '%ingredient%')
                               ->orWhere('name', 'LIKE', '%consumption%')
@@ -598,6 +607,7 @@ class StockMovementController extends Controller
                     $restaurantExpenseCategory = Category::create([
                         'name' => 'Ingredients / Inventory Consumption',
                         'type' => 'expense',
+                        'module' => 'restaurant',
                     ]);
                 }
 

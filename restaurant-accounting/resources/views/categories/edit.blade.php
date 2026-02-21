@@ -26,6 +26,21 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="module" class="form-label">Module <span class="text-danger">*</span></label>
+                            <select class="form-select @error('module') is-invalid @enderror" id="module" name="module" required>
+                                <option value="">Select Module</option>
+                                <option value="restaurant" {{ old('module', $category->module) == 'restaurant' ? 'selected' : '' }}>Restaurant</option>
+                                <option value="inventory" {{ old('module', $category->module) == 'inventory' ? 'selected' : '' }}>Inventory</option>
+                            </select>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle"></i> Restaurant categories appear in normal reports. Inventory categories appear in inventory reports.
+                            </small>
+                            @error('module')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
                             <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
                                 <option value="">Select Type</option>

@@ -33,6 +33,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name',
             'type' => 'required|in:income,expense',
+            'module' => 'required|in:restaurant,inventory',
         ]);
 
         Category::create($validated);
@@ -57,6 +58,7 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'type' => 'required|in:income,expense',
+            'module' => 'required|in:restaurant,inventory',
         ]);
 
         $category->update($validated);

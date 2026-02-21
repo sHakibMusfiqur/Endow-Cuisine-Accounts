@@ -57,6 +57,10 @@ class TransactionService
             $currencyId = $data['currency_id'] ?? Currency::getDefault()?->id;
             $currency = Currency::findOrFail($currencyId);
             
+            // STEP 1.5: Get category and automatically set source based on module
+            $category = Category::findOrFail($data['category_id']);
+            $source = $category->module; // 'restaurant' or 'inventory'
+            
             // STEP 2: Determine original amount (the amount in selected currency)
             $amountOriginal = $data['income'] > 0 ? $data['income'] : $data['expense'];
             
@@ -76,10 +80,11 @@ class TransactionService
             $lastBalance = $this->getLastBalance($data['date']);
             $newBalance = $lastBalance + $incomeBase - $expenseBase;
 
-            // Create transaction
+            // Create transaction with automatic source assignment
             $transaction = DailyTransaction::create([
                 'date' => $data['date'],
                 'description' => $data['description'],
+                'source' => $source, // Auto-set based on category module
                 'income' => $data['income'],
                 'expense' => $data['expense'],
                 'balance' => $newBalance,
@@ -152,6 +157,10 @@ class TransactionService
             $currencyId = $data['currency_id'] ?? $transaction->currency_id;
             $currency = Currency::findOrFail($currencyId);
             
+            // Get category and automatically set source based on module
+            $category = Category::findOrFail($data['category_id']);
+            $source = $category->module; // 'restaurant' or 'inventory'
+            
             // Determine original amount
             $amountOriginal = $data['income'] > 0 ? $data['income'] : $data['expense'];
             
@@ -165,10 +174,11 @@ class TransactionService
             $incomeBase = $data['income'] > 0 ? $amountBase : 0;
             $expenseBase = $data['expense'] > 0 ? $amountBase : 0;
 
-            // Update transaction
+            // Update transaction with automatic source assignment
             $transaction->update([
                 'date' => $data['date'],
                 'description' => $data['description'],
+                'source' => $source, // Auto-set based on category module
                 'income' => $data['income'],
                 'expense' => $data['expense'],
                 'category_id' => $data['category_id'],
@@ -684,24 +694,18 @@ class TransactionService
         // Get transaction IDs for the period
         $transactionIds = $query->pluck('id');
 
-        // Calculate Normal Profit (exclude inventory-related transactions)
+        // Calculate Normal Profit (restaurant module transactions only)
         $normalIncome = DailyTransaction::whereIn('id', $transactionIds)
             ->where('income', '>', 0)
-            ->where(function($q) {
-                $q->whereDoesntHave('category', function($catQuery) {
-                    $catQuery->where('name', 'Inventory Item Sale');
-                })
-                ->orWhereNull('category_id');
+            ->whereHas('category', function($q) {
+                $q->where('module', 'restaurant');
             })
             ->sum('income');
 
         $normalExpense = DailyTransaction::whereIn('id', $transactionIds)
             ->where('expense', '>', 0)
-            ->where(function($q) {
-                $q->whereDoesntHave('category', function($catQuery) {
-                    $catQuery->whereIn('name', ['Inventory Purchase', 'Inventory Damage']);
-                })
-                ->orWhereNull('category_id');
+            ->whereHas('category', function($q) {
+                $q->where('module', 'restaurant');
             })
             ->sum('expense');
 
@@ -749,24 +753,18 @@ class TransactionService
         $query = DailyTransaction::whereBetween('date', [$dateFrom, $dateTo]);
         $transactionIds = $query->pluck('id');
 
-        // Calculate Normal Profit (exclude inventory-related transactions)
+        // Calculate Normal Profit (restaurant module transactions only)
         $normalIncome = DailyTransaction::whereIn('id', $transactionIds)
             ->where('income', '>', 0)
-            ->where(function($q) {
-                $q->whereDoesntHave('category', function($catQuery) {
-                    $catQuery->where('name', 'Inventory Item Sale');
-                })
-                ->orWhereNull('category_id');
+            ->whereHas('category', function($q) {
+                $q->where('module', 'restaurant');
             })
             ->sum('income');
 
         $normalExpense = DailyTransaction::whereIn('id', $transactionIds)
             ->where('expense', '>', 0)
-            ->where(function($q) {
-                $q->whereDoesntHave('category', function($catQuery) {
-                    $catQuery->whereIn('name', ['Inventory Purchase', 'Inventory Damage']);
-                })
-                ->orWhereNull('category_id');
+            ->whereHas('category', function($q) {
+                $q->where('module', 'restaurant');
             })
             ->sum('expense');
 

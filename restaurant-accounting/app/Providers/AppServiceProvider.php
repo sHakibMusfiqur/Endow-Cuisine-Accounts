@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Category;
+use App\Observers\CategoryObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 
@@ -22,5 +24,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // Force Bootstrap 5 pagination views
         Paginator::useBootstrapFive();
+
+        // Register model observers
+        Category::observe(CategoryObserver::class);
     }
 }

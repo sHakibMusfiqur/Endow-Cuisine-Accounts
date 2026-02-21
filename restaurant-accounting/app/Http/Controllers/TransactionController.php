@@ -118,8 +118,10 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        // Fetch all categories with id, name, and type for client-side filtering
+        // Fetch ONLY restaurant module categories for normal transactions
+        // Inventory categories must NOT appear in restaurant transaction forms
         $categories = Category::select('id', 'name', 'type')
+            ->where('module', 'restaurant')
             ->orderBy('name')
             ->get();
         
@@ -157,6 +159,11 @@ class TransactionController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['category_id' => 'Selected category does not match the transaction type.']);
+        }
+        
+        // Validate that category module is 'restaurant' (prevent inventory category usage)
+        if ($category->module !== 'restaurant') {
+            abort(403, 'Restaurant transactions can only use restaurant categories. The selected category belongs to the inventory module.');
         }
 
         // Set defaults
@@ -197,8 +204,10 @@ class TransactionController extends Controller
      */
     public function edit(DailyTransaction $transaction)
     {
-        // Fetch all categories with id, name, and type for client-side filtering
+        // Fetch ONLY restaurant module categories for normal transactions
+        // Inventory categories must NOT appear in restaurant transaction forms
         $categories = Category::select('id', 'name', 'type')
+            ->where('module', 'restaurant')
             ->orderBy('name')
             ->get();
         
@@ -280,6 +289,11 @@ class TransactionController extends Controller
                 ->withInput()
                 ->withErrors(['category_id' => 'Selected category does not match the transaction type.']);
         }
+        
+        // Validate that category module is 'restaurant' (prevent inventory category usage)
+        if ($category->module !== 'restaurant') {
+            abort(403, 'Restaurant transactions can only use restaurant categories. The selected category belongs to the inventory module.');
+        }
 
         // Set defaults
         $validated['income'] = $validated['income'] ?? 0;
@@ -351,11 +365,17 @@ class TransactionController extends Controller
         $paymentMethods = PaymentMethod::active()->get();
         $defaultCurrency = Currency::getDefault();
 
-        // Get or create "Inventory Item Sale" category
+        // Get or create "Inventory Item Sale" category with inventory module
         $category = Category::firstOrCreate(
             ['name' => 'Inventory Item Sale', 'type' => 'income'],
-            ['description' => 'Sales of inventory items']
+            ['description' => 'Sales of inventory items', 'module' => 'inventory']
         );
+        
+        // Ensure module is set to 'inventory' if category already exists
+        if ($category->module !== 'inventory') {
+            $category->module = 'inventory';
+            $category->save();
+        }
 
         return view('transactions.inventory-sale', compact(
             'inventoryItems',
@@ -416,11 +436,17 @@ class TransactionController extends Controller
             $quantity = $validated['quantity'];
             $totalSaleAmount = $quantity * $sellingPrice;
 
-            // Get or create "Inventory Item Sale" category
+            // Get or create "Inventory Item Sale" category with inventory module
             $category = Category::firstOrCreate(
                 ['name' => 'Inventory Item Sale', 'type' => 'income'],
-                ['description' => 'Sales of inventory items']
+                ['description' => 'Sales of inventory items', 'module' => 'inventory']
             );
+            
+            // Ensure module is set to 'inventory' if category already exists
+            if ($category->module !== 'inventory') {
+                $category->module = 'inventory';
+                $category->save();
+            }
 
             // STEP 1: Create the income transaction
             $description = $validated['description'] ?? sprintf(
@@ -498,11 +524,17 @@ class TransactionController extends Controller
         $paymentMethods = PaymentMethod::active()->get();
         $defaultCurrency = Currency::getDefault();
 
-        // Get or create "Inventory Item Sale" category
+        // Get or create "Inventory Item Sale" category with inventory module
         $category = Category::firstOrCreate(
             ['name' => 'Inventory Item Sale', 'type' => 'income'],
-            ['description' => 'Sales of inventory items']
+            ['description' => 'Sales of inventory items', 'module' => 'inventory']
         );
+        
+        // Ensure module is set to 'inventory' if category already exists
+        if ($category->module !== 'inventory') {
+            $category->module = 'inventory';
+            $category->save();
+        }
 
         return view('transactions.inventory-sale-multi', compact(
             'inventoryItems',
@@ -535,11 +567,17 @@ class TransactionController extends Controller
             $grandTotal = 0;
             $processedItems = [];
 
-            // Get or create "Inventory Item Sale" category
+            // Get or create "Inventory Item Sale" category with inventory module
             $category = Category::firstOrCreate(
                 ['name' => 'Inventory Item Sale', 'type' => 'income'],
-                ['description' => 'Sales of inventory items']
+                ['description' => 'Sales of inventory items', 'module' => 'inventory']
             );
+            
+            // Ensure module is set to 'inventory' if category already exists
+            if ($category->module !== 'inventory') {
+                $category->module = 'inventory';
+                $category->save();
+            }
 
             foreach ($validated['items'] as $itemData) {
                 // Get inventory item

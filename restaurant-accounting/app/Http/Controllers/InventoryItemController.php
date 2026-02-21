@@ -118,6 +118,7 @@ class InventoryItemController extends Controller
                 // Create expense transaction for opening stock purchase
                 // Opening stock = money spent to acquire initial inventory
                 $expenseCategory = \App\Models\Category::where('type', 'expense')
+                    ->where('module', 'inventory')
                     ->where(function($query) {
                         $query->where('name', 'LIKE', '%inventory%')
                               ->orWhere('name', 'LIKE', '%purchase%')
@@ -131,6 +132,7 @@ class InventoryItemController extends Controller
                     $expenseCategory = \App\Models\Category::create([
                         'name' => 'Inventory Purchase',
                         'type' => 'expense',
+                        'module' => 'inventory',
                     ]);
                 }
 
