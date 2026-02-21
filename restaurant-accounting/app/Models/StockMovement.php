@@ -125,6 +125,14 @@ class StockMovement extends Model
     }
 
     /**
+     * Scope for internal consumption movements (internal usage tracking).
+     */
+    public function scopeInternalConsumption($query)
+    {
+        return $query->where('type', 'internal_consumption');
+    }
+
+    /**
      * Scope for damage/spoilage movements.
      * These are stored as 'adjustment' type with reference_type = 'damage_spoilage'
      */
@@ -159,6 +167,8 @@ class StockMovement extends Model
             'adjustment' => 'Adjustment',
             'usage' => 'Usage (From Sales)',
             'sale' => 'Direct Sale',
+            'internal_purchase' => 'Internal Purchase',
+            'internal_consumption' => 'Internal Consumption',
             default => ucfirst($this->type),
         };
     }
