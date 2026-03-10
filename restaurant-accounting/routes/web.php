@@ -101,6 +101,12 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:delete transactions')->group(function () {
         Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+        
+        // New routes for deletion with restore stock option
+        Route::get('/transactions/{transaction}/check-inventory-type', [TransactionController::class, 'checkInventoryType'])
+            ->name('transactions.check-inventory-type');
+        Route::post('/transactions/{transaction}/destroy-with-option', [TransactionController::class, 'destroyWithOption'])
+            ->name('transactions.destroy-with-option');
     });
 
     // Categories - Permission-based (Admin only)

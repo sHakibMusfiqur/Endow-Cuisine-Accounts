@@ -363,18 +363,12 @@
                             @endcan
                             
                             @can('delete transactions')
-                                <form action="{{ route('transactions.destroy', $transaction) }}" 
-                                      method="POST" 
-                                      class="d-inline" 
-                                      onsubmit="return confirm('Are you sure you want to delete this transaction? This action cannot be undone.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="btn btn-sm btn-danger" 
-                                            title="Delete Transaction">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                                <button type="button" 
+                                        class="btn btn-sm btn-danger delete-transaction-btn" 
+                                        data-transaction-id="{{ $transaction->id }}"
+                                        title="Delete Transaction">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             @endcan
                         </div>
                     </td>
@@ -406,4 +400,75 @@
     <!-- Pagination -->
     <x-pagination :items="$transactions" />
 </div>
+
+{{-- Include Delete Inventory Transaction Modal --}}
+@can('delete transactions')
+    <x-delete-inventory-transaction-modal />
+@endcan
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-transaction-btn');
+    const modal = new bootstrap.Modal(document.getElementById('deleteInventoryTransactionModal'));
+    const modalForm = document.getElementById('deleteInventoryTransactionForm');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const transactionId = this.getAttribute('data-transaction-id');
+            
+            try {
+                // Check if this is an inventory-related transaction
+                const response = await fetch(`/transactions/${transactionId}/check-inventory-type`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to check transaction type');
+                }
+
+                const data = await response.json();
+
+                if (data.is_inventory_related) {
+                    // Show modal for inventory transactions
+                    modalForm.action = `/transactions/${transactionId}/destroy-with-option`;
+                    modal.show();
+                } else {
+                    // Regular transaction - show standard confirmation
+                    if (confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+                        // Create and submit delete form
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `/transactions/${transactionId}`;
+                        
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = '_token';
+                        csrfInput.value = '{{ csrf_token() }}';
+                        
+                        const methodInput = document.createElement('input');
+                        methodInput.type = 'hidden';
+                        methodInput.name = '_method';
+                        methodInput.value = 'DELETE';
+                        
+                        form.appendChild(csrfInput);
+                        form.appendChild(methodInput);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    });
+});
+</script>
+@endpush
+
 @endsection

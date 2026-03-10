@@ -6,7 +6,6 @@ use App\Models\DailyTransaction;
 use App\Models\Currency;
 use App\Models\Category;
 use App\Models\ItemUsageRecipe;
-use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -26,12 +25,7 @@ class TransactionService
      * 3. Stores rate SNAPSHOT with transaction (historical lock)
      * 4. Future rate changes DO NOT affect this transaction
      * 
-     * Example:
-     *   User enters: 10 USD
-     *   Current rate: 1320.50 KRW/USD (fetched dynamically from DB)
-     *   Conversion: 10 × 1320.50 = 13,205 KRW
-     *   Stored: original=10, base=13205, rate_snapshot=1320.50
-     *   
+  
      * If rate changes tomorrow to 1400, this transaction stays 13,205 KRW ✓
      *
      * @param array $data
@@ -223,13 +217,40 @@ class TransactionService
 
     /**
      * Delete a transaction.
+     * 
+     * Automatically detects and handles inventory-related transactions using specialized logic.
      *
      * @param DailyTransaction $transaction
-     * @return bool
+     * @return bool|array Returns bool for regular transactions, array for inventory transactions
      * @throws Exception
      */
-    public function deleteTransaction(DailyTransaction $transaction): bool
+    public function deleteTransaction(DailyTransaction $transaction)
     {
+        // Check if this is an inventory sale transaction
+        $inventoryDeletionService = app(InventorySaleDeletionService::class);
+        
+        if ($inventoryDeletionService->isInventorySale($transaction)) {
+            // Use specialized inventory sale deletion logic
+            return $inventoryDeletionService->deleteInventorySale($transaction);
+        }
+
+        // Check if this is an internal consumption transaction
+        $internalConsumptionDeletionService = app(InternalConsumptionDeletionService::class);
+        
+        if ($internalConsumptionDeletionService->isInternalConsumption($transaction)) {
+            // Use specialized internal consumption deletion logic
+            return $internalConsumptionDeletionService->deleteInternalConsumption($transaction);
+        }
+
+        // Check if this is an inventory purchase transaction
+        $purchaseDeletionService = app(InventoryPurchaseDeletionService::class);
+        
+        if ($purchaseDeletionService->isPurchase($transaction)) {
+            // Use specialized purchase deletion logic
+            return $purchaseDeletionService->deletePurchase($transaction);
+        }
+
+        // Regular transaction deletion
         DB::beginTransaction();
 
         try {
@@ -292,7 +313,7 @@ class TransactionService
      * @param string $date
      * @return void
      */
-    private function updateSubsequentBalances($date): void
+    public function updateSubsequentBalances($date): void
     {
         $transactions = DailyTransaction::where('date', '>=', $date)
             ->orderBy('date', 'asc')

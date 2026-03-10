@@ -316,14 +316,109 @@ class TransactionController extends Controller
 
     /**
      * Remove the specified transaction.
+     * 
+     * Handles both regular transactions and inventory sale transactions.
+     * Inventory sales automatically restore stock and delete related records.
      */
     public function destroy(DailyTransaction $transaction)
     {
         try {
-            $this->transactionService->deleteTransaction($transaction);
+            $result = $this->transactionService->deleteTransaction($transaction);
+
+            // Check if it's an inventory sale deletion (returns array) or regular deletion (returns bool)
+            if (is_array($result) && isset($result['success'])) {
+                $message = $result['message'];
+            } else {
+                $message = 'Transaction deleted successfully.';
+            }
 
             return redirect()->route('transactions.index')
-                ->with('success', 'Transaction deleted successfully.');
+                ->with('success', $message);
+        } catch (Exception $e) {
+            return redirect()->back()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Check if a transaction is inventory-related (Inventory Sale or Internal Consumption).
+     * Used by frontend to determine whether to show the confirmation modal.
+     * 
+     * @param DailyTransaction $transaction
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkInventoryType(DailyTransaction $transaction)
+    {
+        $inventorySaleDeletionService = app(\App\Services\InventorySaleDeletionService::class);
+        $internalConsumptionDeletionService = app(\App\Services\InternalConsumptionDeletionService::class);
+
+        $isInventorySale = $inventorySaleDeletionService->isInventorySale($transaction);
+        $isInternalConsumption = $internalConsumptionDeletionService->isInternalConsumption($transaction);
+
+        $type = 'regular';
+        if ($isInventorySale) {
+            $type = 'inventory_sale';
+        } elseif ($isInternalConsumption) {
+            $type = 'internal_consumption';
+        }
+
+        return response()->json([
+            'is_inventory_related' => ($isInventorySale || $isInternalConsumption),
+            'type' => $type,
+            'transaction_id' => $transaction->id,
+        ]);
+    }
+
+    /**
+     * Delete a transaction with restore stock option.
+     * This method allows choosing between restoring stock or permanent deletion.
+     * 
+     * @param Request $request
+     * @param DailyTransaction $transaction
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyWithOption(Request $request, DailyTransaction $transaction)
+    {
+        $validated = $request->validate([
+            'restore_stock' => 'required|boolean',
+        ]);
+
+        try {
+            $inventorySaleDeletionService = app(\App\Services\InventorySaleDeletionService::class);
+            $internalConsumptionDeletionService = app(\App\Services\InternalConsumptionDeletionService::class);
+
+            // Check if this is an inventory sale transaction
+            if ($inventorySaleDeletionService->isInventorySale($transaction)) {
+                $result = $inventorySaleDeletionService->deleteInventorySaleWithOption(
+                    $transaction,
+                    $validated['restore_stock']
+                );
+
+                return redirect()->route('transactions.index')
+                    ->with('success', $result['message']);
+            }
+
+            // Check if this is an internal consumption transaction
+            if ($internalConsumptionDeletionService->isInternalConsumption($transaction)) {
+                $result = $internalConsumptionDeletionService->deleteInternalConsumptionWithOption(
+                    $transaction,
+                    $validated['restore_stock']
+                );
+
+                return redirect()->route('transactions.index')
+                    ->with('success', $result['message']);
+            }
+
+            // Regular transaction - ignore restore_stock option
+            $result = $this->transactionService->deleteTransaction($transaction);
+
+            $message = is_array($result) && isset($result['message']) 
+                ? $result['message'] 
+                : 'Transaction deleted successfully.';
+
+            return redirect()->route('transactions.index')
+                ->with('success', $message);
+
         } catch (Exception $e) {
             return redirect()->back()
                 ->with('error', $e->getMessage());

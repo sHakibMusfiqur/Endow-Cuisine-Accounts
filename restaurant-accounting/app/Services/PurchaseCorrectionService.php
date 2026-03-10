@@ -21,9 +21,12 @@ class PurchaseCorrectionService
     /**
      * Correct a purchase entry error by updating the original transaction.
      * 
+     * IMPORTANT: This method receives TOTAL stock quantities (before and after correction),
+     * NOT individual purchase quantities. It calculates the purchase correction internally.
+     * 
      * @param InventoryItem $item The inventory item to correct
-     * @param float $oldQuantity The incorrect quantity that was entered
-     * @param float $correctedQuantity The correct purchase quantity
+     * @param float $oldQuantity Current TOTAL stock quantity before correction
+     * @param float $correctedQuantity Desired TOTAL stock quantity after correction
      * @param float|null $correctedUnitCost The correct unit cost (optional, null means no change)
      * @param string $notes Explanation of the correction
      * @return array Status information about the correction
@@ -53,12 +56,28 @@ class PurchaseCorrectionService
         // Use corrected unit cost if provided, otherwise use current unit cost
         $effectiveUnitCost = $correctedUnitCost ?? $item->unit_cost;
         
-        // Calculate the difference
-        $quantityDifference = $correctedQuantity - $oldQuantity;
+        // ==========================================
+        // CRITICAL FIX: Calculate purchase correction quantities (not total stock)
+        // ==========================================
+        // $oldQuantity and $correctedQuantity are TOTAL stock (including existing stock before purchase)
+        // We need to extract the PURCHASE quantities only
         
-        // Calculate old and new expense amounts
-        $oldExpenseAmount = $oldQuantity * $oldUnitCost;
-        $correctedExpenseAmount = $correctedQuantity * $effectiveUnitCost;
+        // Get the original purchase quantity from the stock movement
+        $originalPurchaseQty = $lastPurchase->quantity;
+        
+        // Calculate the stock difference (how much the total stock needs to change)
+        $stockDifference = $correctedQuantity - $oldQuantity;
+        
+        // Calculate the corrected purchase quantity
+        // Original purchase + stock difference = what the purchase should have been
+        $correctedPurchaseQty = $originalPurchaseQty + $stockDifference;
+        
+        // Calculate the purchase correction amount (only the difference)
+        $purchaseCorrectionQty = $correctedPurchaseQty - $originalPurchaseQty;
+        
+        // Calculate old and new expense amounts (based on PURCHASE quantities only)
+        $oldExpenseAmount = $originalPurchaseQty * $oldUnitCost;
+        $correctedExpenseAmount = $correctedPurchaseQty * $effectiveUnitCost;
         $expenseDifference = $correctedExpenseAmount - $oldExpenseAmount;
 
         // Find the related expense transaction
@@ -95,10 +114,14 @@ class PurchaseCorrectionService
             'corrected_expense' => $correctedExpenseAmount,
             'expense_difference' => $expenseDifference,
             'transaction_id' => $expenseTransaction->id,
+            'original_purchase_qty' => $originalPurchaseQty,
+            'corrected_purchase_qty' => $correctedPurchaseQty,
+            'purchase_correction_qty' => $purchaseCorrectionQty,
         ];
 
-        // Update the item's current stock
-        $item->current_stock = $correctedQuantity;
+        // Update the item's current stock by adding the difference (not replacing with total)
+        // This ensures we only adjust by the purchase correction amount
+        $item->current_stock = $item->current_stock + $stockDifference;
         
         // Update unit cost if a corrected value was provided
         if ($correctedUnitCost !== null) {
@@ -132,19 +155,19 @@ class PurchaseCorrectionService
         // Recalculate balances for all subsequent transactions
         $this->recalculateBalancesAfter($expenseTransaction);
 
-        // Update the stock movement record
-        $lastPurchase->quantity = $correctedQuantity;
+        // Update the stock movement record with corrected PURCHASE quantity
+        $lastPurchase->quantity = $correctedPurchaseQty;
         $lastPurchase->unit_cost = $effectiveUnitCost;
         $lastPurchase->total_cost = $correctedExpenseAmount;
-        $lastPurchase->balance_after = $correctedQuantity;
+        $lastPurchase->balance_after = $item->current_stock; // Use the updated current stock
         $lastPurchase->notes = ($lastPurchase->notes ?? '') . ' [CORRECTED: ' . $notes . ']';
         $lastPurchase->save();
 
         // Log the purchase correction in inventory_adjustments
         $adjustmentNotes = sprintf(
             'Purchase corrected from %s to %s %s',
-            number_format($oldQuantity, 2),
-            number_format($correctedQuantity, 2),
+            number_format($originalPurchaseQty, 2),
+            number_format($correctedPurchaseQty, 2),
             $item->unit
         );
         
@@ -165,9 +188,9 @@ class PurchaseCorrectionService
         
         InventoryAdjustment::create([
             'inventory_item_id' => $item->id,
-            'old_quantity' => $oldQuantity,
-            'new_quantity' => $correctedQuantity,
-            'difference' => $quantityDifference,
+            'old_quantity' => $originalPurchaseQty,
+            'new_quantity' => $correctedPurchaseQty,
+            'difference' => $purchaseCorrectionQty,
             'old_expense_amount' => $oldExpenseAmount,
             'corrected_expense_amount' => $correctedExpenseAmount,
             'expense_transaction_id' => $expenseTransaction->id,
@@ -181,9 +204,12 @@ class PurchaseCorrectionService
         $activityData = [
             'item_id' => $item->id,
             'item_name' => $item->name,
-            'old_quantity' => $oldQuantity,
-            'corrected_quantity' => $correctedQuantity,
-            'quantity_difference' => $quantityDifference,
+            'original_purchase_qty' => $originalPurchaseQty,
+            'corrected_purchase_qty' => $correctedPurchaseQty,
+            'purchase_correction_qty' => $purchaseCorrectionQty,
+            'old_total_stock' => $oldQuantity,
+            'corrected_total_stock' => $correctedQuantity,
+            'stock_difference' => $stockDifference,
             'old_expense' => $oldExpenseAmount,
             'corrected_expense' => $correctedExpenseAmount,
             'expense_difference' => $expenseDifference,
@@ -208,8 +234,9 @@ class PurchaseCorrectionService
         // ==========================================
         $spatieProperties = [
             'item' => $item->name,
-            'old_qty' => $oldQuantity,
-            'new_qty' => $correctedQuantity,
+            'old_purchase_qty' => $originalPurchaseQty,
+            'new_purchase_qty' => $correctedPurchaseQty,
+            'purchase_correction_qty' => $purchaseCorrectionQty,
             'old_amount' => $oldExpenseAmount,
             'new_amount' => $correctedExpenseAmount,
             'correction_type' => 'purchase_correction',
@@ -225,7 +252,7 @@ class PurchaseCorrectionService
             ->causedBy(auth()->user())
             ->performedOn($expenseTransaction)
             ->withProperties($spatieProperties)
-            ->log("Purchase Entry Corrected – {$item->name} ({$oldQuantity} → {$correctedQuantity})");
+            ->log("Purchase Entry Corrected – {$item->name} ({$originalPurchaseQty} → {$correctedPurchaseQty})");
 
         return $result;
     }
