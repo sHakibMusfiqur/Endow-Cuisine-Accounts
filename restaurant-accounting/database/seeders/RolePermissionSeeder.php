@@ -134,11 +134,12 @@ class RolePermissionSeeder extends Seeder
         ]);
         $this->command->info('✓ Admin permissions assigned');
 
-        // ACCOUNTANT - Can create, edit transactions + reports + manage inventory (add, edit items but NOT delete)
+        // ACCOUNTANT - Can create, edit, delete transactions + reports + manage inventory (add, edit items but NOT delete)
         $accountant = Role::findByName('accountant');
         $accountant->syncPermissions([
             'create transactions',
             'edit transactions',
+            'delete transactions',  // Accountants can delete transactions (with module restrictions enforced in controller)
             'view transactions',
             'view reports',
             'view dashboard',

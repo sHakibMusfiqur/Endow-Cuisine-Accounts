@@ -21,6 +21,14 @@ class DashboardController extends Controller
      */
     public function index()
     {
+        // Redirect module-restricted accountants to their respective pages
+        $user = auth()->user();
+        if ($user && $user->isRestaurantAccountant()) {
+            return redirect()->route('transactions.create');
+        } elseif ($user && $user->isInventoryAccountant()) {
+            return redirect()->route('transactions.inventory-sale-multi.create');
+        }
+
         // Get summary statistics
         $todaySummary = $this->transactionService->getSummary('today');
         $weekSummary = $this->transactionService->getSummary('week');

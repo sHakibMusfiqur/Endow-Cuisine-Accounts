@@ -142,6 +142,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <!-- Inventory Actions Card -->
+            @unless(auth()->user()?->isRestaurantAccountant())
             <div class="card mb-3 shadow-sm" style="border-radius: 8px; border: 1px solid #e8e8e8; background-color: white;">
                 <div class="card-body py-3 px-4">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -164,6 +165,7 @@
                     </div>
                 </div>
             </div>
+            @endunless
 
             <div class="card enterprise-card shadow-sm" style="border-radius: 8px; border: 1px solid #e8e8e8; border-top: 4px solid #c82333; background-color: white;">
                 <div class="card-header bg-white py-3 px-4" style="border-bottom: 1px solid #f0f0f0;">
@@ -175,7 +177,7 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ route('transactions.store') }}" method="POST">
+                    <form id="transaction-form" action="{{ route('transactions.store') }}" method="POST">
                         @csrf
 
                         <!-- Basic Information -->
@@ -573,7 +575,7 @@
         });
 
         // Update hidden input before form submission
-        const form = document.querySelector('form');
+        const form = document.querySelector('#transaction-form');
         form.addEventListener('submit', function(e) {
             const content = quill.root.innerHTML;
             const text = quill.getText().trim();

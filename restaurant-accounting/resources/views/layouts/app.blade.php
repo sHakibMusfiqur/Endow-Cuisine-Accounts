@@ -1126,11 +1126,24 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <!-- Logo Section - Optimized Structure -->
-        <a href="{{ route('dashboard') }}"
-           class="logo {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-           aria-label="Go to Dashboard - Restaurant Accounting System"
-           data-tooltip="🏠 Dashboard"
-           title="Go to Dashboard"
+        @php
+            $logoHref = route('dashboard');
+            $logoTooltip = '🏠 Dashboard';
+            if (auth()->check() && auth()->user()->isRestaurantAccountant()) {
+                $logoHref = route('transactions.create');
+                $logoTooltip = '📝 Create Transaction';
+            } elseif (auth()->check() && auth()->user()->isInventoryAccountant()) {
+                $logoHref = route('transactions.inventory-sale-multi.create');
+                $logoTooltip = '📦 Inventory Sale';
+            }
+        @endphp
+        <a href="{{ $logoHref }}"
+           class="logo {{ (auth()->user()->isRestaurantAccountant() && request()->routeIs('transactions.create')) || 
+                          (auth()->user()->isInventoryAccountant() && request()->routeIs('transactions.inventory-sale-multi.create')) ||
+                          (!auth()->user()->hasAccountantModuleRestriction() && request()->routeIs('dashboard')) ? 'active' : '' }}"
+           aria-label="Go to Home - Restaurant Accounting System"
+           data-tooltip="{{ $logoTooltip }}"
+           title="{{ $logoTooltip }}"
            role="link"
            tabindex="0">
             <div class="logo-icon">
@@ -1158,16 +1171,59 @@
             </div>
         </a>
         <nav class="nav flex-column">
+            {{-- Dashboard - Hidden for module-restricted accountants --}}
+            @unless(auth()->check() && auth()->user()->hasAccountantModuleRestriction())
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                href="{{ route('dashboard') }}"
                data-tooltip="Dashboard">
                 <i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span>
             </a>
+            @endunless
+
+            {{-- Create Transaction - Only for restaurant accountants --}}
+            @if(auth()->check() && auth()->user()->isRestaurantAccountant())
+            <a class="nav-link {{ request()->routeIs('transactions.create') ? 'active' : '' }}"
+               href="{{ route('transactions.create') }}"
+               data-tooltip="Create Transaction">
+                <i class="fas fa-plus-circle"></i> <span class="nav-text">Create Transaction</span>
+            </a>
+            @endif
+
+            {{-- Transactions - All users --}}
             <a class="nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}"
                href="{{ route('transactions.index') }}"
                data-tooltip="Transactions">
                 <i class="fas fa-exchange-alt"></i> <span class="nav-text">Transactions</span>
             </a>
+
+            {{-- Inventory Consumption - Only for restaurant accountants --}}
+            @if(auth()->check() && auth()->user()->isRestaurantAccountant())
+            <a class="nav-link {{ request()->routeIs('inventory.movements.internal-purchase') ? 'active' : '' }}"
+               href="{{ route('inventory.movements.internal-purchase-multi') }}"
+               data-tooltip="Inventory Consumption">
+                <i class="fas fa-utensils"></i> <span class="nav-text">Inventory Consumption</span>
+            </a>
+            @endif
+
+            {{-- Inventory Sale - Only for inventory accountants --}}
+            @if(auth()->check() && auth()->user()->isInventoryAccountant())
+            <a class="nav-link {{ request()->routeIs('transactions.inventory-sale-multi.*') ? 'active' : '' }}"
+               href="{{ route('transactions.inventory-sale-multi.create') }}"
+               data-tooltip="Inventory Sale">
+                <i class="fas fa-shopping-cart"></i> <span class="nav-text">Inventory Sale</span>
+            </a>
+            @endif
+
+            {{-- Restock Item (Stock In) - Only for inventory accountants --}}
+            @if(auth()->check() && auth()->user()->isInventoryAccountant())
+            <a class="nav-link {{ request()->routeIs('inventory.movements.stock-in') ? 'active' : '' }}"
+               href="{{ route('inventory.movements.stock-in') }}"
+               data-tooltip="Restock Item">
+                <i class="fas fa-arrow-alt-circle-up"></i> <span class="nav-text">Restock Item</span>
+            </a>
+            @endif
+
+            {{-- Categories - Based on permission --}}
             @can('manage categories')
             <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"
                href="{{ route('categories.index') }}"
@@ -1180,6 +1236,9 @@
                 <i class="fas fa-credit-card"></i> <span class="nav-text">Payment Methods</span>
             </a>
             @endcan
+
+            {{-- Inventory - Hidden for restaurant accountants, shown for others --}}
+            @unless(auth()->check() && auth()->user()->isRestaurantAccountant())
             @can('view inventory')
             <a class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}"
                href="{{ route('inventory.items.index') }}"
@@ -1187,11 +1246,19 @@
                 <i class="fas fa-boxes"></i> <span class="nav-text">Inventory</span>
             </a>
             @endcan
+            @endunless
+
+            {{-- Reports - Hidden for module-restricted accountants (restaurant and inventory) --}}
+            @unless(auth()->check() && auth()->user()->hasAccountantModuleRestriction())
             <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"
                href="{{ route('reports.index') }}"
                data-tooltip="Reports">
-                <i class="fas fa-file-alt"></i> <span class="nav-text">Reports</span>
+                <i class="fas fa-file-alt"></i> <span class="nav-text">Report</span>
             </a>
+            @endunless
+
+            {{-- User Management - Hidden for module-restricted accountants --}}
+            @unless(auth()->check() && auth()->user()->hasAccountantModuleRestriction())
             @can('manage users')
             <a class="nav-link {{ request()->routeIs('users.*') || request()->routeIs('activity-logs.*') ? 'active' : '' }}"
                href="{{ route('users.index') }}"
@@ -1199,6 +1266,9 @@
                 <i class="fas fa-users-cog"></i> <span class="nav-text">User Management</span>
             </a>
             @endcan
+            @endunless
+
+            {{-- My Profile --}}
             <a class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}"
                href="{{ route('profile.show') }}"
                data-tooltip="My Profile">

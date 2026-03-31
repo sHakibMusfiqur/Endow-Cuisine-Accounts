@@ -45,6 +45,13 @@ class LoginController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
+            // Redirect based on user role and module access
+            if ($user->isRestaurantAccountant()) {
+                return redirect()->intended(route('transactions.create'));
+            } elseif ($user->isInventoryAccountant()) {
+                return redirect()->intended(route('transactions.inventory-sale-multi.create'));
+            }
+
             return redirect()->intended(route('dashboard'));
         }
 

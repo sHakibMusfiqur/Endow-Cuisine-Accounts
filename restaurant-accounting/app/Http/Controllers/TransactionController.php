@@ -319,10 +319,39 @@ class TransactionController extends Controller
      * 
      * Handles both regular transactions and inventory sale transactions.
      * Inventory sales automatically restore stock and delete related records.
+     * 
+     * Authorization:
+     * - Admin: Can delete any transaction
+     * - Accountant with module restriction: Can only delete transactions in their allowed module
      */
     public function destroy(DailyTransaction $transaction)
     {
         try {
+            // Get authenticated user
+            $user = Auth::user();
+            
+            // Check if user is an accountant with module restrictions
+            if ($user->isAccountant() && $user->hasAccountantModuleRestriction()) {
+                // Get the transaction's module from category
+                $transactionModule = $transaction->category?->module;
+                
+                if (!$transactionModule) {
+                    return redirect()->back()
+                        ->with('error', 'Unable to determine transaction module.');
+                }
+                
+                // Check if user can access this module
+                if ($transactionModule === 'restaurant' && !$user->canAccessRestaurantModule()) {
+                    return redirect()->back()
+                        ->with('error', 'You do not have permission to delete restaurant transactions.');
+                }
+                
+                if ($transactionModule === 'inventory' && !$user->canAccessInventoryModule()) {
+                    return redirect()->back()
+                        ->with('error', 'You do not have permission to delete inventory transactions.');
+                }
+            }
+            
             $result = $this->transactionService->deleteTransaction($transaction);
 
             // Check if it's an inventory sale deletion (returns array) or regular deletion (returns bool)

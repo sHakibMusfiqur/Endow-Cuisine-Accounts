@@ -49,9 +49,16 @@ class UserManagementController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => 'required|in:admin,accountant,manager',
+            'module_access' => 'nullable|in:restaurant,inventory',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
+
+        // Set module_access with default of 'both' for all roles
+        $moduleAccess = 'both';
+        if ($validated['role'] === 'accountant' && $validated['module_access']) {
+            $moduleAccess = $validated['module_access'];
+        }
 
         $user = User::create([
             'name' => $validated['name'],
@@ -59,6 +66,7 @@ class UserManagementController extends Controller
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
+            'module_access' => $moduleAccess,
         ]);
 
         $user->assignRole($validated['role']);
@@ -126,6 +134,7 @@ class UserManagementController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => 'required|in:admin,accountant,manager',
+            'module_access' => 'nullable|in:restaurant,inventory',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
@@ -140,11 +149,22 @@ class UserManagementController extends Controller
             $changes['email'] = ['from' => $user->email, 'to' => $validated['email']];
         }
 
+        // Handle module_access update with default of 'both'
+        $moduleAccess = 'both';
+        if ($validated['role'] === 'accountant' && $validated['module_access']) {
+            $moduleAccess = $validated['module_access'];
+        }
+
+        if ($user->module_access !== $moduleAccess) {
+            $changes['module_access'] = ['from' => $user->module_access, 'to' => $moduleAccess];
+        }
+
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
+            'module_access' => $moduleAccess,
         ]);
 
         if ($request->filled('password')) {

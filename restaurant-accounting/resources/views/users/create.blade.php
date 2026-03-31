@@ -74,7 +74,7 @@
                                 <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                 <option value="accountant" {{ old('role') == 'accountant' ? 'selected' : '' }}>Accountant</option>
                                 <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
-                            </select>
+                           </select>
                             @error('role')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -83,6 +83,20 @@
                                 <strong>Accountant:</strong> Can create & edit transactions |
                                 <strong>Manager:</strong> View only
                             </small>
+                        </div>
+
+                        <!-- Module Access Field - Only for Accountants -->
+                        <div class="mb-3" id="moduleAccessContainer" style="display: none;">
+                            <label for="module_access" class="form-label">Module <span class="text-danger">*</span></label>
+                            <select class="form-select @error('module_access') is-invalid @enderror" id="module_access" name="module_access">
+                                <option value="">Select Module</option>
+                                <option value="restaurant" {{ old('module_access') == 'restaurant' ? 'selected' : '' }}>Restaurant</option>
+                                <option value="inventory" {{ old('module_access') == 'inventory' ? 'selected' : '' }}>Inventory</option>
+                            </select>
+                            @error('module_access')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+            
                         </div>
 
                         <div class="mb-3">
@@ -117,4 +131,35 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('role');
+    const moduleAccessContainer = document.getElementById('moduleAccessContainer');
+    const moduleAccessSelect = document.getElementById('module_access');
+
+    /**
+     * Toggle module access field visibility based on role selection.
+     * Shows field only when role is "accountant".
+     */
+    function toggleModuleAccessField() {
+        if (roleSelect.value === 'accountant') {
+            // Show module access container
+            moduleAccessContainer.style.display = 'block';
+            moduleAccessSelect.setAttribute('required', 'required');
+        } else {
+            // Hide module access container
+            moduleAccessContainer.style.display = 'none';
+            moduleAccessSelect.removeAttribute('required');
+            moduleAccessSelect.value = '';
+        }
+    }
+
+    // Set initial state on page load
+    toggleModuleAccessField();
+
+    // Listen for role changes
+    roleSelect.addEventListener('change', toggleModuleAccessField);
+});
+</script>
 @endsection

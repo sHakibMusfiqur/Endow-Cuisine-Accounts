@@ -59,6 +59,11 @@ Route::middleware('auth')->group(function () {
     // Dashboard - All authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Inventory Sale Landing Page - Shortcut for inventory module accountants
+    Route::get('/inventory/sale', function () {
+        return redirect()->route('transactions.inventory-sale-multi.create');
+    })->name('inventory.sale');
+
     // Profile Management - All authenticated users
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -75,8 +80,10 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('can:create transactions')->group(function () {
-        Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
-        Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        Route::middleware('module:restaurant')->group(function () {
+            Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+            Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+        });
         
         // Inventory Sale Routes - DEPRECATED: Redirect to Multi-Item
         Route::get('/transactions/inventory-sale', function () {
@@ -85,8 +92,10 @@ Route::middleware('auth')->group(function () {
         })->name('transactions.inventory-sale.create');
         
         // Multi-Item Inventory Sale
-        Route::get('/transactions/inventory-sale-multi', [TransactionController::class, 'createInventorySaleMulti'])->name('transactions.inventory-sale-multi.create');
-        Route::post('/transactions/inventory-sale-multi', [TransactionController::class, 'storeInventorySaleMulti'])->name('transactions.inventory-sale-multi.store');
+        Route::middleware('module:inventory')->group(function () {
+            Route::get('/transactions/inventory-sale-multi', [TransactionController::class, 'createInventorySaleMulti'])->name('transactions.inventory-sale-multi.create');
+            Route::post('/transactions/inventory-sale-multi', [TransactionController::class, 'storeInventorySaleMulti'])->name('transactions.inventory-sale-multi.store');
+        });
     });
 
     Route::middleware('can:view transactions')->group(function () {
@@ -119,9 +128,23 @@ Route::middleware('auth')->group(function () {
         Route::resource('payment-methods', PaymentMethodController::class);
     });
 
-    // Inventory Management - Permission-based
+    // Inventory Consumption Routes (Accessible by both Restaurant and Inventory Accountants)
+    // These are accessible to restaurant accountants for internal consumption operations
+    Route::middleware('can:create transactions')->group(function () {
+        // Internal Purchase/Consumption - DEPRECATED: Redirect to Multi-Item
+        Route::get('/inventory/movements/internal-purchase', function () {
+            return redirect()->route('inventory.movements.internal-purchase-multi')
+                ->with('info', 'Please use the Multi-Item Internal Consumption for better workflow.');
+        })->name('inventory.movements.internal-purchase');
+        
+        // Multi-Item Internal Purchase/Consumption (for both restaurant and inventory accountants)
+        Route::get('/inventory/movements/internal-purchase-multi', [StockMovementController::class, 'createInternalPurchaseMulti'])->name('inventory.movements.internal-purchase-multi');
+        Route::post('/inventory/movements/internal-purchase-multi', [StockMovementController::class, 'storeInternalPurchaseMulti'])->name('inventory.movements.internal-purchase-multi.store');
+    });
+
+    // Inventory Management - Permission-based (Inventory Accountants only)
     // Note: Routes with specific paths (create, edit) must come BEFORE dynamic routes ({item})
-    Route::prefix('inventory')->name('inventory.')->group(function () {
+    Route::prefix('inventory')->name('inventory.')->middleware('module:inventory')->group(function () {
         
         // Manage Inventory Routes (Admin/Manager only)
         Route::middleware('can:manage inventory')->group(function () {
@@ -132,21 +155,11 @@ Route::middleware('auth')->group(function () {
             Route::put('/items/{item}', [InventoryItemController::class, 'update'])->name('items.update');
             Route::delete('/items/{item}', [InventoryItemController::class, 'destroy'])->name('items.destroy');
 
-            // Stock Movements Management
+            // Stock Movements Management (Restocking - Stock In/Out for inventory accountants)
             Route::get('/movements/stock-in', [StockMovementController::class, 'createStockIn'])->name('movements.stock-in');
             Route::post('/movements/stock-in', [StockMovementController::class, 'storeStockIn'])->name('movements.stock-in.store');
             Route::get('/movements/stock-out', [StockMovementController::class, 'createStockOut'])->name('movements.stock-out');
             Route::post('/movements/stock-out', [StockMovementController::class, 'storeStockOut'])->name('movements.stock-out.store');
-            
-            // Internal Purchase - DEPRECATED: Redirect to Multi-Item
-            Route::get('/movements/internal-purchase', function () {
-                return redirect()->route('inventory.movements.internal-purchase-multi')
-                    ->with('info', 'Please use the Multi-Item Internal Consumption for better workflow.');
-            })->name('movements.internal-purchase');
-            
-            // Multi-Item Internal Purchase
-            Route::get('/movements/internal-purchase-multi', [StockMovementController::class, 'createInternalPurchaseMulti'])->name('movements.internal-purchase-multi');
-            Route::post('/movements/internal-purchase-multi', [StockMovementController::class, 'storeInternalPurchaseMulti'])->name('movements.internal-purchase-multi.store');
 
             // Usage Recipes Management
             Route::get('/recipes/create', [ItemUsageRecipeController::class, 'create'])->name('recipes.create');
