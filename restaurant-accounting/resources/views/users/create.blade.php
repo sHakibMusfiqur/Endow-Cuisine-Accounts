@@ -92,6 +92,7 @@
                                 <option value="">Select Module</option>
                                 <option value="restaurant" {{ old('module_access') == 'restaurant' ? 'selected' : '' }}>Restaurant</option>
                                 <option value="inventory" {{ old('module_access') == 'inventory' ? 'selected' : '' }}>Inventory</option>
+                                <option value="both" {{ old('module_access') == 'both' ? 'selected' : '' }}>Both</option>
                             </select>
                             @error('module_access')
                                 <div class="invalid-feedback">{{ $message }}</div>

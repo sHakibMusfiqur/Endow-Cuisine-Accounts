@@ -49,7 +49,7 @@ class UserManagementController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => 'required|in:admin,accountant,manager',
-            'module_access' => 'nullable|in:restaurant,inventory',
+            'module_access' => 'nullable|in:restaurant,inventory,both',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
@@ -134,7 +134,7 @@ class UserManagementController extends Controller
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => ['nullable', 'confirmed', Password::min(8)],
             'role' => 'required|in:admin,accountant,manager',
-            'module_access' => 'nullable|in:restaurant,inventory',
+            'module_access' => 'nullable|in:restaurant,inventory,both',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
