@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard - Restaurant Accounting')
-@section('page-title', 'Dashboard')
+@section('title', 'Restaurant Dashboard - Restaurant Accounting')
+@section('page-title', 'Restaurant Dashboard')
 
 @section('content')
 <style>
@@ -240,6 +240,12 @@
         --stat-card-from: #dc2626;
         --stat-card-to: #f97316;
         --stat-card-shadow: rgba(220, 38, 38, 0.24);
+    }
+
+    .stat-card.balance {
+        --stat-card-from: #0ea5e9;
+        --stat-card-to: #2563eb;
+        --stat-card-shadow: rgba(37, 99, 235, 0.24);
     }
 
     .stat-card.net {
@@ -645,12 +651,12 @@
 <div class="container-fluid">
     <!-- Summary Cards -->
     <div class="row g-3">
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
             <div class="stat-card income">
                 <div class="stat-card__header">
                     <div>
-                        <div class="stat-card__eyebrow">Total Income</div>
-                        <div class="stat-card__value">{{ formatCurrency($totalSummary['total_income']) }}</div>
+                        <div class="stat-card__eyebrow">Today's Income</div>
+                        <div class="stat-card__value">{{ formatCurrency($todayIncome) }}</div>
                     </div>
                     <div class="stat-card__icon" aria-hidden="true">
                         <i class="fas fa-arrow-up"></i>
@@ -663,12 +669,12 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
             <div class="stat-card expense">
                 <div class="stat-card__header">
                     <div>
-                        <div class="stat-card__eyebrow">Total Expense</div>
-                        <div class="stat-card__value">{{ formatCurrency($totalSummary['total_expense']) }}</div>
+                        <div class="stat-card__eyebrow">Today's Expense</div>
+                        <div class="stat-card__value">{{ formatCurrency($todayExpense) }}</div>
                     </div>
                     <div class="stat-card__icon" aria-hidden="true">
                         <i class="fas fa-arrow-down"></i>
@@ -681,12 +687,30 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card balance">
+                <div class="stat-card__header">
+                    <div>
+                        <div class="stat-card__eyebrow">Current Balance</div>
+                        <div class="stat-card__value">{{ formatCurrency($currentBalance) }}</div>
+                    </div>
+                    <div class="stat-card__icon" aria-hidden="true">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="stat-card__trend" aria-hidden="true">
+                    <svg viewBox="0 0 320 60" preserveAspectRatio="none" focusable="false">
+                        <path d="M0 42 C 30 22, 48 8, 82 18 S 138 52, 168 36 S 220 4, 250 20 S 290 48, 320 24" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
             <div class="stat-card net">
                 <div class="stat-card__header">
                     <div>
-                        <div class="stat-card__eyebrow">Total Profit</div>
-                        <div class="stat-card__value">{{ formatCurrency($totalSummary['net_amount']) }}</div>
+                        <div class="stat-card__eyebrow">Today's Net</div>
+                        <div class="stat-card__value">{{ formatCurrency($todayNet) }}</div>
                     </div>
                     <div class="stat-card__icon" aria-hidden="true">
                         <i class="fas fa-chart-pie"></i>
@@ -710,7 +734,7 @@
             <div class="payment-method-overview__divider"></div>
 
             <div class="payment-method-filter">
-                <form method="GET" action="{{ route('dashboard') }}">
+                <form method="GET" action="{{ route('restaurant.dashboard') }}">
                     <div class="row g-3 align-items-end">
                         <div class="col-12 col-md-3">
                             <label for="from_date" class="payment-method-filter__label">From Date</label>
@@ -750,7 +774,7 @@
                                     <i class="fas fa-search"></i>
                                     <span>Search</span>
                                 </button>
-                                <a href="{{ route('dashboard') }}" class="btn payment-method-filter__btn payment-method-filter__btn--reset">
+                                <a href="{{ route('restaurant.dashboard') }}" class="btn payment-method-filter__btn payment-method-filter__btn--reset">
                                     <i class="fas fa-rotate-right"></i>
                                     <span>Reset</span>
                                 </a>
@@ -1041,62 +1065,6 @@
         </div>
     </div>
 
-    <!-- Total Damage -->
-    <div class="dashboard-section">
-        <div class="dashboard-section-card">
-            <div class="dashboard-section__header">
-                <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Damage / Spoilage</h5>
-            </div>
-            <div class="dashboard-section__divider"></div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="dashboard-metric-card">
-                        <div class="card-body p-0">
-                            <div class="mb-2">
-                                <small class="text-muted text-uppercase d-block mb-1">Today</small>
-                                <h6 class="mb-0">Damage</h6>
-                            </div>
-                            <h4 class="mb-0 fw-semibold text-danger">{{ formatCurrency(-$todayDamage) }}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="dashboard-metric-card">
-                        <div class="card-body p-0">
-                            <div class="mb-2">
-                                <small class="text-muted text-uppercase d-block mb-1">This Week</small>
-                                <h6 class="mb-0">Damage</h6>
-                            </div>
-                            <h4 class="mb-0 fw-semibold text-danger">{{ formatCurrency(-$weekDamage) }}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="dashboard-metric-card">
-                        <div class="card-body p-0">
-                            <div class="mb-2">
-                                <small class="text-muted text-uppercase d-block mb-1">This Month</small>
-                                <h6 class="mb-0">Damage</h6>
-                            </div>
-                            <h4 class="mb-0 fw-semibold text-danger">{{ formatCurrency(-$monthDamage) }}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="dashboard-metric-card">
-                        <div class="card-body p-0">
-                            <div class="mb-2">
-                                <small class="text-muted text-uppercase d-block mb-1">This Year</small>
-                                <h6 class="mb-0">Damage</h6>
-                            </div>
-                            <h4 class="mb-0 fw-semibold text-danger">{{ formatCurrency(-$yearDamage) }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Charts -->
     <div class="row mt-4">
         <div class="col-md-6">
@@ -1185,7 +1153,7 @@
                                     <td>{{ \Illuminate\Support\Str::limit(strip_tags($transaction->description), 50) }}</td>
                                     <td>
                                         @if($isDamageEntry)
-                                            <span class="badge bg-warning text-dark">Inventory</span>
+                                            <span class="badge bg-warning text-dark">Inventory Damage</span>
                                         @else
                                             <span class="badge bg-secondary">{{ $transaction->category->name }}</span>
                                         @endif

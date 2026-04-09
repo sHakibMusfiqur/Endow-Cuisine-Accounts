@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\DailyTransaction;
-use App\Models\InventoryAdjustment;
 use App\Models\PaymentMethod;
 use App\Services\TransactionService;
 use Carbon\Carbon;
@@ -11,9 +10,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller
+class RestaurantDashboardController extends Controller
 {
-    protected $transactionService;
+    protected TransactionService $transactionService;
 
     public function __construct(TransactionService $transactionService)
     {
@@ -21,33 +20,27 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the dashboard.
+     * Display the restaurant accountant dashboard.
      */
     public function index(Request $request)
     {
-        // Redirect module-restricted accountants to their respective pages
-        $user = auth()->user();
-        if ($user && $user->isRestaurantAccountant()) {
-            return redirect()->route('restaurant.dashboard');
-        } elseif ($user && $user->isInventoryAccountant()) {
-            return redirect()->route('inventory.dashboard');
-        }
+        $todayIncome = $this->getRestaurantTotalForPeriod('today', 'income');
+        $todayExpense = $this->getRestaurantTotalForPeriod('today', 'expense');
+        $todayNet = $todayIncome - $todayExpense;
+        $currentBalance = $this->getRestaurantCurrentBalance();
 
-        // Get summary statistics
-        $totalSummary = $this->transactionService->getSummary('all');
-        $todaySummary = $this->transactionService->getSummary('today');
-        $weekSummary = $this->transactionService->getSummary('week');
-        $monthSummary = $this->transactionService->getSummary('month');
-        $yearSummary = $this->transactionService->getSummary('year');
+        $todaySummary = $this->getRestaurantSummary('today');
+        $weekSummary = $this->getRestaurantSummary('week');
+        $monthSummary = $this->getRestaurantSummary('month');
+        $yearSummary = $this->getRestaurantSummary('year');
 
-        // Get profit calculations
-        $todayProfit = $this->transactionService->getProfitSummary('today');
-        $weekProfit = $this->transactionService->getProfitSummary('week');
-        $monthProfit = $this->transactionService->getProfitSummary('month');
-        $yearProfit = $this->transactionService->getProfitSummary('year');
+        $todayProfit = $this->getRestaurantProfitSummary('today');
+        $weekProfit = $this->getRestaurantProfitSummary('week');
+        $monthProfit = $this->getRestaurantProfitSummary('month');
+        $yearProfit = $this->getRestaurantProfitSummary('year');
 
-        // Get recent transactions
-        $normalTransactions = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
+        $normalTransactions = $this->restaurantTransactionsQuery()
+            ->with(['category', 'paymentMethod', 'creator'])
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->limit(50)
@@ -59,33 +52,22 @@ class DashboardController extends Controller
             ->take(10)
             ->values();
 
-        // Enrich purchase correction descriptions for dashboard display
         foreach ($recentTransactions as $transaction) {
-            // Check if this is a purchase correction transaction
-            if (is_object($transaction->category) && 
-                $transaction->category->name === 'Inventory Purchase') {
-                
-                // Look for related inventory adjustment (purchase correction)
-                // CRITICAL: Get the LATEST adjustment if multiple corrections exist
-                // Multiple corrections create multiple adjustment records for same transaction
+            if (is_object($transaction->category) && $transaction->category->name === 'Inventory Purchase') {
                 $adjustment = \App\Models\InventoryAdjustment::where('expense_transaction_id', $transaction->id)
                     ->where('correction_type', 'purchase_correction')
                     ->with('inventoryItem')
                     ->orderBy('id', 'desc')
                     ->first();
-                
+
                 if ($adjustment && $adjustment->inventoryItem) {
-                    // Build short, clean description format
                     $itemName = $adjustment->inventoryItem->name;
                     $unit = $adjustment->inventoryItem->unit ?? 'unit';
-                    
-                    // Use the stored old/new quantities from the LATEST adjustment record
                     $oldQty = rtrim(rtrim(number_format($adjustment->old_quantity, 2), '0'), '.');
                     $newQty = rtrim(rtrim(number_format($adjustment->new_quantity, 2), '0'), '.');
-                    
-                    // Short format: "Stock Correction – Item (old → new unit)"
+
                     $transaction->description = sprintf(
-                        'Stock Correction – %s (%s → %s %s)',
+                        'Stock Correction - %s (%s -> %s %s)',
                         $itemName,
                         $oldQty,
                         $newQty,
@@ -95,29 +77,20 @@ class DashboardController extends Controller
             }
         }
 
-        $todayDamage = $this->getDamageTotalForPeriod('today');
-        $weekDamage = $this->getDamageTotalForPeriod('week');
-        $monthDamage = $this->getDamageTotalForPeriod('month');
-        $yearDamage = $this->getDamageTotalForPeriod('year');
-
-        // Get weekly chart data (last 7 days)
         $weeklyChartData = $this->getWeeklyChartData();
-
-        // Get monthly chart data (current month by day)
         $monthlyChartData = $this->getMonthlyChartData();
 
-        // Get ALL income entries for current month grouped by category and item
         $categoryIncomes = $this->getGroupedIncomeExpenseData('income');
-
-        // Get ALL expense entries for current month grouped by category and item
         $categoryExpenses = $this->getGroupedIncomeExpenseData('expense');
 
-        // Get totals for all payment methods using all transactions
         [$fromDate, $toDate, $transactionType] = $this->normalizePaymentMethodFilters($request);
         $paymentMethodTotals = $this->getPaymentMethodTotals($fromDate, $toDate, $transactionType);
 
-        return view('dashboard.index', compact(
-            'totalSummary',
+        return view('dashboard.restaurant', compact(
+            'todayIncome',
+            'todayExpense',
+            'todayNet',
+            'currentBalance',
             'todaySummary',
             'weekSummary',
             'monthSummary',
@@ -129,10 +102,6 @@ class DashboardController extends Controller
             'recentTransactions',
             'weeklyChartData',
             'monthlyChartData',
-            'todayDamage',
-            'weekDamage',
-            'monthDamage',
-            'yearDamage',
             'categoryIncomes',
             'categoryExpenses',
             'paymentMethodTotals',
@@ -140,6 +109,87 @@ class DashboardController extends Controller
             'toDate',
             'transactionType'
         ));
+    }
+
+    /**
+     * Base query for restaurant-related transactions.
+     */
+    private function restaurantTransactionsQuery(): Builder
+    {
+        return DailyTransaction::query()
+            ->where(function (Builder $query) {
+                $query->where('source', 'restaurant')
+                    ->orWhere(function (Builder $innerQuery) {
+                        $innerQuery->where('internal_reference_type', 'inventory_internal_consumption')
+                            ->where('expense', '>', 0);
+                    });
+            });
+    }
+
+    /**
+     * Get totals for income or expense for a period.
+     */
+    private function getRestaurantTotalForPeriod(string $period, string $type): float
+    {
+        $query = $this->applyPeriodFilter($this->restaurantTransactionsQuery(), $period);
+
+        $column = $type === 'income' ? 'income' : 'expense';
+
+        return (float) $query->where($column, '>', 0)->sum($column);
+    }
+
+    /**
+     * Get current balance for restaurant transactions.
+     */
+    private function getRestaurantCurrentBalance(): float
+    {
+        return (float) $this->restaurantTransactionsQuery()
+            ->sum(DB::raw('COALESCE(income, 0) - COALESCE(expense, 0)'));
+    }
+
+    /**
+     * Get summary totals for a period.
+     */
+    private function getRestaurantSummary(string $period): array
+    {
+        $query = $this->applyPeriodFilter($this->restaurantTransactionsQuery(), $period);
+
+        $totalIncome = (float) (clone $query)->where('income', '>', 0)->sum('income');
+        $totalExpense = (float) (clone $query)->where('expense', '>', 0)->sum('expense');
+        $netAmount = $totalIncome - $totalExpense;
+
+        return [
+            'total_income' => $totalIncome,
+            'total_expense' => $totalExpense,
+            'net_amount' => $netAmount,
+        ];
+    }
+
+    /**
+     * Get profit breakdown for restaurant-only data.
+     */
+    private function getRestaurantProfitSummary(string $period): array
+    {
+        $query = $this->applyPeriodFilter($this->restaurantTransactionsQuery(), $period);
+
+        $normalIncome = (float) (clone $query)->where('income', '>', 0)->sum('income');
+        $normalExpense = (float) (clone $query)->where('expense', '>', 0)->sum('expense');
+        $normalProfit = $normalIncome - $normalExpense;
+
+        $inventorySaleRevenue = 0.0;
+        $inventoryCOGS = 0.0;
+        $inventoryProfit = 0.0;
+        $totalProfit = $normalProfit + $inventoryProfit;
+
+        return [
+            'normal_income' => $normalIncome,
+            'normal_expense' => $normalExpense,
+            'normal_profit' => $normalProfit,
+            'inventory_sale_revenue' => $inventorySaleRevenue,
+            'inventory_cogs' => $inventoryCOGS,
+            'inventory_profit' => $inventoryProfit,
+            'total_profit' => $totalProfit,
+        ];
     }
 
     /**
@@ -180,7 +230,7 @@ class DashboardController extends Controller
             default => 'COALESCE(daily_transactions.income, 0) - COALESCE(daily_transactions.expense, 0)',
         };
 
-        $totalsSubquery = DailyTransaction::query()
+        $totalsSubquery = $this->restaurantTransactionsQuery()
             ->select('payment_method_id')
             ->selectRaw("SUM({$amountExpression}) as total_amount")
             ->whereNotNull('payment_method_id')
@@ -206,52 +256,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * Base query for inventory damage transactions.
-     */
-    private function damageTransactionsQuery(): Builder
-    {
-        return InventoryAdjustment::query()->damageSpoilage();
-    }
-
-    /**
-     * Get total damage for a period.
-     */
-    private function getDamageTotalForPeriod(string $period): float
-    {
-        $query = $this->damageTransactionsQuery()
-            ->join('inventory_items', 'inventory_adjustments.inventory_item_id', '=', 'inventory_items.id');
-
-        switch ($period) {
-            case 'today':
-                $query->whereDate('inventory_adjustments.created_at', Carbon::today());
-                break;
-            case 'week':
-                $query->whereBetween('inventory_adjustments.created_at', [
-                    Carbon::now()->startOfWeek(),
-                    Carbon::now()->endOfWeek(),
-                ]);
-                break;
-            case 'month':
-                $query->whereBetween('inventory_adjustments.created_at', [
-                    Carbon::now()->startOfMonth(),
-                    Carbon::now()->endOfMonth(),
-                ]);
-                break;
-            case 'year':
-                $query->whereBetween('inventory_adjustments.created_at', [
-                    Carbon::now()->startOfYear(),
-                    Carbon::now()->endOfYear(),
-                ]);
-                break;
-        }
-
-        return (float) $query->sum(DB::raw('ABS(inventory_adjustments.difference) * COALESCE(inventory_items.unit_cost, 0)'));
-    }
-
-    /**
      * Get weekly chart data (last 7 days).
      */
-    private function getWeeklyChartData()
+    private function getWeeklyChartData(): array
     {
         $dates = [];
         $income = [];
@@ -261,8 +268,13 @@ class DashboardController extends Controller
             $date = Carbon::today()->subDays($i);
             $dates[] = $date->format('M d');
 
-            $dayIncome = DailyTransaction::whereDate('date', $date)->sum('income');
-            $dayExpense = DailyTransaction::whereDate('date', $date)->sum('expense');
+            $dayIncome = (float) $this->restaurantTransactionsQuery()
+                ->whereDate('date', $date)
+                ->sum('income');
+
+            $dayExpense = (float) $this->restaurantTransactionsQuery()
+                ->whereDate('date', $date)
+                ->sum('expense');
 
             $income[] = $dayIncome;
             $expense[] = $dayExpense;
@@ -278,11 +290,11 @@ class DashboardController extends Controller
     /**
      * Get monthly chart data (current month by day).
      */
-    private function getMonthlyChartData()
+    private function getMonthlyChartData(): array
     {
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
-        
+
         $dates = [];
         $income = [];
         $expense = [];
@@ -291,8 +303,13 @@ class DashboardController extends Controller
         while ($currentDate <= $endDate) {
             $dates[] = $currentDate->format('M d');
 
-            $dayIncome = DailyTransaction::whereDate('date', $currentDate)->sum('income');
-            $dayExpense = DailyTransaction::whereDate('date', $currentDate)->sum('expense');
+            $dayIncome = (float) $this->restaurantTransactionsQuery()
+                ->whereDate('date', $currentDate)
+                ->sum('income');
+
+            $dayExpense = (float) $this->restaurantTransactionsQuery()
+                ->whereDate('date', $currentDate)
+                ->sum('expense');
 
             $income[] = $dayIncome;
             $expense[] = $dayExpense;
@@ -309,39 +326,34 @@ class DashboardController extends Controller
 
     /**
      * Get grouped income or expense data with category and inventory item details.
-     * 
+     *
      * @param string $type 'income' or 'expense'
-     * @return \Illuminate\Support\Collection
      */
     private function getGroupedIncomeExpenseData(string $type)
     {
         $amountColumn = $type === 'income' ? 'income' : 'expense';
-        
-        // Get all transactions for current month
-        $transactions = DailyTransaction::with(['category'])
+
+        $transactions = $this->restaurantTransactionsQuery()
+            ->with(['category'])
             ->thisMonth()
             ->where($amountColumn, '>', 0)
             ->get();
 
-        // Group transactions by category and description to aggregate amounts
         $grouped = [];
-        
+
         foreach ($transactions as $transaction) {
-            // Try to find related stock movement to get inventory item details
-            $stockMovement = \App\Models\StockMovement::where('reference_type', 'App\Models\DailyTransaction')
+            $stockMovement = \App\Models\StockMovement::where('reference_type', 'App\\Models\\DailyTransaction')
                 ->where('reference_id', $transaction->id)
                 ->with('inventoryItem')
                 ->first();
 
             $categoryName = $transaction->category ? $transaction->category->name : 'Uncategorized';
             $itemName = null;
-            
+
             if ($stockMovement && $stockMovement->inventoryItem) {
-                // Use inventory item name if available
                 $itemName = $stockMovement->inventoryItem->name;
                 $key = $categoryName . '|' . $itemName;
             } else {
-                // Use transaction description - strip HTML tags for dashboard display
                 $itemName = strip_tags($transaction->description);
                 $key = $categoryName . '|' . $itemName;
             }
@@ -357,7 +369,25 @@ class DashboardController extends Controller
             $grouped[$key]['amount'] += $transaction->$amountColumn;
         }
 
-        // Convert to collection and sort by amount descending
         return collect($grouped)->sortByDesc('amount')->values();
+    }
+
+    /**
+     * Apply period filters to a query.
+     */
+    private function applyPeriodFilter(Builder $query, string $period): Builder
+    {
+        switch ($period) {
+            case 'today':
+                return $query->today();
+            case 'week':
+                return $query->thisWeek();
+            case 'month':
+                return $query->thisMonth();
+            case 'year':
+                return $query->thisYear();
+            default:
+                return $query;
+        }
     }
 }

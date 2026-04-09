@@ -1130,16 +1130,16 @@
             $logoHref = route('dashboard');
             $logoTooltip = '🏠 Dashboard';
             if (auth()->check() && auth()->user()->isRestaurantAccountant()) {
-                $logoHref = route('transactions.create');
-                $logoTooltip = '📝 Create Transaction';
+                $logoHref = route('restaurant.dashboard');
+                $logoTooltip = '🏠 Restaurant Dashboard';
             } elseif (auth()->check() && auth()->user()->isInventoryAccountant()) {
-                $logoHref = route('transactions.inventory-sale-multi.create');
-                $logoTooltip = '📦 Inventory Sale';
+                $logoHref = route('inventory.dashboard');
+                $logoTooltip = '🏠 Inventory Dashboard';
             }
         @endphp
         <a href="{{ $logoHref }}"
-           class="logo {{ (auth()->user()->isRestaurantAccountant() && request()->routeIs('transactions.create')) || 
-                          (auth()->user()->isInventoryAccountant() && request()->routeIs('transactions.inventory-sale-multi.create')) ||
+           class="logo {{ (auth()->user()->isRestaurantAccountant() && request()->routeIs('restaurant.dashboard')) || 
+                          (auth()->user()->isInventoryAccountant() && request()->routeIs('inventory.dashboard')) ||
                           (!auth()->user()->hasAccountantModuleRestriction() && request()->routeIs('dashboard')) ? 'active' : '' }}"
            aria-label="Go to Home - Restaurant Accounting System"
            data-tooltip="{{ $logoTooltip }}"
@@ -1171,14 +1171,21 @@
             </div>
         </a>
         <nav class="nav flex-column">
-            {{-- Dashboard - Hidden for module-restricted accountants --}}
-            @unless(auth()->check() && auth()->user()->hasAccountantModuleRestriction())
-            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-               href="{{ route('dashboard') }}"
+            @php
+                $dashboardRoute = auth()->check() && auth()->user()->isRestaurantAccountant()
+                    ? route('restaurant.dashboard')
+                    : (auth()->check() && auth()->user()->isInventoryAccountant()
+                        ? route('inventory.dashboard')
+                        : route('dashboard'));
+                $dashboardActive = request()->routeIs('dashboard')
+                    || request()->routeIs('restaurant.dashboard')
+                    || request()->routeIs('inventory.dashboard');
+            @endphp
+            <a class="nav-link {{ $dashboardActive ? 'active' : '' }}"
+               href="{{ $dashboardRoute }}"
                data-tooltip="Dashboard">
                 <i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span>
             </a>
-            @endunless
 
             {{-- Create Transaction - Only for restaurant accountants --}}
             @if(auth()->check() && auth()->user()->isRestaurantAccountant())

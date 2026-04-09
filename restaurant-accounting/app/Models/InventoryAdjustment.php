@@ -58,6 +58,14 @@ class InventoryAdjustment extends Model
     }
 
     /**
+     * Get the user who recorded this adjustment.
+     */
+    public function adjustedBy()
+    {
+        return $this->belongsTo(User::class, 'adjusted_by');
+    }
+
+    /**
      * Scope query to only purchase corrections.
      */
     public function scopePurchaseCorrections($query)

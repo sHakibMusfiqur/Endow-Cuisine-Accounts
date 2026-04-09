@@ -49,7 +49,7 @@ class CheckModuleAccess
 
             // Access denied - redirect to appropriate landing page
             if ($user->module_access === 'inventory') {
-                return redirect()->route('transactions.inventory-sale-multi.create')
+                return redirect()->route('inventory.dashboard')
                     ->with('error', 'You do not have access to this resource.');
             }
 

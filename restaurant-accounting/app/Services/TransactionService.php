@@ -5,16 +5,113 @@ namespace App\Services;
 use App\Models\DailyTransaction;
 use App\Models\Currency;
 use App\Models\Category;
+use App\Models\InventoryAdjustment;
 use App\Models\ItemUsageRecipe;
 use App\Models\StockMovement;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use Exception;
 
 class TransactionService
 {
+    /**
+     * Get inventory damage rows in a transaction-like shape for list views.
+     *
+     * @param array<string, mixed> $filters
+     */
+    public function getDamageTransactionFeed(array $filters = [], ?int $limit = null): Collection
+    {
+        $query = InventoryAdjustment::query()
+            ->damageSpoilage()
+            ->with(['inventoryItem', 'adjustedBy'])
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($damageQuery) use ($search) {
+                $damageQuery->where('reason', 'like', '%' . $search . '%')
+                    ->orWhere('notes', 'like', '%' . $search . '%')
+                    ->orWhereHas('inventoryItem', function ($itemQuery) use ($search) {
+                        $itemQuery->where('name', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+            if ($limit !== null) {
+                $query->limit($limit);
+            }
+
+        return $query->get()->map(function (InventoryAdjustment $adjustment) {
+            $item = $adjustment->inventoryItem;
+            if (!$item) {
+                return null;
+            }
+
+            $lossValue = abs((float) $adjustment->difference) * (float) ($item->unit_cost ?? 0);
+            $quantityLost = abs((float) $adjustment->difference);
+            $unit = $item->unit ?? 'unit';
+
+            $damage = new \stdClass();
+            $damage->id = 'damage-' . $adjustment->id;
+            $damage->date = $adjustment->created_at;
+            $damage->description = sprintf(
+                'Inventory Damage – %s (%s %s)',
+                $item->name,
+                rtrim(rtrim(number_format($quantityLost, 2), '0'), '.'),
+                $unit
+            );
+            $damage->income = 0;
+            $damage->expense = $lossValue;
+            $damage->balance = 0;
+            $damage->category = (object) ['name' => 'Inventory', 'type' => 'expense'];
+            $damage->paymentMethod = (object) ['name' => 'N/A'];
+            $damage->currency = (object) ['code' => 'KRW', 'symbol' => '₩'];
+            $damage->creator = $adjustment->adjustedBy ?: (object) ['name' => 'System'];
+            $damage->is_damage_entry = true;
+            $damage->damage_adjustment_id = $adjustment->id;
+            $damage->damage_loss_value = $lossValue;
+            $damage->damage_quantity = $quantityLost;
+            $damage->damage_item_name = $item->name;
+
+            return $damage;
+        })->filter()->values();
+    }
+
+    /**
+     * Merge normal and damage transactions into a single newest-first collection.
+     */
+    public function mergeTransactionFeed(Collection $transactions, Collection $damageEntries): Collection
+    {
+        return $transactions
+            ->concat($damageEntries)
+            ->sort(function ($left, $right) {
+                $leftDate = $left->date instanceof Carbon ? $left->date : Carbon::parse($left->date ?? now());
+                $rightDate = $right->date instanceof Carbon ? $right->date : Carbon::parse($right->date ?? now());
+
+                if ($leftDate->equalTo($rightDate)) {
+                    $leftId = is_numeric($left->id) ? (int) $left->id : 0;
+                    $rightId = is_numeric($right->id) ? (int) $right->id : 0;
+
+                    return $rightId <=> $leftId;
+                }
+
+                return $rightDate->timestamp <=> $leftDate->timestamp;
+            })
+            ->values();
+    }
+
     /**
      * Create a new transaction with balance calculation.
      * 
@@ -103,7 +200,7 @@ class TransactionService
             \App\Models\ActivityLog::log(
                 'create',
                 "Created transaction: {$transaction->description} (" . 
-                ($transaction->income > 0 ? 'Income: ₩' . number_format($transaction->income, 0) : 'Expense: ₩' . number_format($transaction->expense, 0)) . ")",
+                ($transaction->income > 0 ? 'Income: ₩' . number_format((float) $transaction->income, 0) : 'Expense: ₩' . number_format((float) $transaction->expense, 0)) . ")",
                 'transactions',
                 [
                     'transaction_id' => $transaction->id,
@@ -186,7 +283,7 @@ class TransactionService
             // Recalculate balance
             $lastBalance = $this->getLastBalance($data['date'], $transaction->id);
             $newBalance = $lastBalance + $incomeBase - $expenseBase;
-            $transaction->balance = $newBalance;
+            $transaction->fill(['balance' => $newBalance]);
             $transaction->save();
 
             // Update balances for subsequent transactions
@@ -267,7 +364,7 @@ class TransactionService
             // Log the transaction deletion activity
             \App\Models\ActivityLog::log(
                 'delete',
-                "Deleted transaction: {$description} ({$type}: ₩" . number_format($amount, 0) . ")",
+                "Deleted transaction: {$description} ({$type}: ₩" . number_format((float) $amount, 0) . ")",
                 'transactions',
                 [
                     'date' => $date,

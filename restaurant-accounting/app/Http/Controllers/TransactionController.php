@@ -10,6 +10,7 @@ use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use App\Services\TransactionService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -59,10 +60,35 @@ class TransactionController extends Controller
             $query->where('description', 'like', '%' . $request->search . '%');
         }
 
-        // Order by date and id
-        $transactions = $query->orderBy('date', 'desc')
+        $normalTransactions = $query->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->get();
+
+        $damageTransactions = collect();
+        if (!$request->filled('type') || $request->type === 'expense') {
+            $damageTransactions = $this->transactionService->getDamageTransactionFeed([
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'search' => $request->input('search'),
+            ]);
+        }
+
+        $allTransactions = $this->transactionService->mergeTransactionFeed($normalTransactions, $damageTransactions);
+
+        $perPage = 20;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $allTransactions->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $transactions = new LengthAwarePaginator(
+            $currentItems,
+            $allTransactions->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
         // Enrich purchase correction descriptions for transaction list display
         foreach ($transactions as $transaction) {

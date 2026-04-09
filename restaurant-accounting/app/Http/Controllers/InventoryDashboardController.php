@@ -5,15 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\DailyTransaction;
 use App\Models\InventoryAdjustment;
 use App\Models\PaymentMethod;
+use App\Models\StockMovement;
 use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller
+class InventoryDashboardController extends Controller
 {
-    protected $transactionService;
+    protected TransactionService $transactionService;
 
     public function __construct(TransactionService $transactionService)
     {
@@ -21,33 +22,27 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the dashboard.
+     * Display the inventory accountant dashboard.
      */
     public function index(Request $request)
     {
-        // Redirect module-restricted accountants to their respective pages
-        $user = auth()->user();
-        if ($user && $user->isRestaurantAccountant()) {
-            return redirect()->route('restaurant.dashboard');
-        } elseif ($user && $user->isInventoryAccountant()) {
-            return redirect()->route('inventory.dashboard');
-        }
+        $todayIncome = $this->getInventoryTotalForPeriod('today', 'income');
+        $todayExpense = $this->getInventoryTotalForPeriod('today', 'expense');
+        $todayNet = $todayIncome - $todayExpense;
+        $currentBalance = $this->getInventoryCurrentBalance();
 
-        // Get summary statistics
-        $totalSummary = $this->transactionService->getSummary('all');
-        $todaySummary = $this->transactionService->getSummary('today');
-        $weekSummary = $this->transactionService->getSummary('week');
-        $monthSummary = $this->transactionService->getSummary('month');
-        $yearSummary = $this->transactionService->getSummary('year');
+        $todaySummary = $this->getInventorySummary('today');
+        $weekSummary = $this->getInventorySummary('week');
+        $monthSummary = $this->getInventorySummary('month');
+        $yearSummary = $this->getInventorySummary('year');
 
-        // Get profit calculations
-        $todayProfit = $this->transactionService->getProfitSummary('today');
-        $weekProfit = $this->transactionService->getProfitSummary('week');
-        $monthProfit = $this->transactionService->getProfitSummary('month');
-        $yearProfit = $this->transactionService->getProfitSummary('year');
+        $todayProfit = $this->getInventoryProfitSummary('today');
+        $weekProfit = $this->getInventoryProfitSummary('week');
+        $monthProfit = $this->getInventoryProfitSummary('month');
+        $yearProfit = $this->getInventoryProfitSummary('year');
 
-        // Get recent transactions
-        $normalTransactions = DailyTransaction::with(['category', 'paymentMethod', 'creator'])
+        $normalTransactions = $this->inventoryTransactionsQuery()
+            ->with(['category', 'paymentMethod', 'creator'])
             ->orderBy('date', 'desc')
             ->orderBy('id', 'desc')
             ->limit(50)
@@ -59,33 +54,22 @@ class DashboardController extends Controller
             ->take(10)
             ->values();
 
-        // Enrich purchase correction descriptions for dashboard display
         foreach ($recentTransactions as $transaction) {
-            // Check if this is a purchase correction transaction
-            if (is_object($transaction->category) && 
-                $transaction->category->name === 'Inventory Purchase') {
-                
-                // Look for related inventory adjustment (purchase correction)
-                // CRITICAL: Get the LATEST adjustment if multiple corrections exist
-                // Multiple corrections create multiple adjustment records for same transaction
+            if (is_object($transaction->category) && $transaction->category->name === 'Inventory Purchase') {
                 $adjustment = \App\Models\InventoryAdjustment::where('expense_transaction_id', $transaction->id)
                     ->where('correction_type', 'purchase_correction')
                     ->with('inventoryItem')
                     ->orderBy('id', 'desc')
                     ->first();
-                
+
                 if ($adjustment && $adjustment->inventoryItem) {
-                    // Build short, clean description format
                     $itemName = $adjustment->inventoryItem->name;
                     $unit = $adjustment->inventoryItem->unit ?? 'unit';
-                    
-                    // Use the stored old/new quantities from the LATEST adjustment record
                     $oldQty = rtrim(rtrim(number_format($adjustment->old_quantity, 2), '0'), '.');
                     $newQty = rtrim(rtrim(number_format($adjustment->new_quantity, 2), '0'), '.');
-                    
-                    // Short format: "Stock Correction – Item (old → new unit)"
+
                     $transaction->description = sprintf(
-                        'Stock Correction – %s (%s → %s %s)',
+                        'Stock Correction - %s (%s -> %s %s)',
                         $itemName,
                         $oldQty,
                         $newQty,
@@ -100,24 +84,20 @@ class DashboardController extends Controller
         $monthDamage = $this->getDamageTotalForPeriod('month');
         $yearDamage = $this->getDamageTotalForPeriod('year');
 
-        // Get weekly chart data (last 7 days)
         $weeklyChartData = $this->getWeeklyChartData();
-
-        // Get monthly chart data (current month by day)
         $monthlyChartData = $this->getMonthlyChartData();
 
-        // Get ALL income entries for current month grouped by category and item
         $categoryIncomes = $this->getGroupedIncomeExpenseData('income');
-
-        // Get ALL expense entries for current month grouped by category and item
         $categoryExpenses = $this->getGroupedIncomeExpenseData('expense');
 
-        // Get totals for all payment methods using all transactions
         [$fromDate, $toDate, $transactionType] = $this->normalizePaymentMethodFilters($request);
         $paymentMethodTotals = $this->getPaymentMethodTotals($fromDate, $toDate, $transactionType);
 
-        return view('dashboard.index', compact(
-            'totalSummary',
+        return view('dashboard.inventory', compact(
+            'todayIncome',
+            'todayExpense',
+            'todayNet',
+            'currentBalance',
             'todaySummary',
             'weekSummary',
             'monthSummary',
@@ -140,6 +120,72 @@ class DashboardController extends Controller
             'toDate',
             'transactionType'
         ));
+    }
+
+    /**
+     * Base query for inventory-related transactions.
+     */
+    private function inventoryTransactionsQuery(): Builder
+    {
+        return DailyTransaction::query()
+            ->whereHas('category', function (Builder $query) {
+                $query->where('module', 'inventory');
+            });
+    }
+
+    /**
+     * Get totals for income or expense for a period.
+     */
+    private function getInventoryTotalForPeriod(string $period, string $type): float
+    {
+        $query = $this->applyPeriodFilter($this->inventoryTransactionsQuery(), $period);
+
+        $column = $type === 'income' ? 'income' : 'expense';
+
+        return (float) $query->where($column, '>', 0)->sum($column);
+    }
+
+    /**
+     * Get current balance for inventory transactions.
+     */
+    private function getInventoryCurrentBalance(): float
+    {
+        return (float) $this->inventoryTransactionsQuery()
+            ->sum(DB::raw('COALESCE(income, 0) - COALESCE(expense, 0)'));
+    }
+
+    /**
+     * Get summary totals for a period.
+     */
+    private function getInventorySummary(string $period): array
+    {
+        $query = $this->applyPeriodFilter($this->inventoryTransactionsQuery(), $period);
+
+        $totalIncome = (float) (clone $query)->where('income', '>', 0)->sum('income');
+        $totalExpense = (float) (clone $query)->where('expense', '>', 0)->sum('expense');
+        $netAmount = $totalIncome - $totalExpense;
+
+        return [
+            'total_income' => $totalIncome,
+            'total_expense' => $totalExpense,
+            'net_amount' => $netAmount,
+        ];
+    }
+
+    /**
+     * Get profit breakdown using admin dashboard calculation,
+     * then force restaurant profit to zero for inventory accountants.
+     */
+    private function getInventoryProfitSummary(string $period): array
+    {
+        $profitSummary = $this->transactionService->getProfitSummary($period);
+
+        $profitSummary['normal_income'] = 0.0;
+        $profitSummary['normal_expense'] = 0.0;
+        $profitSummary['normal_profit'] = 0.0;
+        $profitSummary['total_profit'] = $profitSummary['inventory_profit'];
+
+        return $profitSummary;
     }
 
     /**
@@ -180,7 +226,7 @@ class DashboardController extends Controller
             default => 'COALESCE(daily_transactions.income, 0) - COALESCE(daily_transactions.expense, 0)',
         };
 
-        $totalsSubquery = DailyTransaction::query()
+        $totalsSubquery = $this->inventoryTransactionsQuery()
             ->select('payment_method_id')
             ->selectRaw("SUM({$amountExpression}) as total_amount")
             ->whereNotNull('payment_method_id')
@@ -251,7 +297,7 @@ class DashboardController extends Controller
     /**
      * Get weekly chart data (last 7 days).
      */
-    private function getWeeklyChartData()
+    private function getWeeklyChartData(): array
     {
         $dates = [];
         $income = [];
@@ -261,8 +307,13 @@ class DashboardController extends Controller
             $date = Carbon::today()->subDays($i);
             $dates[] = $date->format('M d');
 
-            $dayIncome = DailyTransaction::whereDate('date', $date)->sum('income');
-            $dayExpense = DailyTransaction::whereDate('date', $date)->sum('expense');
+            $dayIncome = (float) $this->inventoryTransactionsQuery()
+                ->whereDate('date', $date)
+                ->sum('income');
+
+            $dayExpense = (float) $this->inventoryTransactionsQuery()
+                ->whereDate('date', $date)
+                ->sum('expense');
 
             $income[] = $dayIncome;
             $expense[] = $dayExpense;
@@ -278,11 +329,11 @@ class DashboardController extends Controller
     /**
      * Get monthly chart data (current month by day).
      */
-    private function getMonthlyChartData()
+    private function getMonthlyChartData(): array
     {
         $startDate = Carbon::now()->startOfMonth();
         $endDate = Carbon::now()->endOfMonth();
-        
+
         $dates = [];
         $income = [];
         $expense = [];
@@ -291,8 +342,13 @@ class DashboardController extends Controller
         while ($currentDate <= $endDate) {
             $dates[] = $currentDate->format('M d');
 
-            $dayIncome = DailyTransaction::whereDate('date', $currentDate)->sum('income');
-            $dayExpense = DailyTransaction::whereDate('date', $currentDate)->sum('expense');
+            $dayIncome = (float) $this->inventoryTransactionsQuery()
+                ->whereDate('date', $currentDate)
+                ->sum('income');
+
+            $dayExpense = (float) $this->inventoryTransactionsQuery()
+                ->whereDate('date', $currentDate)
+                ->sum('expense');
 
             $income[] = $dayIncome;
             $expense[] = $dayExpense;
@@ -309,39 +365,39 @@ class DashboardController extends Controller
 
     /**
      * Get grouped income or expense data with category and inventory item details.
-     * 
+     *
      * @param string $type 'income' or 'expense'
-     * @return \Illuminate\Support\Collection
      */
     private function getGroupedIncomeExpenseData(string $type)
     {
         $amountColumn = $type === 'income' ? 'income' : 'expense';
-        
-        // Get all transactions for current month
-        $transactions = DailyTransaction::with(['category'])
+
+        $transactions = $this->inventoryTransactionsQuery()
+            ->with(['category'])
             ->thisMonth()
             ->where($amountColumn, '>', 0)
             ->get();
 
-        // Group transactions by category and description to aggregate amounts
-        $grouped = [];
-        
-        foreach ($transactions as $transaction) {
-            // Try to find related stock movement to get inventory item details
-            $stockMovement = \App\Models\StockMovement::where('reference_type', 'App\Models\DailyTransaction')
-                ->where('reference_id', $transaction->id)
-                ->with('inventoryItem')
-                ->first();
+        if ($transactions->isEmpty()) {
+            return collect();
+        }
 
+        $movementLookup = StockMovement::where('reference_type', 'App\\Models\\DailyTransaction')
+            ->whereIn('reference_id', $transactions->pluck('id'))
+            ->with('inventoryItem')
+            ->get()
+            ->groupBy('reference_id');
+
+        $grouped = [];
+
+        foreach ($transactions as $transaction) {
+            $stockMovement = $movementLookup->get($transaction->id)?->first();
             $categoryName = $transaction->category ? $transaction->category->name : 'Uncategorized';
-            $itemName = null;
-            
+
             if ($stockMovement && $stockMovement->inventoryItem) {
-                // Use inventory item name if available
                 $itemName = $stockMovement->inventoryItem->name;
                 $key = $categoryName . '|' . $itemName;
             } else {
-                // Use transaction description - strip HTML tags for dashboard display
                 $itemName = strip_tags($transaction->description);
                 $key = $categoryName . '|' . $itemName;
             }
@@ -357,7 +413,25 @@ class DashboardController extends Controller
             $grouped[$key]['amount'] += $transaction->$amountColumn;
         }
 
-        // Convert to collection and sort by amount descending
         return collect($grouped)->sortByDesc('amount')->values();
+    }
+
+    /**
+     * Apply period filters to a query.
+     */
+    private function applyPeriodFilter(Builder $query, string $period): Builder
+    {
+        switch ($period) {
+            case 'today':
+                return $query->today();
+            case 'week':
+                return $query->thisWeek();
+            case 'month':
+                return $query->thisMonth();
+            case 'year':
+                return $query->thisYear();
+            default:
+                return $query;
+        }
     }
 }

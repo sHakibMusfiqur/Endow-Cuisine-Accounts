@@ -310,22 +310,33 @@
             </thead>
             <tbody>
                 @forelse($transactions as $transaction)
+                @php $isDamageEntry = $transaction->is_damage_entry ?? false; @endphp
                 <tr>
                     <td>{{ $transaction->date->format('M d, Y') }}</td>
                     <td title="{{ strip_tags($transaction->description) }}">
-                        {{ Str::limit(strip_tags($transaction->description), 50) }}
+                        {{ \Illuminate\Support\Str::limit(strip_tags($transaction->description), 50) }}
                     </td>
                     <td>
-                        <span class="badge {{ $transaction->category->type == 'income' ? 'bg-success' : 'bg-warning' }}">
-                            {{ $transaction->category->name }}
-                        </span>
+                        @if($isDamageEntry)
+                            <span class="badge bg-warning text-dark">Inventory Damage</span>
+                        @else
+                            <span class="badge {{ $transaction->category->type == 'income' ? 'bg-success' : 'bg-warning' }}">
+                                {{ $transaction->category->name }}
+                            </span>
+                        @endif
                     </td>
-                    <td>{{ $transaction->paymentMethod->name }}</td>
+                    <td>{{ $isDamageEntry ? 'N/A' : $transaction->paymentMethod->name }}</td>
                     <td>
-                        <span class="badge bg-secondary">{{ $transaction->currency->code }}</span>
+                        @if($isDamageEntry)
+                            <span class="badge bg-secondary">KRW</span>
+                        @else
+                            <span class="badge bg-secondary">{{ $transaction->currency->code }}</span>
+                        @endif
                     </td>
                     <td class="text-success fw-bold text-end">
-                        @if($transaction->income > 0)
+                        @if($isDamageEntry)
+                            <span class="text-muted">-</span>
+                        @elseif($transaction->income > 0)
                             {{ formatCurrency($transaction->income, false, $activeCurrency, true) }}
                             @if($activeCurrency->code !== $transaction->currency->code)
                                 <br><small class="text-muted">{{ $transaction->currency->symbol }}{{ number_format($transaction->income, 2) }}</small>
@@ -335,7 +346,9 @@
                         @endif
                     </td>
                     <td class="text-danger fw-bold text-end">
-                        @if($transaction->expense > 0)
+                        @if($isDamageEntry)
+                            -₩{{ number_format($transaction->expense, 0) }}
+                        @elseif($transaction->expense > 0)
                             {{ formatCurrency($transaction->expense, false, $activeCurrency, true) }}
                             @if($activeCurrency->code !== $transaction->currency->code)
                                 <br><small class="text-muted">{{ $transaction->currency->symbol }}{{ number_format($transaction->expense, 2) }}</small>
@@ -345,34 +358,46 @@
                         @endif
                     </td>
                     <td class="fw-bold text-end {{ $transaction->balance < 0 ? 'text-danger' : 'text-dark' }}">
-                        {{ formatCurrency($transaction->balance, false, $activeCurrency, true) }}
+                        @if($isDamageEntry)
+                            <span class="text-muted">-</span>
+                        @else
+                            {{ formatCurrency($transaction->balance, false, $activeCurrency, true) }}
+                        @endif
                     </td>
-                    <td>{{ $transaction->creator->name }}</td>
+                    <td>{{ $isDamageEntry ? data_get($transaction, 'creator.name', 'System') : $transaction->creator->name }}</td>
                     <td class="text-center">
-                        <div class="btn-group" role="group">
-                            <a href="{{ route('transactions.show', $transaction) }}" 
-                               class="btn btn-sm btn-primary" 
-                               title="View Transaction">
-                                <i class="fas fa-eye"></i>
+                        @if($isDamageEntry)
+                            <a href="{{ route('inventory.damage.show', $transaction->damage_adjustment_id) }}"
+                               class="btn btn-sm btn-primary"
+                               title="View Damage Details">
+                                <i class="fas fa-eye"></i> View
                             </a>
-                            
-                            @can('edit transactions')
-                                <a href="{{ route('transactions.edit', $transaction) }}" 
-                                   class="btn btn-sm btn-info" 
-                                   title="Edit Transaction">
-                                    <i class="fas fa-edit"></i>
+                        @else
+                            <div class="btn-group" role="group">
+                                <a href="{{ route('transactions.show', $transaction) }}" 
+                                   class="btn btn-sm btn-primary" 
+                                   title="View Transaction">
+                                    <i class="fas fa-eye"></i>
                                 </a>
-                            @endcan
-                            
-                            @can('delete transactions')
-                                <button type="button" 
-                                        class="btn btn-sm btn-danger delete-transaction-btn" 
-                                        data-transaction-id="{{ $transaction->id }}"
-                                        title="Delete Transaction">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            @endcan
-                        </div>
+                                
+                                @can('edit transactions')
+                                    <a href="{{ route('transactions.edit', $transaction) }}" 
+                                       class="btn btn-sm btn-info" 
+                                       title="Edit Transaction">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                @endcan
+                                
+                                @can('delete transactions')
+                                    <button type="button" 
+                                            class="btn btn-sm btn-danger delete-transaction-btn" 
+                                            data-transaction-id="{{ $transaction->id }}"
+                                            title="Delete Transaction">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                @endcan
+                            </div>
+                        @endif
                     </td>
                 </tr>
                 @empty

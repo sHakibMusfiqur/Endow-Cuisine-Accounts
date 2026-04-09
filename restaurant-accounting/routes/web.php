@@ -5,6 +5,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RestaurantDashboardController;
+use App\Http\Controllers\InventoryDashboardController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentMethodController;
@@ -16,18 +18,10 @@ use App\Http\Controllers\InventoryItemController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\ItemUsageRecipeController;
 use App\Http\Controllers\InventoryReportController;
+use App\Http\Controllers\InventoryDamageController;
 
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+
 
 // Storage route - Serve files without symlink (for shared hosting)
 Route::get('/storage/{path}', function ($path) {
@@ -59,6 +53,18 @@ Route::middleware('auth')->group(function () {
     // Dashboard - All authenticated users
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Restaurant Accountant Dashboard
+    Route::middleware('module:restaurant')->group(function () {
+        Route::get('/restaurant/dashboard', [RestaurantDashboardController::class, 'index'])
+            ->name('restaurant.dashboard');
+    });
+
+    // Inventory Accountant Dashboard
+    Route::middleware('module:inventory')->group(function () {
+        Route::get('/inventory/dashboard', [InventoryDashboardController::class, 'index'])
+            ->name('inventory.dashboard');
+    });
+
     // Inventory Sale Landing Page - Shortcut for inventory module accountants
     Route::get('/inventory/sale', function () {
         return redirect()->route('transactions.inventory-sale-multi.create');
@@ -77,6 +83,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('can:view transactions')->group(function () {
         Route::get('/transactions', [TransactionController::class, 'index'])
             ->name('transactions.index');
+
+        Route::get('/inventory/damage/{id}', [InventoryDamageController::class, 'show'])
+            ->name('inventory.damage.show');
     });
 
     Route::middleware('can:create transactions')->group(function () {
