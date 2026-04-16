@@ -649,7 +649,7 @@
             <div class="stat-card income">
                 <div class="stat-card__header">
                     <div>
-                        <div class="stat-card__eyebrow">Total Income</div>
+                        <div class="stat-card__eyebrow">Total Sale</div>
                         <div class="stat-card__value">{{ formatCurrency($totalSummary['total_income']) }}</div>
                     </div>
                     <div class="stat-card__icon" aria-hidden="true">
