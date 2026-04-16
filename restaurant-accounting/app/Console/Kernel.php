@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('02:00')
                  ->withoutOverlapping()
                  ->onOneServer();
+
+        $hours = (int) max(1, ceil(config('session.lifetime') / 60));
+        $schedule->command('session:prune --hours='.$hours)
+                 ->daily()
+                 ->withoutOverlapping()
+                 ->onOneServer();
     }
 
     /**

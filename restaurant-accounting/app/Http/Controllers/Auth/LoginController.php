@@ -12,8 +12,12 @@ class LoginController extends Controller
     /**
      * Show the login form.
      */
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        if ($request->filled('intended')) {
+            $request->session()->put('url.intended', $request->input('intended'));
+        }
+
         return view('auth.login');
     }
 

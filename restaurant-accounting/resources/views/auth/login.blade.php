@@ -152,6 +152,13 @@
         </div>
         @endif
 
+        @if(session('error') || request()->boolean('expired'))
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ session('error') ?? 'Your session has expired. Please login again.' }}
+        </div>
+        @endif
+
         <form method="POST" action="{{ route('login') }}">
             @csrf
             <div class="mb-3">

@@ -1522,6 +1522,48 @@
                 bsAlert.close();
             });
         }, 5000);
+
+        // ===================================
+        // SESSION EXPIRATION HANDLING (AJAX)
+        // ===================================
+
+        (function() {
+            const loginUrl = "{{ route('login') }}";
+            let handlingSessionExpiry = false;
+
+            function handleSessionExpired() {
+                if (handlingSessionExpiry) {
+                    return;
+                }
+
+                handlingSessionExpiry = true;
+                const intended = window.location.pathname + window.location.search;
+                const targetUrl = `${loginUrl}?expired=1&intended=${encodeURIComponent(intended)}`;
+                window.location.href = targetUrl;
+            }
+
+            if (window.fetch) {
+                const originalFetch = window.fetch;
+                window.fetch = function() {
+                    return originalFetch.apply(this, arguments).then(function(response) {
+                        if (response && response.status === 419) {
+                            handleSessionExpired();
+                        }
+                        return response;
+                    });
+                };
+            }
+
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function() {
+                this.addEventListener('loadend', function() {
+                    if (this.status === 419) {
+                        handleSessionExpired();
+                    }
+                });
+                return originalOpen.apply(this, arguments);
+            };
+        })();
     </script>
 
     @stack('scripts')
