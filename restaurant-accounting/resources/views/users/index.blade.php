@@ -281,8 +281,7 @@
             <h1 class="header-title">
                 <i class="fas fa-users me-2"></i>User Management
             </h1>
-            <p class="header-subtitle">Manage system users, roles, and permissions</p>
-        </div>
+                   </div>
         <div class="header-actions">
             <a href="{{ route('activity-logs.index') }}" class="btn btn-black">
                 <i class="fas fa-history me-2"></i>Activity Logs
