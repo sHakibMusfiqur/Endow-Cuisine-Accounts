@@ -24,14 +24,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('daily_transactions', function (Blueprint $table) {
-            // Add source column with ENUM type
-            $table->enum('source', ['normal', 'inventory', 'restaurant'])
-                  ->default('normal')
-                  ->after('description')
-                  ->comment('Source of the transaction: normal, inventory, or restaurant');
-            
-            // Add index for better query performance when filtering by source
-            $table->index('source');
+            // Only add source column if it doesn't exist
+            // (may have been added by previous migration)
+            if (!Schema::hasColumn('daily_transactions', 'source')) {
+                // Add source column with ENUM type
+                $table->enum('source', ['normal', 'inventory', 'restaurant'])
+                      ->default('normal')
+                      ->after('description')
+                      ->comment('Source of the transaction: normal, inventory, or restaurant');
+                
+                // Add index for better query performance when filtering by source
+                $table->index('source');
+            }
         });
         
         // Optional: Update existing records if you need different logic
@@ -56,9 +60,12 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('daily_transactions', function (Blueprint $table) {
-            // Drop index first, then column
-            $table->dropIndex(['source']);
-            $table->dropColumn('source');
+            // Only drop if column exists
+            if (Schema::hasColumn('daily_transactions', 'source')) {
+                // Drop index first, then column
+                $table->dropIndex(['source']);
+                $table->dropColumn('source');
+            }
         });
     }
 };
